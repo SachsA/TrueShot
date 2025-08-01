@@ -7,3 +7,7 @@ All rights reserved. You may not use, copy, modify, merge, publish, distribute, 
 # TrueShot
 
 Tactical FPS 5V5 in C++
+
+# X / Twitter
+
+https://x.com/TrueShotGame
