@@ -1,75 +1,111 @@
-### License
+# 🎯 TrueShot
 
-This project is not licensed for public use.
+**Tactical 5v5 FPS built in C++**
 
-All rights reserved. You may not use, copy, modify, merge, publish, distribute, sublicense, or sell any part of this project without explicit permission from the author.
+---
 
-# TrueShot
+## 📜 License
 
-Tactical FPS 5V5 in C++.
+This project is **not licensed for public use.**
 
-# Development
+> **All rights reserved.**\
+> You may **not** use, copy, modify, merge, publish, distribute, sublicense, or sell any part of this project without explicit permission from the author.
 
-## Programs to install
+---
 
-### Downalod Visual Studio
-https://visualstudio.microsoft.com/
+## 🛠️ Development Setup
 
-During installation, make sur to tick the case: "Desktop development with C++"
+Follow these steps to get the project up and running on Windows.
 
-Restart your PC.
+### 1. Install Visual Studio
 
-### Install gcc/mingw
-https://code.visualstudio.com/docs/cpp/config-mingw
+🔗 [Download Visual Studio](https://visualstudio.microsoft.com/)
 
-Make sur to do all the steps, including envrionement steps.
-Restart all your terminals, visual studio and others.
+- During installation, make sure to **check** the workload:
+  > ✅ **Desktop development with C++**
+- After installation, **restart your PC**.
 
-### Install cmake
-https://cmake.org/download/
+---
 
-Choose "Windows x64 Installer"
-IMPORTANT, make sure to tick: "Add CMake to system PATH"
+### 2. Install GCC / MinGW
 
-### Install vcpkg
+🔗 [Follow this guide for MinGW setup](https://code.visualstudio.com/docs/cpp/config-mingw)
+
+- Be sure to complete **all steps**, including setting up the environment variables.
+- **Restart all terminals**, Visual Studio, and any open IDEs after setup.
+
+---
+
+### 3. Install CMake
+
+🔗 [Download CMake](https://cmake.org/download/)
+
+- Choose: **Windows x64 Installer**
+- **Important**: During installation, check the option:
+  > ✅ **Add CMake to system PATH**
+
+---
+
+### 4. Install vcpkg
+
+```bash
 git clone https://github.com/Microsoft/vcpkg.git
 cd vcpkg
 .\bootstrap-vcpkg.bat
 .\vcpkg integrate install
+```
 
-On Windows, search "Edit environment variables for your account"
-On PATH variable, click edit
-Add C:\Users\alexa\vcpkg
-Click OK
-Click OK again.
-Restart all your terminals, visual studio and others.
+**Add ****\`\`**** to your system PATH:**
 
-## Clone and dependencies
+1. Open **"Edit environment variables for your account"**
+2. Select the `PATH` variable and click **Edit**
+3. Add the path to your `vcpkg` folder, e.g.:
+   ```
+   C:\Users\alexa\vcpkg
+   ```
+4. Click **OK** to confirm changes
+5. **Restart all terminals**, Visual Studio, and other tools
 
+---
+
+## 📦 Clone and Install Dependencies
+
+```bash
 git clone git@github.com:SachsA/TrueShot.git
-
+cd TrueShot
 vcpkg install glfw3 glm glad[gl-api-33]
+```
 
-## Build and execute
+---
 
+## ⚙️ Build and Run
+
+```bash
 mkdir build && cd build
 cmake .. -DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
 cmake --build .
+```
 
-For example mine is: -DCMAKE_TOOLCHAIN_FILE=C:/Users/alexa/vcpkg/scripts/buildsystems/vcpkg.cmake
+> 📝 Example:
+>
+> ```
+> -DCMAKE_TOOLCHAIN_FILE=C:/Users/alexa/vcpkg/scripts/buildsystems/vcpkg.cmake
+> ```
 
-Then, execute your .exe generated in build folder.
+After building, run the generated `.exe` inside the `build` folder.
 
-# Socials
+---
 
-### X / Twitter
+## 🌐 Socials
 
-https://x.com/TrueShotGame
+Stay connected and follow the game's development!
 
-### Youtube
+- 🦆 **X / Twitter**\
+  [https://x.com/TrueShotGame](https://x.com/TrueShotGame)
 
-https://www.youtube.com/channel/UC0cwNEc0hI77cCWwX7EaNTg
+- 📺 **YouTube**\
+  [https://www.youtube.com/channel/UC0cwNEc0hI77cCWwX7EaNTg](https://www.youtube.com/channel/UC0cwNEc0hI77cCWwX7EaNTg)
 
-### Twitch
+- 🎮 **Twitch**\
+  [https://www.twitch.tv/trueshotgame](https://www.twitch.tv/trueshotgame)
 
-https://www.twitch.tv/trueshotgame
