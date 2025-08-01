@@ -1,5 +1,5 @@
 @echo off
-echo Building TrueShot with Visual Studio...
+echo Building TrueShot with vcpkg...
 
 :: Try to find vcpkg toolchain file
 set VCPKG_ROOT=

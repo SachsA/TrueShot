@@ -15,9 +15,11 @@ This project is **not licensed for public use.**
 
 ## 🛠️ Development Setup
 
-Follow these steps to get the project up and running on Windows.
+**TrueShot can be dev on both Windows and Mac.**
 
-### 1. Install Visual Studio
+Follow these steps to get the project up and running on Windows/Mac.
+
+### 1. Install Visual Studio (ONLY WINDOWS USERS)
 
 🔗 [Download Visual Studio](https://visualstudio.microsoft.com/)
 
@@ -27,7 +29,7 @@ Follow these steps to get the project up and running on Windows.
 
 ---
 
-### 2. Install GCC / MinGW
+### 2. Install GCC / MinGW (ONLY WINDOWS USERS)
 
 🔗 [Follow this guide for MinGW setup](https://code.visualstudio.com/docs/cpp/config-mingw)
 
@@ -38,15 +40,27 @@ Follow these steps to get the project up and running on Windows.
 
 ### 3. Install CMake
 
+- Windows:
+
 🔗 [Download CMake](https://cmake.org/download/)
 
 - Choose: **Windows x64 Installer**
 - **Important**: During installation, check the option:
   > ✅ **Add CMake to system PATH**
 
+- Mac:
+
+```bash
+brew install cmake
+```
+
+**Do not forget to add cmake to your PATH.**
+
 ---
 
 ### 4. Install vcpkg
+
+- Windows:
 
 ```bash
 git clone https://github.com/Microsoft/vcpkg.git
@@ -55,7 +69,18 @@ cd vcpkg
 .\vcpkg integrate install
 ```
 
+- Mac:
+
+```bash
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.sh
+./vcpkg integrate install
+```
+
 **Add vcpkg to your system PATH:**
+
+- Windows:
 
 1. Open **"Edit environment variables for your account"**
 2. Select the `PATH` variable and click **Edit**
@@ -65,6 +90,14 @@ cd vcpkg
    ```
 4. Click **OK** to confirm changes
 5. **Restart all terminals**, Visual Studio, and other tools
+
+- Mac:
+
+```bash
+nano ~/.zshrc
+export PATH="/Users/asachs/vcpkg:$PATH"
+source ~/.zshrc
+```
 
 ---
 
@@ -82,8 +115,16 @@ vcpkg install glfw3 glm glad[gl-api-33]
 
 ### Automatically
 
+- Windows:
+
 ```bash
 .\RunTrueShot.bat
+```
+
+- Mac:
+
+```bash
+./RunTrueShot.sh
 ```
 
 ---
@@ -102,11 +143,19 @@ cmake --build . --config Debug
 > -DCMAKE_TOOLCHAIN_FILE=C:/Users/alexa/vcpkg/scripts/buildsystems/vcpkg.cmake
 > ```
 
+- Windows:
+
 After building, run the generated `.exe` inside the `build/Debug` folder:
 
 ```bash
 cd Debug
 TrueShot.exe
+```
+
+- Mac:
+
+```bash
+./TrueShot
 ```
 
 ---
