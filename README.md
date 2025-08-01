@@ -55,7 +55,7 @@ cd vcpkg
 .\vcpkg integrate install
 ```
 
-**Add ****\`\`**** to your system PATH:**
+**Add vcpkg to your system PATH:**
 
 1. Open **"Edit environment variables for your account"**
 2. Select the `PATH` variable and click **Edit**
