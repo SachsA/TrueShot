@@ -92,7 +92,7 @@ cmake --build .
 > -DCMAKE_TOOLCHAIN_FILE=C:/Users/alexa/vcpkg/scripts/buildsystems/vcpkg.cmake
 > ```
 
-After building, run the generated `.exe` inside the `build` folder.
+After building, run the generated `.exe` inside the `build/Debug` folder.
 
 ---
 
