@@ -10,10 +10,10 @@ Tactical FPS 5V5 in C++
 
 # Socials
 
-## X / Twitter
+### X / Twitter
 
 https://x.com/TrueShotGame
 
-## Youtube
+### Youtube
 
 https://www.youtube.com/channel/UC0cwNEc0hI77cCWwX7EaNTg
