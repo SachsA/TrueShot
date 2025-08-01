@@ -17,3 +17,7 @@ https://x.com/TrueShotGame
 ### Youtube
 
 https://www.youtube.com/channel/UC0cwNEc0hI77cCWwX7EaNTg
+
+### Twitch
+
+https://www.twitch.tv/trueshotgame
