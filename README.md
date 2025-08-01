@@ -78,12 +78,22 @@ vcpkg install glfw3 glm glad[gl-api-33]
 
 ---
 
-## ⚙️ Build and Run
+## ⚙️ Build and Run TrueShot
+
+### Automatically
+
+```bash
+.\RunTrueShot.bat
+```
+
+---
+
+### Manually
 
 ```bash
 mkdir build && cd build
 cmake .. -DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
-cmake --build .
+cmake --build . --config Debug
 ```
 
 > 📝 Example:
@@ -92,7 +102,12 @@ cmake --build .
 > -DCMAKE_TOOLCHAIN_FILE=C:/Users/alexa/vcpkg/scripts/buildsystems/vcpkg.cmake
 > ```
 
-After building, run the generated `.exe` inside the `build/Debug` folder.
+After building, run the generated `.exe` inside the `build/Debug` folder:
+
+```bash
+cd Debug
+TrueShot.exe
+```
 
 ---
 
@@ -109,3 +124,4 @@ Stay connected and follow the game's development!
 - 🎮 **Twitch**\
   [https://www.twitch.tv/trueshotgame](https://www.twitch.tv/trueshotgame)
 
+---
