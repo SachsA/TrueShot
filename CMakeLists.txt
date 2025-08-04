@@ -15,6 +15,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 # Executable
 add_executable(${PROJECT_NAME} 
     src/main.cpp
+    src/player_controller.cpp
+    src/fps_camera.cpp
     src/shader.cpp
 )
 
