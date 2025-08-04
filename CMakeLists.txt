@@ -21,6 +21,7 @@ add_executable(${PROJECT_NAME}
     src/fps_camera.cpp
     src/shader.cpp
     src/weapon_system.cpp
+    src/audio_system.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
