@@ -7,17 +7,15 @@
 #include "shader.h"
 #include "fps_camera.h"
 #include "player_controller.h"
-#include "weapon_system.h"
 #include "physics_types.h"
 
 // Settings
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
-// Global camera/controller/weapons
+// Global camera/controller
 FPSCamera* gCamera = nullptr;
 PlayerController* gPlayerController = nullptr;
-WeaponSystem* gWeaponSystem = nullptr;
 
 // Mouse state
 bool firstMouse = true;
@@ -52,85 +50,36 @@ void processInput(GLFWwindow* window, float deltaTime) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    // Player movement
     if (gPlayerController)
         gPlayerController->processInput(window, deltaTime);
-    
-    // Weapon input
-    if (gWeaponSystem)
-        gWeaponSystem->processInput(window, deltaTime);
 }
 
-void printDebugInfo(const PlayerController* controller, const WeaponSystem* weapons) {
+void printDebugInfo(const PlayerController* controller) {
     static float debugTimer = 0.0f;
-    static float debugInterval = 2.0f; // Print every 2 seconds
+    static float debugInterval = 1.0f; // Print every 1 second
     
     debugTimer += 1.0f/60.0f; // Assuming ~60 FPS
     
     if (debugTimer >= debugInterval) {
-        const MovementState& movement = controller->getMovementState();
+        const MovementState& state = controller->getMovementState();
         
-        std::cout << "\n=== TRUESHOT DEBUG ===" << std::endl;
-        
-        // Movement info
-        std::cout << "MOVEMENT:" << std::endl;
-        std::cout << "  Speed: " << (int)movement.speed << " units/sec" << std::endl;
-        std::cout << "  Max Speed: " << (int)movement.maxSpeed << " units/sec" << std::endl;
-        std::cout << "  Bhop Combo: " << movement.consecutiveHops << std::endl;
-        std::cout << "  On Ground: " << (movement.onGround ? "YES" : "NO") << std::endl;
-        
-        // Weapon info
-        if (weapons && weapons->getCurrentWeapon()) {
-            const auto* weapon = weapons->getCurrentWeapon();
-            const auto& weaponState = weapons->getWeaponState();
-            
-            std::cout << "WEAPON: " << weapon->name << std::endl;
-            std::cout << "  Ammo: " << weaponState.currentAmmo << "/" << weaponState.reserveAmmo << std::endl;
-            std::cout << "  Spread: " << weapons->getCurrentSpread().x << "°" << std::endl;
-            std::cout << "  Recoil: (" << weaponState.currentRecoil.x << ", " << weaponState.currentRecoil.y << ")" << std::endl;
-            std::cout << "  ADS: " << (weaponState.adsProgress * 100.0f) << "%" << std::endl;
-            std::cout << "  State: " << (int)weaponState.state << std::endl;
+        std::cout << "=== STRAFE DEBUG ===" << std::endl;
+        std::cout << "Speed: " << (int)state.speed << " units/sec" << std::endl;
+        std::cout << "Max Speed: " << (int)state.maxSpeed << " units/sec" << std::endl;
+        std::cout << "Efficiency: " << (int)(state.strafeEfficiency * 100.0f) << "%" << std::endl;
+        std::cout << "Bhop Combo: " << state.consecutiveHops << std::endl;
+        std::cout << "Air Time: " << state.airTime << "s" << std::endl;
+        std::cout << "On Ground: " << (state.onGround ? "YES" : "NO") << std::endl;
+        if (state.hitWall) {
+            std::cout << "WALL HIT! Bounced." << std::endl;
         }
-        
-        std::cout << "=====================\n" << std::endl;
+        std::cout << "===================" << std::endl;
         
         debugTimer = 0.0f;
     }
 }
 
-void printControls() {
-    std::cout << "=== TRUESHOT - Tactical FPS ===" << std::endl;
-    std::cout << "\nMOVEMENT CONTROLS:" << std::endl;
-    std::cout << "  WASD - Move (strafe while turning for speed!)" << std::endl;
-    std::cout << "  SPACE - Jump/Bhop" << std::endl;
-    std::cout << "  Mouse - Look around" << std::endl;
-    
-    std::cout << "\nWEAPON CONTROLS:" << std::endl;
-    std::cout << "  Mouse1 - Fire" << std::endl;
-    std::cout << "  Mouse2 - Aim Down Sights (ADS)" << std::endl;
-    std::cout << "  R - Reload" << std::endl;
-    std::cout << "  1-5 - Switch weapons:" << std::endl;
-    std::cout << "    1 - Glock-18" << std::endl;
-    std::cout << "    2 - Desert Eagle" << std::endl;
-    std::cout << "    3 - AK-47" << std::endl;
-    std::cout << "    4 - M4A4" << std::endl;
-    std::cout << "    5 - AWP" << std::endl;
-    
-    std::cout << "\nTIPS:" << std::endl;
-    std::cout << "  • Strafe jump for speed (A/D + mouse turn)" << std::endl;
-    std::cout << "  • Crouch reduces spread" << std::endl;
-    std::cout << "  • Moving increases spread" << std::endl;
-    std::cout << "  • ADS for better accuracy" << std::endl;
-    std::cout << "  • Learn recoil patterns for spray control!" << std::endl;
-    
-    std::cout << "\nESC - Exit" << std::endl;
-    std::cout << "==============================\n" << std::endl;
-}
-
 int main() {
-    // Print controls first
-    printControls();
-    
     // Initialisation de GLFW
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW\n";
@@ -141,7 +90,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Création de la fenêtre
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "TrueShot - Tactical FPS", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "TrueShot - Physics System", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window\n";
         glfwTerminate();
@@ -164,15 +113,11 @@ int main() {
     // OpenGL options
     glEnable(GL_DEPTH_TEST);
 
-    // Création de la caméra et du controller
+    // Création de la caméra et du controller avec nouveau système physique
     FPSCamera camera(glm::vec3(0.0f, Physics::PLAYER_HEIGHT, 3.0f));
     PlayerController playerController(&camera);
-    WeaponSystem weaponSystem(&camera, &playerController);
-    
-    // Set global pointers
     gCamera = &camera;
     gPlayerController = &playerController;
-    gWeaponSystem = &weaponSystem;
 
     // Shaders
     Shader shader("shaders/basic.vert", "shaders/basic.frag");
@@ -209,9 +154,9 @@ int main() {
 
     glBindVertexArray(0);
 
-    // Targets pour tir (cubes colorés)
+    // Cube : VAO/VBO/EBO (target pour movement test)
     float cubeVertices[] = {
-        // positions             // couleurs (différentes faces)
+        // positions             // couleurs
         -0.5f,  0.5f,  0.5f,     1.0f, 0.0f, 0.0f,  // Front-top-left (rouge)
          0.5f,  0.5f,  0.5f,     0.0f, 1.0f, 0.0f,  // Front-top-right (vert)
          0.5f, -0.5f,  0.5f,     0.0f, 0.0f, 1.0f,  // Front-bottom-right (bleu)
@@ -255,48 +200,31 @@ int main() {
 
     glBindVertexArray(0);
 
-    // Positions de cubes/targets pour tester le tir
-    glm::vec3 targetPositions[] = {
-        glm::vec3(0.0f, 1.0f, -10.0f),   // Target proche
-        glm::vec3(5.0f, 1.5f, -15.0f),   // Target à droite
-        glm::vec3(-5.0f, 1.5f, -15.0f),  // Target à gauche
-        glm::vec3(0.0f, 2.0f, -25.0f),   // Target loin en hauteur
-        glm::vec3(10.0f, 1.0f, -20.0f),  // Target très à droite
-        glm::vec3(-10.0f, 1.0f, -20.0f), // Target très à gauche
-        glm::vec3(0.0f, 0.5f, -35.0f),   // Target très loin
-        glm::vec3(3.0f, 3.0f, -12.0f),   // Target en hauteur
+    // Positions de cubes pour tester le movement
+    glm::vec3 cubePositions[] = {
+        glm::vec3(0.0f, 0.5f, -5.0f),   // Cube devant
+        glm::vec3(10.0f, 0.5f, 0.0f),   // Cube à droite
+        glm::vec3(-10.0f, 0.5f, 0.0f),  // Cube à gauche
+        glm::vec3(0.0f, 0.5f, -15.0f),  // Cube loin
+        glm::vec3(5.0f, 2.0f, -5.0f),   // Cube en l'air
     };
-    int numTargets = sizeof(targetPositions) / sizeof(targetPositions[0]);
-
-    // Crosshair simple (sera dans le HUD plus tard)
-    float crosshairVertices[] = {
-        // Ligne horizontale
-        -0.02f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-         0.02f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-        // Ligne verticale
-         0.0f, -0.02f, 0.0f, 1.0f, 1.0f, 1.0f,
-         0.0f,  0.02f, 0.0f, 1.0f, 1.0f, 1.0f
-    };
-    unsigned int crosshairVAO, crosshairVBO;
-    glGenVertexArrays(1, &crosshairVAO);
-    glGenBuffers(1, &crosshairVBO);
-
-    glBindVertexArray(crosshairVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, crosshairVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(crosshairVertices), crosshairVertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
+    int numCubes = sizeof(cubePositions) / sizeof(cubePositions[0]);
 
     // Timing
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
 
-    std::cout << "TrueShot initialized! Ready for tactical action!" << std::endl;
+    std::cout << "=== TrueShot Physics System - OPTIMIZED ===" << std::endl;
+    std::cout << "Controls:" << std::endl;
+    std::cout << "WASD - Move (try strafing while turning!)" << std::endl;
+    std::cout << "SPACE - Jump/Bhop" << std::endl;
+    std::cout << "ESC - Exit" << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "STRAFE TIPS:" << std::endl;
+    std::cout << "- Hold A/D while turning mouse for speed" << std::endl;
+    std::cout << "- Best angle: ~30 degrees" << std::endl;
+    std::cout << "- Chain jumps for bhop combo!" << std::endl;
+    std::cout << "==========================================" << std::endl;
 
     // Boucle principale
     while (!glfwWindowShouldClose(window)) {
@@ -308,12 +236,11 @@ int main() {
         // Input processing
         processInput(window, deltaTime);
         
-        // Physics & weapons update
+        // Physics update (avec fixed timestep)
         playerController.update(deltaTime);
-        weaponSystem.update(deltaTime);
 
         // Debug info
-        printDebugInfo(&playerController, &weaponSystem);
+        printDebugInfo(&playerController);
 
         // Rendu
         glClearColor(0.05f, 0.1f, 0.15f, 1.0f);
@@ -321,22 +248,13 @@ int main() {
 
         shader.use();
 
-        // Matrices de projection et vue
-        float fov = 75.0f;
-        
-        // Adjust FOV for ADS
-        if (weaponSystem.isAiming() && weaponSystem.getCurrentWeapon()) {
-            float adsFOV = fov * weaponSystem.getCurrentWeapon()->stats.adsFOVMultiplier;
-            float adsProgress = weaponSystem.getWeaponState().adsProgress;
-            fov = glm::mix(fov, adsFOV, adsProgress);
-        }
-        
-        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 200.0f);
+        // Matrices
+        glm::mat4 projection = glm::perspective(glm::radians(75.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 200.0f);
         glm::mat4 view = camera.getViewMatrix();
         shader.setMat4("projection", projection);
         shader.setMat4("view", view);
 
-        // Rendu du sol
+        // Sol
         glm::mat4 model = glm::mat4(1.0f);
         shader.setMat4("model", model);
 
@@ -344,18 +262,15 @@ int main() {
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
-        // Rendu des targets/cubes
-        for (int i = 0; i < numTargets; ++i) {
+        // Cubes de repère
+        for (int i = 0; i < numCubes; ++i) {
             glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, targetPositions[i]);
+            model = glm::translate(model, cubePositions[i]);
             
-            // Rotation lente pour les voir bouger
-            model = glm::rotate(model, (float)glfwGetTime() * 0.5f, glm::vec3(0.0f, 1.0f, 0.0f));
-            
-            // Scale différente selon la distance pour le challenge
-            float distance = glm::length(targetPositions[i]);
-            float scale = 1.0f + (distance / 50.0f); // Plus loin = plus gros
-            model = glm::scale(model, glm::vec3(scale));
+            // Rotation lente pour voir le movement
+            if (i < 4) { // Pas le cube en l'air
+                model = glm::rotate(model, (float)glfwGetTime() * 0.5f, glm::vec3(0.0f, 1.0f, 0.0f));
+            }
             
             shader.setMat4("model", model);
 
@@ -364,38 +279,10 @@ int main() {
         }
         glBindVertexArray(0);
 
-        // Crosshair simple (rendu en dernier, sans depth test)
-        glDisable(GL_DEPTH_TEST);
-        
-        model = glm::mat4(1.0f);
-        // Position le crosshair au centre de l'écran
-        glm::vec3 cameraPos = playerController.getPosition();
-        glm::vec3 cameraForward = camera.getForward();
-        model = glm::translate(model, cameraPos + cameraForward * 2.0f);
-        
-        shader.setMat4("model", model);
-
-        glBindVertexArray(crosshairVAO);
-        glLineWidth(2.0f);
-        glDrawArrays(GL_LINES, 0, 4);
-        glBindVertexArray(0);
-        
-        glEnable(GL_DEPTH_TEST);
-
         // Swap et events
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    // Cleanup
-    glDeleteVertexArrays(1, &floorVAO);
-    glDeleteBuffers(1, &floorVBO);
-    glDeleteBuffers(1, &floorEBO);
-    glDeleteVertexArrays(1, &cubeVAO);
-    glDeleteBuffers(1, &cubeVBO);
-    glDeleteBuffers(1, &cubeEBO);
-    glDeleteVertexArrays(1, &crosshairVAO);
-    glDeleteBuffers(1, &crosshairVBO);
 
     glfwTerminate();
     return 0;
