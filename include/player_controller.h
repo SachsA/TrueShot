@@ -1,8 +1,10 @@
 #pragma once
 
+#include "physics_types.h"
+#include "audio_system.h"
+
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
-#include "physics_types.h"
 
 class FPSCamera;
 
@@ -22,6 +24,9 @@ public:
     glm::vec3 getVelocity() const { return m_State.velocity; }
     float getSpeed() const { return m_State.speed; }
     bool isOnGround() const { return m_State.onGround; }
+
+    // Setters
+    void setAudioSystem(AudioSystem* audioSystem) { m_AudioSystem = audioSystem; }
     
     // Debug info
     const MovementState& getMovementState() const { return m_State; }
@@ -60,6 +65,14 @@ private:
     MovementState m_State;
     MovementInput m_Input;
     FPSCamera* m_Camera;
+    AudioSystem* m_AudioSystem = nullptr;
+
+    // Pour le timing des sauts et autres mécaniques
+    float m_GameTime = 0.0f;
+
+    // Footstep tracking
+    float m_LastFootstepTime = 0.0f;
+    glm::vec3 m_LastFootstepPos{0.0f};
     
     // Fixed timestep accumulator
     float m_TimeAccumulator = 0.0f;

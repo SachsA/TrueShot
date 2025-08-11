@@ -1,12 +1,14 @@
 #pragma once
 
 #include "weapon_types.h"
+
 #include <GLFW/glfw3.h>
 #include <memory>
 #include <unordered_map>
 
 class FPSCamera;
 class PlayerController;
+class AudioSystem;
 
 class WeaponSystem {
 public:
@@ -43,6 +45,9 @@ public:
     const WeaponState& getWeaponState() const { return m_WeaponState; }
     glm::vec2 getCurrentSpread() const;
     glm::vec2 getCurrentRecoil() const { return m_WeaponState.currentRecoil; }
+
+    // Audio integration
+    void setAudioSystem(AudioSystem* audioSystem) { m_AudioSystem = audioSystem; }
     
     // Debug info
     void printDebugInfo() const;
@@ -81,6 +86,8 @@ private:
     // External references
     FPSCamera* m_Camera;
     PlayerController* m_Player;
+    // Optional audio system for sound effects
+    AudioSystem* m_AudioSystem = nullptr;
     
     // Current weapon
     std::unique_ptr<Weapons::WeaponConfig> m_CurrentWeapon;

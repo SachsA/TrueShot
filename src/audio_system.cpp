@@ -260,6 +260,27 @@ void AudioSystem::onWeaponFire(const std::string& weaponName, const glm::vec3& p
     }
 }
 
+void AudioSystem::onWeaponDraw(const std::string& weaponName, const glm::vec3& position) {
+    // Play weapon fire draw
+    std::string drawSound = weaponName + "_draw";
+    int sourceId = playSound(drawSound, position, 1.0f);
+    
+    if (sourceId != -1) {
+        AudioSource* source = getAudioSource(sourceId);
+        if (source) {
+            source->category = Audio::AudioCategory::WEAPONS;
+            source->priority = Audio::Priority::HIGH;
+            source->settings3D.minDistance = 5.0f;
+            source->settings3D.maxDistance = 150.0f;
+        }
+    }
+    
+    if (m_DebugVisualization) {
+        std::cout << "🔫 " << weaponName << " drew at (" 
+                  << position.x << ", " << position.y << ", " << position.z << ")" << std::endl;
+    }
+}
+
 void AudioSystem::onWeaponReload(const std::string& weaponName, const glm::vec3& position, 
                                 const std::string& reloadPhase) {
     std::string reloadSound = weaponName + "_reload_" + reloadPhase;

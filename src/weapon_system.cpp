@@ -1,6 +1,8 @@
 #include "weapon_system.h"
 #include "fps_camera.h"
 #include "player_controller.h"
+#include "audio_system.h"
+
 #include <algorithm>
 #include <iostream>
 #include <random>
@@ -101,6 +103,10 @@ bool WeaponSystem::equipWeapon(const std::string& weaponName) {
     
     changeWeaponState(Weapons::WeaponState::DRAWING);
     
+    if (m_CurrentWeapon && m_AudioSystem) {
+        m_AudioSystem->onWeaponDraw(m_CurrentWeapon->name, m_Player->getPosition());
+    }
+
     std::cout << "Equipped: " << m_CurrentWeapon->name << " (" 
               << m_WeaponState.currentAmmo << "/" << m_WeaponState.reserveAmmo << ")" << std::endl;
     
@@ -159,6 +165,16 @@ void WeaponSystem::fire() {
     // Perform raycast
     glm::vec3 cameraPos = m_Camera ? glm::vec3(0) : glm::vec3(0); // Get actual camera position
     HitResult hit = performRaycast(cameraPos, shotDirection);
+
+    // Audio feedback
+    if (m_AudioSystem) {
+        m_AudioSystem->onWeaponFire(m_CurrentWeapon->name, m_Player->getPosition());
+        
+        if (hit.hit) {
+            Audio::SurfaceMaterial material = Audio::SurfaceMaterial::CONCRETE; // Default
+            m_AudioSystem->onBulletImpact(hit.hitPoint, material);
+        }
+    }
     
     // Add recoil
     addRecoil();
@@ -382,6 +398,11 @@ void WeaponSystem::startReload() {
     changeWeaponState(Weapons::WeaponState::RELOADING);
     m_WeaponState.reloadStartTime = m_GameTime;
     
+    // Audio feedback
+    if (m_AudioSystem) {
+        m_AudioSystem->onWeaponReload(m_CurrentWeapon->name, m_Player->getPosition(), "start");
+    }
+
     // Determine reload time
     float reloadTime = m_WeaponState.chamberedRound ? 
         m_CurrentWeapon->stats.tacticalReloadTime : 

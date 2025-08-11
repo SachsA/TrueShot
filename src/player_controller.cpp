@@ -1,5 +1,6 @@
 #include "player_controller.h"
 #include "fps_camera.h"
+
 #include <algorithm>
 #include <iostream>
 #include <cmath>
@@ -8,9 +9,13 @@ PlayerController::PlayerController(FPSCamera* camera)
     : m_Camera(camera) {
     m_State.position = glm::vec3(0.0f, Physics::PLAYER_HEIGHT, 3.0f);
     m_Camera->setPosition(m_State.position);
+    m_GameTime = 0.0f;
+    m_LastFootstepPos = m_State.position;
 }
 
 void PlayerController::update(float deltaTime) {
+    m_GameTime += deltaTime;
+
     // Update input timing
     updateInputTiming(deltaTime);
     
@@ -84,6 +89,46 @@ void PlayerController::updatePhysics(float deltaTime) {
     
     // Update ground state
     updateGroundState();
+
+    // Footstep audio
+    if (m_AudioSystem && m_State.onGround) {
+        float distanceMoved = glm::length(m_State.position - m_LastFootstepPos);
+        float timeSinceLastStep = m_GameTime - m_LastFootstepTime;
+        
+        // Calculate footstep interval based on speed
+        float stepDistance = 1.5f;  // Base step distance
+        if (m_State.speed > 200.0f) {
+            stepDistance = 1.0f;  // Running
+        } else if (m_State.speed < 100.0f) {
+            stepDistance = 2.0f;  // Walking/crouching
+        }
+        
+        if (distanceMoved >= stepDistance && timeSinceLastStep > 0.1f) {
+            Audio::SurfaceMaterial surface = Audio::SurfaceMaterial::CONCRETE;
+            
+            // Simple surface detection based on position
+            if (m_State.position.y <= Physics::PLAYER_HEIGHT + 0.1f) {
+                surface = Audio::SurfaceMaterial::CONCRETE;  // On ground
+            }
+            
+            m_AudioSystem->onFootstep(m_State.position, surface, m_State.speed, true);
+            
+            m_LastFootstepTime = m_GameTime;
+            m_LastFootstepPos = m_State.position;
+        }
+    }
+    
+    // Jump audio
+    static bool wasOnGround = true;
+    if (m_AudioSystem && !wasOnGround && m_State.onGround) {
+        // Just landed
+        float impactForce = std::min(1.0f, abs(m_State.previousVelocity.y) / 300.0f);
+        m_AudioSystem->onLand(m_State.position, impactForce, true);
+    } else if (m_AudioSystem && wasOnGround && !m_State.onGround && m_State.velocity.y > 100.0f) {
+        // Just jumped
+        m_AudioSystem->onJump(m_State.position, true);
+    }
+    wasOnGround = m_State.onGround;
     
     // Handle jump avec timing optimisé
     if (m_State.wishJump) {

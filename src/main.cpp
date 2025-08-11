@@ -1,18 +1,23 @@
+#include "shader.h"
+#include "fps_camera.h"
+#include "player_controller.h"
+#include "weapon_system.h"
+#include "physics_types.h"
+#include "audio_system.h"
+
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "shader.h"
-#include "fps_camera.h"
-#include "player_controller.h"
-#include "weapon_system.h"
-#include "physics_types.h"
 
 // Settings
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
+
+// Audio system
+AudioSystem* gAudioSystem = nullptr;
 
 // Global camera/controller/weapons
 FPSCamera* gCamera = nullptr;
@@ -59,6 +64,39 @@ void processInput(GLFWwindow* window, float deltaTime) {
     // Weapon input
     if (gWeaponSystem)
         gWeaponSystem->processInput(window, deltaTime);
+
+    // Audio controls
+    if (gAudioSystem) {
+        static bool plusPressed = false, minusPressed = false;
+        static bool mPressed = false, nPressed = false;
+        
+        // Volume control
+        bool currentPlus = glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS || 
+                          glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS;
+        bool currentMinus = glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS || 
+                           glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS;
+        
+        if (currentPlus && !plusPressed) {
+            float vol = std::min(1.0f, gAudioSystem->getMasterVolume() + 0.1f);
+            gAudioSystem->setMasterVolume(vol);
+            std::cout << "Master Volume: " << (vol * 100.0f) << "%" << std::endl;
+        }
+        if (currentMinus && !minusPressed) {
+            float vol = std::max(0.0f, gAudioSystem->getMasterVolume() - 0.1f);
+            gAudioSystem->setMasterVolume(vol);
+            std::cout << "Master Volume: " << (vol * 100.0f) << "%" << std::endl;
+        }
+        
+        // Debug toggle
+        bool currentM = glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS;
+        if (currentM && !mPressed) {
+            gAudioSystem->toggleDebugVisualization();
+        }
+        
+        plusPressed = currentPlus;
+        minusPressed = currentMinus;
+        mPressed = currentM;
+    }
 }
 
 void printDebugInfo(const PlayerController* controller, const WeaponSystem* weapons) {
@@ -115,6 +153,11 @@ void printControls() {
     std::cout << "    3 - AK-47" << std::endl;
     std::cout << "    4 - M4A4" << std::endl;
     std::cout << "    5 - AWP" << std::endl;
+
+    std::cout << "\nAUDIO CONTROLS:" << std::endl;
+    std::cout << "  + / - - Master volume" << std::endl;
+    std::cout << "  M - Toggle audio debug info" << std::endl;
+    std::cout << "  N - Toggle own footsteps" << std::endl;
     
     std::cout << "\nTIPS:" << std::endl;
     std::cout << "  • Strafe jump for speed (A/D + mouse turn)" << std::endl;
@@ -168,11 +211,19 @@ int main() {
     FPSCamera camera(glm::vec3(0.0f, Physics::PLAYER_HEIGHT, 3.0f));
     PlayerController playerController(&camera);
     WeaponSystem weaponSystem(&camera, &playerController);
+    AudioSystem audioSystem;
     
     // Set global pointers
     gCamera = &camera;
     gPlayerController = &playerController;
     gWeaponSystem = &weaponSystem;
+    gAudioSystem = &audioSystem;
+
+    // Initialize audio system
+    if (!audioSystem.initialize()) {
+        std::cerr << "Failed to initialize audio system" << std::endl;
+    }
+    weaponSystem.setAudioSystem(&audioSystem);
 
     // Shaders
     Shader shader("shaders/basic.vert", "shaders/basic.frag");
@@ -308,9 +359,12 @@ int main() {
         // Input processing
         processInput(window, deltaTime);
         
-        // Physics & weapons update
+        // Physics/weapons/audio update
         playerController.update(deltaTime);
         weaponSystem.update(deltaTime);
+        audioSystem.update(deltaTime);
+
+        audioSystem.setListenerFromCamera(&camera, &playerController);
 
         // Debug info
         printDebugInfo(&playerController, &weaponSystem);
@@ -396,6 +450,7 @@ int main() {
     glDeleteBuffers(1, &cubeEBO);
     glDeleteVertexArrays(1, &crosshairVAO);
     glDeleteBuffers(1, &crosshairVBO);
+    audioSystem.shutdown();
 
     glfwTerminate();
     return 0;
