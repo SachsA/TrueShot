@@ -8,6 +8,7 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(unofficial-enet CONFIG REQUIRED)
 
 # Find include directories
 include_directories(
@@ -34,6 +35,7 @@ target_link_libraries(${PROJECT_NAME}
     OpenGL::GL 
     glad::glad
     glm::glm
+    unofficial::enet::enet
 )
 
 # Import shaders
@@ -41,3 +43,6 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders
 )
+
+# Add CmakeLists for network module
+add_subdirectory(network_module)
