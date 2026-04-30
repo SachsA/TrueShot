@@ -73,7 +73,12 @@ private:
     // Footstep tracking
     float m_LastFootstepTime = 0.0f;
     glm::vec3 m_LastFootstepPos{0.0f};
-    
+
     // Fixed timestep accumulator
     float m_TimeAccumulator = 0.0f;
+
+    // Per-instance state (was previously stored as method-local statics
+    // — broken if more than one PlayerController exists).
+    bool  m_PrevOnGround     = true;
+    float m_GroundTime       = 0.0f;
 };

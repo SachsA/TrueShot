@@ -1,48 +1,41 @@
 @echo off
-echo Building TrueShot with vcpkg...
+:: Build & run TrueShot on Windows.
+:: Looks for a vcpkg toolchain in common locations or %VCPKG_ROOT%.
+setlocal EnableDelayedExpansion
 
-:: Try to find vcpkg toolchain file
-set VCPKG_ROOT=
-for %%d in ("%ProgramFiles%\vcpkg", "%LOCALAPPDATA%\vcpkg", "%USERPROFILE%\vcpkg", "C:\vcpkg", "D:\vcpkg") do (
+if not defined BUILD_TYPE set "BUILD_TYPE=Release"
+if not defined BUILD_DIR  set "BUILD_DIR=build"
+
+set "VCPKG_TOOLCHAIN="
+set "CANDIDATES=%VCPKG_ROOT%;%ProgramFiles%\vcpkg;%LOCALAPPDATA%\vcpkg;%USERPROFILE%\vcpkg;C:\vcpkg;D:\vcpkg"
+
+for %%d in ("%CANDIDATES:;=" "%") do (
     if exist "%%~d\scripts\buildsystems\vcpkg.cmake" (
-        set VCPKG_ROOT=%%~d
-        goto :found_vcpkg
+        set "VCPKG_TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=%%~d\scripts\buildsystems\vcpkg.cmake"
+        echo Found vcpkg at: %%~d
+        goto :have_vcpkg
     )
 )
+echo [warning] vcpkg toolchain not found. CMake may fail to find dependencies.
 
-:found_vcpkg
-if "%VCPKG_ROOT%"=="" (
-    echo Warning: Could not automatically find vcpkg installation
-    set VCPKG_TOOLCHAIN=
-) else (
-    set VCPKG_TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake"
-    echo Found vcpkg at: %VCPKG_ROOT%
-)
-
-if not exist build mkdir build
-cd build
-
-echo Configuring with CMake...
-cmake .. %VCPKG_TOOLCHAIN%
-
-if %errorlevel% neq 0 (
+:have_vcpkg
+echo [1/3] Configuring TrueShot (%BUILD_TYPE%)...
+cmake -S . -B "%BUILD_DIR%" %VCPKG_TOOLCHAIN% -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+if errorlevel 1 (
     echo CMake configuration failed!
     pause
     exit /b 1
 )
 
-echo Building Debug...
-cmake --build . --config Debug
-
-if %errorlevel% neq 0 (
+echo [2/3] Building...
+cmake --build "%BUILD_DIR%" --config %BUILD_TYPE% --parallel
+if errorlevel 1 (
     echo Build failed!
     pause
     exit /b 1
 )
 
-echo Build successful!
-echo Running game...
-cd Debug
-TrueShot.exe
-
+echo [3/3] Running...
+"%BUILD_DIR%\bin\%BUILD_TYPE%\TrueShot.exe"
+if errorlevel 1 "%BUILD_DIR%\bin\TrueShot.exe"
 pause

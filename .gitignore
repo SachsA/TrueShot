@@ -1,44 +1,47 @@
-# Prerequisites
-*.d
+# ----- Build artefacts -----
+build/
+out/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+CMakeUserPresets.json
+compile_commands.json
 
-# Compiled Object files
-*.slo
-*.lo
+# Compiled object & link files
+*.d
 *.o
 *.obj
-
-# Precompiled Headers
+*.slo
+*.lo
 *.gch
 *.pch
-
-# Linker files
 *.ilk
-
-# Debugger Files
 *.pdb
-
-# Compiled Dynamic libraries
 *.so
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
 *.lai
 *.la
 *.a
 *.lib
-
-# Executables
 *.exe
 *.out
 *.app
-
-# debug information files
 *.dwo
 
-# build directories
-build/
+# ----- IDE / editor -----
+.vscode/.browse.*
+.vscode/ipch/
+.idea/
+*.swp
+*.swo
+*~
+
+# ----- OS junk -----
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ----- Project artefacts -----
+*.log
+*.bin

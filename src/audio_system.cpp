@@ -435,15 +435,15 @@ void AudioSystem::setMasterVolume(float volume) {
 }
 
 void AudioSystem::setCategoryVolume(Audio::AudioCategory category, float volume) {
-    int index = static_cast<int>(category);
-    if (index >= 0 && index < m_Listener.categoryVolumes.size()) {
+    const size_t index = static_cast<size_t>(category);
+    if (index < m_Listener.categoryVolumes.size()) {
         m_Listener.categoryVolumes[index] = std::clamp(volume, 0.0f, 1.0f);
     }
 }
 
 float AudioSystem::getCategoryVolume(Audio::AudioCategory category) const {
-    int index = static_cast<int>(category);
-    if (index >= 0 && index < m_Listener.categoryVolumes.size()) {
+    const size_t index = static_cast<size_t>(category);
+    if (index < m_Listener.categoryVolumes.size()) {
         return m_Listener.categoryVolumes[index];
     }
     return 1.0f;
@@ -656,9 +656,10 @@ void AudioSystem::limitActiveSources() {
             return a.second < b.second;
         });
     
-    // Remove lowest priority sources
-    int toRemove = m_ActiveSources.size() - MAX_SOURCES + 5; // Remove 5 to give some headroom
-    for (int i = 0; i < toRemove && i < sources.size(); ++i) {
+    // Remove lowest priority sources (5 extra for headroom).
+    const size_t excess   = m_ActiveSources.size() - static_cast<size_t>(MAX_SOURCES);
+    const size_t toRemove = std::min(excess + 5, sources.size());
+    for (size_t i = 0; i < toRemove; ++i) {
         stopSound(sources[i].first);
     }
 }
@@ -722,10 +723,12 @@ void AudioSystem::applyDopplerEffect(AudioSource& source) {
     float dopplerShift = (speedOfSound + relativeSpeed) / speedOfSound;
     dopplerShift = std::clamp(dopplerShift, 0.5f, 2.0f); // Reasonable limits
     
-    // Apply to pitch
-    float finalPitch = source.pitch * dopplerShift * source.settings3D.dopplerFactor;
-    
-    // In real implementation: alSourcef(source.alSourceId, AL_PITCH, finalPitch);
+    // Apply to pitch (TODO: forward to OpenAL once the source has a backend handle).
+    // Reference implementation:
+    //   float finalPitch = source.pitch * dopplerShift * source.settings3D.dopplerFactor;
+    //   alSourcef(source.alSourceId, AL_PITCH, finalPitch);
+    (void)source;
+    (void)dopplerShift;
 }
 
 void AudioSystem::applyOcclusion(AudioSource& source) {

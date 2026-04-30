@@ -9,6 +9,7 @@
 class FPSCamera;
 class PlayerController;
 class AudioSystem;
+class GameWorld;
 
 class WeaponSystem {
 public:
@@ -17,9 +18,14 @@ public:
 
     // Main update loop
     void update(float deltaTime);
-    
+
     // Input processing
     void processInput(GLFWwindow* window, float deltaTime);
+
+    // Hook the world so that fire() does real hit detection against
+    // alive targets. Optional — if unset, fire() still works but
+    // never registers a hit.
+    void setGameWorld(GameWorld* world) { m_World = world; }
     
     // Weapon management
     bool equipWeapon(const std::string& weaponName);
@@ -88,6 +94,8 @@ private:
     PlayerController* m_Player;
     // Optional audio system for sound effects
     AudioSystem* m_AudioSystem = nullptr;
+    // Optional game world used for hit detection
+    GameWorld*  m_World = nullptr;
     
     // Current weapon
     std::unique_ptr<Weapons::WeaponConfig> m_CurrentWeapon;

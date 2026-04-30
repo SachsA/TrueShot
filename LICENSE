@@ -1,0 +1,35 @@
+TrueShot — Proprietary License
+Copyright (c) 2024–2026 Alexandre Sachs. All rights reserved.
+
+This software and its associated source code, documentation, assets, and
+binaries (collectively, the "Software") are the exclusive property of
+Alexandre Sachs (the "Author").
+
+1. NO LICENSE GRANTED
+   No license, express or implied, is granted to any person or entity to
+   use, copy, modify, merge, publish, distribute, sublicense, sell, lease,
+   or otherwise exploit the Software, in whole or in part, without the
+   prior written consent of the Author.
+
+2. NO REVERSE ENGINEERING
+   You may not reverse engineer, disassemble, decompile, or otherwise
+   attempt to derive the source code of any binary form of the Software,
+   except to the extent expressly permitted by applicable law.
+
+3. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+
+4. THIRD-PARTY COMPONENTS
+   The Software depends on third-party libraries (GLFW, GLAD, GLM, ENet,
+   etc.) which are governed by their own licenses. Those licenses apply
+   only to the corresponding third-party components, not to the rest of
+   the Software.
+
+5. CONTACT
+   For licensing or commercial inquiries, please contact the Author.

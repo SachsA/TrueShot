@@ -2,8 +2,9 @@
 #include "fps_camera.h"
 
 #include <algorithm>
-#include <iostream>
 #include <cmath>
+#include <cstdlib>
+#include <iostream>
 
 PlayerController::PlayerController(FPSCamera* camera)
     : m_Camera(camera) {
@@ -118,17 +119,14 @@ void PlayerController::updatePhysics(float deltaTime) {
         }
     }
     
-    // Jump audio
-    static bool wasOnGround = true;
-    if (m_AudioSystem && !wasOnGround && m_State.onGround) {
-        // Just landed
-        float impactForce = std::min(1.0f, abs(m_State.previousVelocity.y) / 300.0f);
+    // Jump / land audio events (per-instance state, was a function-local static).
+    if (m_AudioSystem && !m_PrevOnGround && m_State.onGround) {
+        const float impactForce = std::min(1.0f, std::abs(m_State.previousVelocity.y) / 300.0f);
         m_AudioSystem->onLand(m_State.position, impactForce, true);
-    } else if (m_AudioSystem && wasOnGround && !m_State.onGround && m_State.velocity.y > 100.0f) {
-        // Just jumped
+    } else if (m_AudioSystem && m_PrevOnGround && !m_State.onGround && m_State.velocity.y > 100.0f) {
         m_AudioSystem->onJump(m_State.position, true);
     }
-    wasOnGround = m_State.onGround;
+    m_PrevOnGround = m_State.onGround;
     
     // Handle jump avec timing optimisé
     if (m_State.wishJump) {
@@ -248,14 +246,15 @@ void PlayerController::handleGroundMovement(float deltaTime) {
     glm::vec3 wishDir = calculateWishDirection();
     float wishSpeed = Physics::MAX_GROUND_SPEED;
     
-    // Reset consecutive hops if we stay on ground too long
+    // Reset consecutive hops if we stay on ground too long.
     if (m_State.wasOnGround && m_State.onGround) {
-        static float groundTime = 0.0f;
-        groundTime += deltaTime;
-        if (groundTime > 0.2f) { // 200ms tolerance
+        m_GroundTime += deltaTime;
+        if (m_GroundTime > 0.2f) { // 200ms tolerance
             m_State.consecutiveHops = 0;
-            groundTime = 0.0f;
+            m_GroundTime = 0.0f;
         }
+    } else {
+        m_GroundTime = 0.0f;
     }
     
     // Apply friction si pas de mouvement

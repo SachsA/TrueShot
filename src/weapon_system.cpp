@@ -2,6 +2,7 @@
 #include "fps_camera.h"
 #include "player_controller.h"
 #include "audio_system.h"
+#include "game_world.h"
 
 #include <algorithm>
 #include <iostream>
@@ -35,8 +36,17 @@ void WeaponSystem::update(float deltaTime) {
     updateADS(deltaTime);
     updateWeaponSway(deltaTime);
     updateWeaponBob(deltaTime);
-    applyViewPunch();
-    
+
+    // View punch (screen shake) — driven by real frame time.
+    {
+        const float spring  = 15.0f;
+        const float damping = 8.0f;
+        const glm::vec2 springForce  = -m_ViewPunch * spring;
+        const glm::vec2 dampingForce = -m_ViewPunchVelocity * damping;
+        m_ViewPunchVelocity += (springForce + dampingForce) * deltaTime;
+        m_ViewPunch         += m_ViewPunchVelocity * deltaTime;
+    }
+
     // Reset per-frame input
     m_Input.reset();
 }
@@ -146,82 +156,102 @@ bool WeaponSystem::canFire() const {
 
 void WeaponSystem::fire() {
     if (!canFire()) return;
-    
+
     // Update timing
     m_WeaponState.lastFireTime = m_GameTime;
     m_WeaponState.lastShotTime = m_GameTime;
     m_WeaponState.shotsFired++;
-    
+
     // Consume ammo
     m_WeaponState.currentAmmo--;
     if (m_WeaponState.currentAmmo == 0) {
         m_WeaponState.chamberedRound = false;
     }
-    
-    // Calculate shot direction with spread
-    glm::vec3 forward = m_Camera->getForward();
-    glm::vec3 shotDirection = applySpreadToDirection(forward);
-    
-    // Perform raycast
-    glm::vec3 cameraPos = m_Camera ? glm::vec3(0) : glm::vec3(0); // Get actual camera position
-    HitResult hit = performRaycast(cameraPos, shotDirection);
+
+    // Track shots fired for accuracy stats.
+    if (m_World) m_World->registerShot();
+
+    // Calculate shot origin (eye) and direction with spread.
+    const glm::vec3 origin    = m_Camera ? m_Camera->getPosition() : glm::vec3(0.0f);
+    const glm::vec3 forward   = m_Camera ? m_Camera->getForward()  : glm::vec3(0.0f, 0.0f, -1.0f);
+    const glm::vec3 direction = applySpreadToDirection(forward);
+
+    HitResult hit = performRaycast(origin, direction);
+
+    // Resolve damage against the real world.
+    if (hit.hit && m_World) {
+        // performRaycast() now uses the world directly, so the index it
+        // resolved is encoded in hit.targetId.
+        if (hit.targetId >= 0) {
+            m_World->registerHit();
+            const bool killed = m_World->damageTarget(hit.targetId, hit.damage);
+            if (killed) {
+                std::cout << "[Score +" << m_World->targets()[hit.targetId].scoreValue
+                          << "] Target down — total score: " << m_World->score() << '\n';
+            }
+        }
+    }
 
     // Audio feedback
     if (m_AudioSystem) {
         m_AudioSystem->onWeaponFire(m_CurrentWeapon->name, m_Player->getPosition());
-        
         if (hit.hit) {
-            Audio::SurfaceMaterial material = Audio::SurfaceMaterial::CONCRETE; // Default
-            m_AudioSystem->onBulletImpact(hit.hitPoint, material);
+            m_AudioSystem->onBulletImpact(hit.hitPoint, Audio::SurfaceMaterial::CONCRETE);
         }
     }
-    
-    // Add recoil
+
+    // Recoil
     addRecoil();
-    
-    // Add view punch for screen shake
-    float punchStrength = m_CurrentWeapon->stats.recoilMagnitude * 0.5f;
+
+    // View punch (random kick); scaled in update loop with real dt.
+    const float punchStrength = m_CurrentWeapon->stats.recoilMagnitude * 0.5f;
     m_ViewPunchVelocity.y += punchStrength * (0.8f + 0.4f * (rand() / float(RAND_MAX)));
     m_ViewPunchVelocity.x += punchStrength * 0.3f * ((rand() / float(RAND_MAX)) - 0.5f);
-    
-    // Debug output
-    std::cout << "FIRE! " << m_CurrentWeapon->name 
-              << " | Ammo: " << m_WeaponState.currentAmmo 
-              << " | Shots: " << m_WeaponState.shotsFired
+
+    // Debug
+    std::cout << "FIRE! " << m_CurrentWeapon->name
+              << " | Ammo: " << m_WeaponState.currentAmmo
               << " | Spread: " << calculateCurrentSpread() << "°";
-    
     if (hit.hit) {
         std::cout << " | HIT at " << hit.distance << "m for " << hit.damage << " dmg";
         if (hit.isHeadshot) std::cout << " (HEADSHOT!)";
     }
-    std::cout << std::endl;
-    
+    std::cout << '\n';
+
     // Auto-reload when empty
     if (m_WeaponState.currentAmmo == 0 && m_WeaponState.reserveAmmo > 0) {
         startReload();
     }
 }
 
-HitResult WeaponSystem::performRaycast(const glm::vec3& origin, const glm::vec3& direction) const {
+HitResult WeaponSystem::performRaycast(const glm::vec3& origin,
+                                       const glm::vec3& direction) const {
     HitResult result;
-    
-    // Simple raycast - in a real game you'd use a physics engine
-    // For now, simulate hitting something at random distance
-    float maxRange = m_CurrentWeapon->stats.maxRange;
-    float hitDistance = maxRange * 0.5f + (rand() / float(RAND_MAX)) * maxRange * 0.5f;
-    
-    if (hitDistance <= maxRange) {
-        result.hit = true;
-        result.hitPoint = origin + direction * hitDistance;
-        result.distance = hitDistance;
-        result.damage = calculateDamage(result);
-        
-        // Random hit location for demo
-        int location = rand() % 7;
-        result.hitLocation = static_cast<HitResult::HitLocation>(location);
-        result.isHeadshot = (result.hitLocation == HitResult::HEAD);
-    }
-    
+    if (!m_CurrentWeapon) return result;
+
+    const float maxRange = m_CurrentWeapon->stats.maxRange;
+
+    if (!m_World) return result;
+
+    float     dist = 0.0f;
+    glm::vec3 hp{0.0f};
+    const int idx = m_World->raycastTargets(origin, direction, maxRange, dist, hp);
+    if (idx < 0) return result;
+
+    // Determine hit location from where the ray hit the AABB:
+    // top third = head, bottom third = legs, middle = chest.
+    const Target& t   = m_World->targets()[idx];
+    const float relY  = (hp.y - t.position.y) / (t.halfExtents.y * t.scale);
+    if      (relY >  0.55f) result.hitLocation = HitResult::HEAD;
+    else if (relY < -0.45f) result.hitLocation = HitResult::LEG_LEFT;
+    else                    result.hitLocation = HitResult::CHEST;
+
+    result.hit        = true;
+    result.hitPoint   = hp;
+    result.distance   = dist;
+    result.targetId   = idx;
+    result.isHeadshot = (result.hitLocation == HitResult::HEAD);
+    result.damage     = calculateDamage(result);
     return result;
 }
 
@@ -378,16 +408,20 @@ glm::vec3 WeaponSystem::applySpreadToDirection(const glm::vec3& baseDirection) c
     std::uniform_real_distribution<float> angleDist(0.0f, 2.0f * 3.14159265359f);
     std::uniform_real_distribution<float> radiusDist(0.0f, 1.0f);
     
-    float angle = angleDist(gen);
-    float radius = sqrt(radiusDist(gen)) * spreadRad; // sqrt for uniform distribution
-    
-    // Create perpendicular vectors
-    glm::vec3 up = abs(baseDirection.y) < 0.9f ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
-    glm::vec3 right = glm::normalize(glm::cross(baseDirection, up));
+    const float angle  = angleDist(gen);
+    const float radius = std::sqrt(radiusDist(gen)) * spreadRad; // sqrt for uniform distribution
+
+    // Build a basis perpendicular to the shot direction.
+    glm::vec3 up = (std::fabs(baseDirection.y) < 0.9f) ? glm::vec3(0.0f, 1.0f, 0.0f)
+                                                       : glm::vec3(1.0f, 0.0f, 0.0f);
+    const glm::vec3 right = glm::normalize(glm::cross(baseDirection, up));
     up = glm::normalize(glm::cross(right, baseDirection));
-    
-    // Apply spread
-    glm::vec3 spreadOffset = right * (cos(angle) * radius) + up * (sin(angle) * radius);
+
+    // Apply spread within a cone. Cast to float because std::cos/std::sin
+    // return double for float inputs depending on overload resolution.
+    const float c = std::cos(angle) * radius;
+    const float s = std::sin(angle) * radius;
+    const glm::vec3 spreadOffset = right * c + up * s;
     return glm::normalize(baseDirection + spreadOffset);
 }
 
@@ -505,20 +539,8 @@ void WeaponSystem::updateWeaponBob(float deltaTime) {
 }
 
 void WeaponSystem::applyViewPunch() {
-    // Update view punch physics
-    float spring = 15.0f;
-    float damping = 0.8f;
-    
-    glm::vec2 springForce = -m_ViewPunch * spring;
-    glm::vec2 dampingForce = -m_ViewPunchVelocity * damping;
-    
-    m_ViewPunchVelocity += (springForce + dampingForce) * (1.0f/60.0f); // Assume 60fps
-    m_ViewPunch += m_ViewPunchVelocity * (1.0f/60.0f);
-    
-    // Apply minimal punch to camera for subtle screen shake
-    if (m_Camera && glm::length(m_ViewPunch) > 0.01f) {
-        m_Camera->processMouseMovement(m_ViewPunch.x * 0.1f, m_ViewPunch.y * 0.1f);
-    }
+    // Deprecated: integration is now done inline in update() with the
+    // real frame deltaTime. Kept as a no-op to preserve the public API.
 }
 
 void WeaponSystem::changeWeaponState(Weapons::WeaponState newState) {

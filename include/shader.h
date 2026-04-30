@@ -2,33 +2,26 @@
 
 #pragma once
 
-#ifdef _WIN32
-    #define NOMINMAX
-    #include <windows.h>
-#endif
-
-#include <glad/glad.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
 
+// GLSL shader program loader. Owns one OpenGL program object.
 class Shader {
 public:
-    unsigned int ID;
-    
+    unsigned int ID = 0;
+
     Shader(const char* vertexPath, const char* fragmentPath);
     ~Shader();
-    
+
+    Shader(const Shader&)            = delete;
+    Shader& operator=(const Shader&) = delete;
+
     void use();
-    void setMat4(const std::string &name, const glm::mat4 &mat) const;
-    void setVec3(const std::string &name, const glm::vec3 &value) const;
-    void setFloat(const std::string &name, float value) const;
-    void setInt(const std::string &name, int value) const;
+    void setMat4 (const std::string& name, const glm::mat4& mat)   const;
+    void setVec3 (const std::string& name, const glm::vec3& value) const;
+    void setFloat(const std::string& name, float value)            const;
+    void setInt  (const std::string& name, int value)              const;
 
 private:
-    void checkCompileErrors(unsigned int shader, std::string type);
+    void checkCompileErrors(unsigned int shader, const std::string& type);
 };
