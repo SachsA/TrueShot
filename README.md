@@ -53,6 +53,8 @@ prototype).
 - **Real hit detection** — ray-vs-AABB raycasting against an `GameWorld` of
   scoring targets, with location-based damage (head / chest / legs).
 - **Score & accuracy tracking** — kills, hits, shots fired, accuracy %.
+- **HUD overlay** — Dear ImGui panels for score, ammo, accuracy, speed, FPS
+  and bhop combo. Toggle with `F1`.
 - **Audio system** — OpenAL-ready architecture with 3D sources, footsteps,
   weapon cues and reverb zones.
 - **Network module** — ENet-based prototype with input snapshots, server
@@ -76,6 +78,7 @@ TrueShot/
 │   ├─ weapon_types.h
 │   ├─ audio_system.h       # 3D audio, footsteps, reverb
 │   ├─ audio_types.h
+│   ├─ hud.h                # ImGui-based in-game overlay
 │   └─ shader.h
 ├─ src/                     # implementations
 ├─ shaders/                 # GLSL (basic.vert / basic.frag)
@@ -109,7 +112,7 @@ git clone https://github.com/microsoft/vcpkg.git
 ./vcpkg/bootstrap-vcpkg.sh        # or .\vcpkg\bootstrap-vcpkg.bat on Windows
 export VCPKG_ROOT="$PWD/vcpkg"    # set %VCPKG_ROOT% on Windows
 
-"$VCPKG_ROOT/vcpkg" install glfw3 glm "glad[gl-api-33]" enet
+"$VCPKG_ROOT/vcpkg" install glfw3 glm "glad[gl-api-33]" enet "imgui[glfw-binding,opengl3-binding]"
 ```
 
 ### Clone
@@ -166,6 +169,7 @@ The build copies `shaders/` next to the executable automatically.
 | Switch weapon | `1` Glock · `2` Deagle · `3` AK-47 · `4` M4A4 · `5` AWP |
 | Master volume | `+` / `-` |
 | Toggle audio debug | `M` |
+| Toggle HUD | `F1` |
 | Quit | `Esc` |
 
 ## Architecture overview
@@ -193,7 +197,7 @@ The build copies `shaders/` next to the executable automatically.
 
 ## Roadmap
 
-- [ ] Proper HUD (TTF text rendering for ammo / HP / score)
+- [x] In-game HUD (Dear ImGui — score, ammo, accuracy, speed, FPS)
 - [ ] Wire the ENet network module into the main game loop
 - [ ] Lobby + match flow (5v5 round structure)
 - [ ] Map loading (BSP / glTF), AI bots

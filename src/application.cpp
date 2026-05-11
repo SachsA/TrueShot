@@ -10,12 +10,14 @@
 #include "renderer.h"
 #include "game_world.h"
 #include "physics_types.h"
+#include "hud.h"
 
 #include <algorithm>
 #include <iostream>
 
 Application::Application()  = default;
 Application::~Application() {
+    if (m_Hud)   m_Hud  ->shutdown();
     if (m_Audio) m_Audio->shutdown();
     if (m_Window) {
         glfwDestroyWindow(m_Window);
@@ -92,6 +94,13 @@ bool Application::init(int width, int height, const char* title) {
         return false;
     }
 
+    // HUD goes last — it relies on a live GL context and window.
+    m_Hud = std::make_unique<Hud>();
+    if (!m_Hud->initialize(m_Window)) {
+        std::cerr << "[App] HUD init failed (continuing without HUD)\n";
+        m_Hud.reset();
+    }
+
     printControls();
     return true;
 }
@@ -147,6 +156,13 @@ void Application::processInput(float deltaTime) {
 
     if (m_Player)  m_Player ->processInput(m_Window, deltaTime);
     if (m_Weapons) m_Weapons->processInput(m_Window, deltaTime);
+
+    // HUD toggle (F1, edge-triggered).
+    const bool f1Now = glfwGetKey(m_Window, GLFW_KEY_F1) == GLFW_PRESS;
+    if (m_Hud && f1Now && !m_F1Prev) {
+        m_Hud->toggleVisible();
+    }
+    m_F1Prev = f1Now;
 
     // Audio volume + debug toggles (edge-triggered).
     if (!m_Audio) return;
@@ -229,8 +245,18 @@ int Application::run() {
 
         printDebugInfo();
 
+        // ImGui requires its NewFrame() call BEFORE the rest of the frame
+        // produces any draw commands that affect GL state we share.
+        if (m_Hud) m_Hud->beginFrame();
+
         if (m_Renderer && m_Camera && m_World && m_Weapons && m_Player) {
             m_Renderer->render(*m_Camera, *m_World, *m_Weapons, *m_Player, currentFrame);
+        }
+
+        // HUD is drawn after the 3D scene so it composites on top.
+        if (m_Hud && m_World && m_Weapons && m_Player) {
+            m_Hud->render(*m_World, *m_Weapons, *m_Player, deltaTime);
+            m_Hud->endFrame();
         }
 
         glfwSwapBuffers(m_Window);

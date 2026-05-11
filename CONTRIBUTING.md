@@ -26,7 +26,7 @@ and submit changes.
 Install dependencies once:
 
 ```bash
-"$VCPKG_ROOT/vcpkg" install glfw3 glm "glad[gl-api-33]" enet
+"$VCPKG_ROOT/vcpkg" install glfw3 glm "glad[gl-api-33]" enet "imgui[glfw-binding,opengl3-binding]"
 ```
 
 ### Windows toolchain setup

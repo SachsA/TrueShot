@@ -10,6 +10,7 @@ class WeaponSystem;
 class AudioSystem;
 class Renderer;
 class GameWorld;
+class Hud;
 
 // Top-level owner of every subsystem. Replaces the previous global
 // state in main.cpp. Lifetime: construct, init(), run(), then destruct.
@@ -47,6 +48,7 @@ private:
     std::unique_ptr<AudioSystem>      m_Audio;
     std::unique_ptr<GameWorld>        m_World;
     std::unique_ptr<Renderer>         m_Renderer;
+    std::unique_ptr<Hud>              m_Hud;
 
     // Mouse state
     bool  m_FirstMouse = true;
@@ -56,6 +58,9 @@ private:
     // Debug / timing
     float m_DebugTimer    = 0.0f;
     float m_DebugInterval = 2.0f;
+
+    // Edge-trigger storage for F1 (toggle HUD)
+    bool  m_F1Prev = false;
 
     // Cached settings
     int  m_Width  = 1280;

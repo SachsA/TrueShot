@@ -32,6 +32,7 @@ find_package(OpenGL                  REQUIRED)
 find_package(glad             CONFIG REQUIRED)
 find_package(glm              CONFIG REQUIRED)
 find_package(unofficial-enet  CONFIG REQUIRED)
+find_package(imgui            CONFIG REQUIRED)
 
 # ---------------------------------------------------------------- target
 add_executable(${PROJECT_NAME}
@@ -45,6 +46,7 @@ add_executable(${PROJECT_NAME}
     src/shader.cpp
     src/weapon_system.cpp
     src/audio_system.cpp
+    src/hud.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -57,6 +59,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glad::glad
     glm::glm
     unofficial::enet::enet
+    imgui::imgui
 )
 
 # ---------------------------------------------------------------- warnings
