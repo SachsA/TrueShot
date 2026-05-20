@@ -24,6 +24,8 @@ public:
     glm::vec3 getVelocity() const { return m_State.velocity; }
     float getSpeed() const { return m_State.speed; }
     bool isOnGround() const { return m_State.onGround; }
+    bool isCrouching() const { return m_Input.crouch || m_CurrentEyeHeight < (Physics::PLAYER_HEIGHT - 0.05f); }
+    float getEyeHeight() const { return m_CurrentEyeHeight; }
 
     // Setters
     void setAudioSystem(AudioSystem* audioSystem) { m_AudioSystem = audioSystem; }
@@ -81,4 +83,7 @@ private:
     // — broken if more than one PlayerController exists).
     bool  m_PrevOnGround     = true;
     float m_GroundTime       = 0.0f;
+
+    // Crouch — smoothly interpolated eye height.
+    float m_CurrentEyeHeight = Physics::PLAYER_HEIGHT;
 };

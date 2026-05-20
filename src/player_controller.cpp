@@ -19,16 +19,29 @@ void PlayerController::update(float deltaTime) {
 
     // Update input timing
     updateInputTiming(deltaTime);
-    
+
     // Fixed timestep physics
     m_TimeAccumulator += deltaTime;
-    
+
     while (m_TimeAccumulator >= Physics::FIXED_TIMESTEP) {
         updatePhysics(Physics::FIXED_TIMESTEP);
         m_TimeAccumulator -= Physics::FIXED_TIMESTEP;
     }
-    
-    m_Camera->setPosition(m_State.position);
+
+    // Smoothly interpolate eye height between standing and crouched.
+    // (TODO: when collision is generalised, also check a ceiling raycast
+    // before allowing un-crouch.)
+    const float targetHeight = m_Input.crouch ? Physics::CROUCH_HEIGHT
+                                              : Physics::PLAYER_HEIGHT;
+    const float t = std::min(1.0f, deltaTime * Physics::CROUCH_TRANSITION_SPEED);
+    m_CurrentEyeHeight = glm::mix(m_CurrentEyeHeight, targetHeight, t);
+
+    // Camera sits at (feet + eye height). The physics keeps m_State.position
+    // at PLAYER_HEIGHT, so we offset down by the difference.
+    glm::vec3 eyePos = m_State.position;
+    eyePos.y += (m_CurrentEyeHeight - Physics::PLAYER_HEIGHT);
+    m_Camera->setPosition(eyePos);
+
     m_Input.reset();
 }
 
@@ -58,10 +71,16 @@ void PlayerController::processInput(GLFWwindow* window, float deltaTime) {
     m_Input.jumpPressed = jumpCurrently && !wasJumping;
     m_Input.jumpReleased = !jumpCurrently && wasJumping;
     m_Input.jump = jumpCurrently;
-    
+
     if (m_Input.jumpPressed) {
         m_State.wishJump = true;
     }
+
+    // Crouch — held while either Ctrl or C is down.
+    m_Input.crouch =
+        glfwGetKey(window, GLFW_KEY_LEFT_CONTROL)  == GLFW_PRESS ||
+        glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS ||
+        glfwGetKey(window, GLFW_KEY_C)             == GLFW_PRESS;
 }
 
 void PlayerController::processMouseInput(float xOffset, float yOffset) {
@@ -244,8 +263,15 @@ float PlayerController::calculateStrafeEfficiency() const {
 
 void PlayerController::handleGroundMovement(float deltaTime) {
     glm::vec3 wishDir = calculateWishDirection();
-    float wishSpeed = Physics::MAX_GROUND_SPEED;
-    
+    float wishSpeed  = Physics::MAX_GROUND_SPEED;
+    float accel      = Physics::GROUND_ACCELERATION;
+
+    // Crouching cuts top speed and acceleration on the ground.
+    if (m_Input.crouch) {
+        wishSpeed *= Physics::CROUCH_MOVE_MULTIPLIER;
+        accel     *= Physics::CROUCH_ACCEL_MULTIPLIER;
+    }
+
     // Reset consecutive hops if we stay on ground too long.
     if (m_State.wasOnGround && m_State.onGround) {
         m_GroundTime += deltaTime;
@@ -256,15 +282,15 @@ void PlayerController::handleGroundMovement(float deltaTime) {
     } else {
         m_GroundTime = 0.0f;
     }
-    
+
     // Apply friction si pas de mouvement
     if (glm::length(m_Input.moveInput) < 0.1f) {
         applyFriction(deltaTime);
     }
     
-    // Accelerate
+    // Accelerate using the (possibly crouch-reduced) values.
     if (glm::length(wishDir) > 0.0f) {
-        accelerate(wishDir, wishSpeed, Physics::GROUND_ACCELERATION, deltaTime);
+        accelerate(wishDir, wishSpeed, accel, deltaTime);
     }
 }
 

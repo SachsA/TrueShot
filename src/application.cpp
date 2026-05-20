@@ -101,6 +101,9 @@ bool Application::init(int width, int height, const char* title) {
         m_Hud.reset();
     }
 
+    // Let the weapon system trigger hit-marker feedback through the HUD.
+    if (m_Hud) m_Weapons->setHud(m_Hud.get());
+
     printControls();
     return true;
 }
@@ -113,6 +116,7 @@ void Application::printControls() const {
         "MOVEMENT\n"
         "  WASD       Move (strafe-jump for speed!)\n"
         "  SPACE      Jump / Bhop\n"
+        "  CTRL / C   Crouch (slower, lower spread)\n"
         "  Mouse      Look around\n"
         "WEAPONS\n"
         "  Mouse1     Fire\n"

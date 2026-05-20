@@ -28,10 +28,16 @@ namespace Physics {
     const float FIXED_TIMESTEP = 1.0f / TICK_RATE;
     
     // Ground detection améliorée
-    const float GROUND_TRACE_DISTANCE = 2.0f;      
+    const float GROUND_TRACE_DISTANCE = 2.0f;
     const float PLAYER_HEIGHT = 1.8f;
     const float PLAYER_RADIUS = 0.3f;
     const float GROUND_TOLERANCE = 0.1f;           // Tolerance pour "on ground"
+
+    // Crouch
+    const float CROUCH_HEIGHT             = 1.25f;   // Eye height while crouched
+    const float CROUCH_TRANSITION_SPEED   = 8.0f;    // 1/sec — how fast we interp height
+    const float CROUCH_MOVE_MULTIPLIER    = 0.45f;   // Ground speed multiplier
+    const float CROUCH_ACCEL_MULTIPLIER   = 0.6f;    // Ground accel multiplier
     
     // Collision improvements
     const float WALL_BOUNCE_FACTOR = 0.8f;         // Bounce off walls
@@ -66,7 +72,7 @@ struct MovementInput {
     glm::vec2 mouseInput{0.0f};     // Mouse delta this frame
     glm::vec2 mouseDelta{0.0f};     // Smoothed mouse delta
     bool jump = false;
-    bool crouch = false;
+    bool crouch = false;            // Held this frame (Ctrl / C)
     
     // Input timing (important pour bhop)
     float jumpHoldTime = 0.0f;      // How long jump has been held

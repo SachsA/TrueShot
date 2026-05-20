@@ -45,8 +45,8 @@ prototype).
 ## Features
 
 - **Source-style movement** — strafe-jumping, bunny-hopping, fixed 64-tick
-  physics, wall bounces, friction and air-control modelled after CS-style
-  values.
+  physics, wall bounces, friction, air-control and crouch (eye-height
+  interp + reduced ground speed) modelled after CS-style values.
 - **Weapon system** — five weapons (Glock, Deagle, AK-47, M4A4, AWP) with
   their own damage, recoil patterns, fire modes, ADS times and reload
   behaviour.
@@ -162,6 +162,7 @@ The build copies `shaders/` next to the executable automatically.
 |---|---|
 | Move | `W` `A` `S` `D` |
 | Jump / bunny-hop | `Space` |
+| Crouch | `Ctrl` / `C` |
 | Look | Mouse |
 | Fire | `Mouse 1` |
 | Aim down sights | `Mouse 2` |

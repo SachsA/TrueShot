@@ -10,6 +10,7 @@ class FPSCamera;
 class PlayerController;
 class AudioSystem;
 class GameWorld;
+class Hud;
 
 class WeaponSystem {
 public:
@@ -26,6 +27,10 @@ public:
     // alive targets. Optional — if unset, fire() still works but
     // never registers a hit.
     void setGameWorld(GameWorld* world) { m_World = world; }
+
+    // Hook the HUD so fire() can trigger the on-screen hit marker.
+    // Optional — if unset, hits silently register on the world only.
+    void setHud(Hud* hud) { m_Hud = hud; }
     
     // Weapon management
     bool equipWeapon(const std::string& weaponName);
@@ -96,6 +101,8 @@ private:
     AudioSystem* m_AudioSystem = nullptr;
     // Optional game world used for hit detection
     GameWorld*  m_World = nullptr;
+    // Optional HUD for hit-marker feedback
+    Hud*        m_Hud   = nullptr;
     
     // Current weapon
     std::unique_ptr<Weapons::WeaponConfig> m_CurrentWeapon;

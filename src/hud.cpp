@@ -91,6 +91,95 @@ void Hud::render(const GameWorld&        world,
                  float                   deltaTime) {
     if (!m_Initialised || !m_Visible) return;
     drawStatsPanel(world, weapons, player, deltaTime);
+    drawHitMarker(deltaTime);
+}
+
+void Hud::onHit(bool headshot, bool killed) {
+    // Restart the marker animation. A "kill" overrides any earlier flag,
+    // a "headshot" overrides a body shot, and a body shot only sticks
+    // if nothing better is already showing.
+    constexpr float kMarkerDuration = 0.35f;
+    m_HitMarkerTimer = kMarkerDuration;
+
+    if (killed) {
+        m_LastHitWasKill = true;
+        m_LastHitWasHead = headshot;
+    } else if (headshot) {
+        m_LastHitWasHead = true;
+        m_LastHitWasKill = false;
+    } else {
+        // Don't downgrade an existing head/kill flag mid-animation.
+        if (!m_LastHitWasHead && !m_LastHitWasKill) {
+            // body shot — no special flag
+        }
+    }
+}
+
+void Hud::drawHitMarker(float deltaTime) {
+    if (m_HitMarkerTimer <= 0.0f) return;
+
+    m_HitMarkerTimer -= deltaTime;
+    if (m_HitMarkerTimer <= 0.0f) {
+        m_HitMarkerTimer  = 0.0f;
+        m_LastHitWasHead  = false;
+        m_LastHitWasKill  = false;
+        return;
+    }
+
+    // Fade from full opacity at the start to zero by the end.
+    constexpr float kMarkerDuration = 0.35f;
+    const float t     = std::clamp(m_HitMarkerTimer / kMarkerDuration, 0.0f, 1.0f);
+    const float alpha = t; // linear fade
+
+    // Pick colour: red kill > yellow head > white body.
+    int cr = 255, cg = 255, cb = 255;
+    if (m_LastHitWasKill) {
+        cr = 230; cg = 60;  cb = 60;
+    } else if (m_LastHitWasHead) {
+        cr = 245; cg = 210; cb = 70;
+    }
+    const ImU32 colour = IM_COL32(cr, cg, cb, int(alpha * 230.0f));
+
+    // Marker grows briefly on the first frame, then settles — a small
+    // "punch" feel without needing a dedicated animation curve.
+    const float growth = 1.0f + (1.0f - t) * 0.25f;
+
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    const ImVec2 centre(vp->WorkPos.x + vp->WorkSize.x * 0.5f,
+                        vp->WorkPos.y + vp->WorkSize.y * 0.5f);
+
+    // Four diagonal ticks around the centre. A short gap leaves the
+    // crosshair visible underneath.
+    const float gap    = 6.0f;
+    const float length = 10.0f * growth;
+    const float thick  = m_LastHitWasKill ? 3.0f : 2.0f;
+
+    ImGui::SetNextWindowPos(vp->WorkPos, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(vp->WorkSize, ImGuiCond_Always);
+    ImGui::SetNextWindowBgAlpha(0.0f);
+    ImGui::Begin("##hitmarker",
+                 nullptr,
+                 ImGuiWindowFlags_NoDecoration |
+                 ImGuiWindowFlags_NoMove |
+                 ImGuiWindowFlags_NoSavedSettings |
+                 ImGuiWindowFlags_NoFocusOnAppearing |
+                 ImGuiWindowFlags_NoNav |
+                 ImGuiWindowFlags_NoInputs |
+                 ImGuiWindowFlags_NoBringToFrontOnFocus);
+
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+
+    // Top-left, top-right, bottom-left, bottom-right ticks.
+    dl->AddLine(ImVec2(centre.x - gap - length, centre.y - gap - length),
+                ImVec2(centre.x - gap,          centre.y - gap),          colour, thick);
+    dl->AddLine(ImVec2(centre.x + gap + length, centre.y - gap - length),
+                ImVec2(centre.x + gap,          centre.y - gap),          colour, thick);
+    dl->AddLine(ImVec2(centre.x - gap - length, centre.y + gap + length),
+                ImVec2(centre.x - gap,          centre.y + gap),          colour, thick);
+    dl->AddLine(ImVec2(centre.x + gap + length, centre.y + gap + length),
+                ImVec2(centre.x + gap,          centre.y + gap),          colour, thick);
+
+    ImGui::End();
 }
 
 void Hud::endFrame() {
@@ -193,7 +282,7 @@ void Hud::drawStatsPanel(const GameWorld&        world,
     {
         const MovementState& mv = player.getMovementState();
 
-        const ImVec2 panelSize(220.0f, 72.0f);
+        const ImVec2 panelSize(220.0f, 96.0f);
         ImGui::SetNextWindowPos(
             ImVec2(vp->WorkPos.x + 16.0f,
                    vp->WorkPos.y + vp->WorkSize.y - panelSize.y - 16.0f),
@@ -212,6 +301,9 @@ void Hud::drawStatsPanel(const GameWorld&        world,
         ImGui::Text("Speed   %4d u/s", int(mv.speed));
         ImGui::Text("Bhop    x%d", mv.consecutiveHops);
         ImGui::Text("Ground  %s", mv.onGround ? "yes" : "no");
+        if (player.isCrouching()) {
+            ImGui::TextColored(ImVec4(0.6f, 0.8f, 1.0f, 1.0f), "CROUCH");
+        }
         ImGui::End();
     }
 }

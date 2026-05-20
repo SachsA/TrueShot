@@ -3,6 +3,7 @@
 #include "player_controller.h"
 #include "audio_system.h"
 #include "game_world.h"
+#include "hud.h"
 
 #include <algorithm>
 #include <iostream>
@@ -189,6 +190,9 @@ void WeaponSystem::fire() {
                 std::cout << "[Score +" << m_World->targets()[hit.targetId].scoreValue
                           << "] Target down — total score: " << m_World->score() << '\n';
             }
+
+            // On-screen feedback (white tick / yellow head / red kill).
+            if (m_Hud) m_Hud->onHit(hit.isHeadshot, killed);
         }
     }
 
@@ -378,10 +382,12 @@ float WeaponSystem::calculateCurrentSpread() const {
         if (!m_Player->isOnGround()) {
             spread += m_CurrentWeapon->stats.jumpingSpread;
         }
+
+        // Crouching bonus (crouchingSpread is a *negative* value in weapon configs).
+        if (m_Player->isCrouching()) {
+            spread += m_CurrentWeapon->stats.crouchingSpread;
+        }
     }
-    
-    // Crouching bonus (implement crouching in player controller)
-    // spread += m_CurrentWeapon->stats.crouchingSpread;
     
     // ADS reduction
     if (m_WeaponState.isAiming) {

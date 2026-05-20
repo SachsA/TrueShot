@@ -52,15 +52,29 @@ public:
     bool isVisible() const        { return m_Visible; }
     void toggleVisible()          { m_Visible = !m_Visible; }
 
+    // Notify the HUD that the player just landed a hit.
+    // Triggers the on-screen hit marker (coloured by severity):
+    //   - white   = body shot
+    //   - yellow  = headshot
+    //   - red     = killing blow (overrides the above)
+    void onHit(bool headshot, bool killed);
+
 private:
     void drawStatsPanel(const GameWorld&        world,
                         const WeaponSystem&     weapons,
                         const PlayerController& player,
                         float                   deltaTime);
 
+    void drawHitMarker(float deltaTime);
+
     bool  m_Initialised = false;
     bool  m_Visible     = true;
 
     // Smoothed FPS (low-pass) so the number doesn't flicker each frame.
     float m_SmoothedFps = 0.0f;
+
+    // Hit marker state (counts down once a hit is registered).
+    float m_HitMarkerTimer = 0.0f;   // seconds remaining of fade-out
+    bool  m_LastHitWasHead = false;
+    bool  m_LastHitWasKill = false;
 };
