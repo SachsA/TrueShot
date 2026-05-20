@@ -59,6 +59,24 @@ echo 'export PATH="$VCPKG_ROOT:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
+### Linux toolchain setup (Debian / Ubuntu)
+
+```bash
+sudo apt update
+sudo apt install -y build-essential cmake git curl zip unzip pkg-config \
+                    libgl1-mesa-dev libx11-dev libxrandr-dev libxinerama-dev \
+                    libxcursor-dev libxi-dev libwayland-dev libxkbcommon-dev \
+                    libasound2-dev
+git clone https://github.com/microsoft/vcpkg.git ~/vcpkg
+~/vcpkg/bootstrap-vcpkg.sh
+echo 'export VCPKG_ROOT="$HOME/vcpkg"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+Steam Deck (SteamOS) : utiliser `distrobox` ou un toolbox Arch pour le
+dev confort ; le build natif fonctionne pareil que sur n'importe quel
+Linux.
+
 ## Development workflow
 
 ```bash
