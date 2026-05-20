@@ -127,6 +127,7 @@ void Application::printControls() const {
         "  + / -      Master volume\n"
         "  M          Toggle audio debug\n"
         "MISC\n"
+        "  F1         Toggle HUD\n"
         "  ESC        Quit\n"
         "==============================\n\n";
 }
