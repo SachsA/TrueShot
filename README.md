@@ -198,12 +198,14 @@ The build copies `shaders/` next to the executable automatically.
 
 ## Roadmap
 
-- [x] In-game HUD (Dear ImGui — score, ammo, accuracy, speed, FPS)
-- [ ] Wire the ENet network module into the main game loop
-- [ ] Lobby + match flow (5v5 round structure)
-- [ ] Map loading (BSP / glTF), AI bots
-- [ ] Proper asset pipeline (textures, view-models, sound banks)
-- [ ] Replay & demo system
+The current build is **Phase 0 — Fondations techniques** (single-player
+practice range). The next milestone is **Phase 1 — Netcode jouable
+(1v1 LAN)**.
+
+For the **full exhaustive roadmap** — network, anti-cheat, maps, art
+direction, audio production, backend, e-sport, legal, marketing — see
+[**ROADMAP.md**](ROADMAP.md). Twenty phases, ~400 atomic tasks, with
+execution mode (solo / freelance / team) and budget estimates for each.
 
 ## Contributing
 
