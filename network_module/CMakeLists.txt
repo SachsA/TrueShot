@@ -20,6 +20,13 @@ target_link_libraries(trueshot_network
     PUBLIC unofficial::enet::enet
 )
 
+# ENet on Windows depends on the Winsock + Windows Multimedia APIs
+# (WSAStartup / socket / htons + timeGetTime), but the vcpkg config
+# doesn't propagate those transitive system libs. Link them ourselves.
+if(WIN32)
+    target_link_libraries(trueshot_network PUBLIC ws2_32 winmm)
+endif()
+
 # ---------------------------------------------------------------- executables
 # Server.cpp / Client.cpp each define a main(), but only when the matching
 # TRUESHOT_SERVER / TRUESHOT_CLIENT macro is defined. Wire that in here so

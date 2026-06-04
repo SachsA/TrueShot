@@ -62,6 +62,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     imgui::imgui
 )
 
+# ENet on Windows pulls in Winsock + winmm transitively. The vcpkg
+# config doesn't propagate these, so we add them explicitly.
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ws2_32 winmm)
+endif()
+
 # ---------------------------------------------------------------- warnings
 # Goal: same effective strictness on every compiler.
 #  * /W4 on MSVC is roughly equivalent to -Wall -Wextra on GCC/Clang.
