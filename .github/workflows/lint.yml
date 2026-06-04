@@ -53,10 +53,9 @@ jobs:
     name: editorconfig-checker
     runs-on: ubuntu-latest
     timeout-minutes: 3
-    # The editorconfig-checker action is still on Node 20 (no v3 yet).
-    # Forcing Node 24 here keeps it running until the upstream catches up.
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+    # Note: editorconfig-checker is still on Node 20 — GitHub will warn
+    # about deprecation. Harmless until the upstream releases a Node 24
+    # version. No action needed from us.
     steps:
       - uses: actions/checkout@v5
       - uses: editorconfig-checker/action-editorconfig-checker@v2
