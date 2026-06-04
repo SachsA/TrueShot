@@ -63,8 +63,17 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 # ---------------------------------------------------------------- warnings
+# Goal: same effective strictness on every compiler.
+#  * /W4 on MSVC is roughly equivalent to -Wall -Wextra on GCC/Clang.
+#  * We silence "unused parameter" everywhere — overloaded interface
+#    methods naturally have unused params and they don't indicate a bug.
 if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /permissive-)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        /W4
+        /permissive-
+        /wd4100   # C4100 unreferenced formal parameter — matches GCC -Wno-unused-parameter
+        /wd4458   # C4458 declaration hides class member — too noisy on getters/setters
+    )
     if(TRUESHOT_WARNINGS_AS_ERRORS)
         target_compile_options(${PROJECT_NAME} PRIVATE /WX)
     endif()

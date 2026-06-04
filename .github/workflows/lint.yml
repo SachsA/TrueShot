@@ -11,6 +11,9 @@ concurrency:
   group: lint-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   # -----------------------------------------------------------------
   # clang-format — fails if any tracked C++ file is not formatted.

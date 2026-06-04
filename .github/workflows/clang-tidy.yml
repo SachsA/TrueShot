@@ -10,6 +10,9 @@ concurrency:
   group: clang-tidy-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   clang-tidy:
     runs-on: ubuntu-latest
