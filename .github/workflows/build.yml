@@ -53,7 +53,6 @@ jobs:
 
       # ---------------------------------------------------------------
       # vcpkg expects its GHA cache token through these env vars.
-      # The github-script step exports them so vcpkg picks them up.
       - name: Export vcpkg cache tokens
         uses: actions/github-script@v7
         with:
@@ -74,14 +73,12 @@ jobs:
             libxkbcommon-dev libasound2-dev xvfb
 
       # ---------------------------------------------------------------
-      # Ninja — robust install with the dedicated action that puts it
-      # on PATH and validates the install on every OS.
+      # Ninja — robust install on the 3 OS.
       - name: Install Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5
 
       # ---------------------------------------------------------------
-      # MSVC environment must be loaded before CMake on Windows so that
-      # cl.exe / link.exe are on PATH for Ninja.
+      # MSVC env so cl.exe / link.exe are visible to Ninja.
       - name: Set up MSVC (Windows)
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
@@ -89,13 +86,35 @@ jobs:
           arch: x64
 
       # ---------------------------------------------------------------
+      # Bootstrap our OWN vcpkg into the workspace.
+      # The runner-provided vcpkg is a shallow clone and doesn't have
+      # the history needed to resolve the baseline pinned in vcpkg.json.
+      # Cloning fresh here = reproducible builds, full git history,
+      # no dependency on whatever the runner happens to ship.
+      - name: Bootstrap vcpkg (Linux / macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git "$GITHUB_WORKSPACE/vcpkg"
+          "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> "$GITHUB_ENV"
+
+      - name: Bootstrap vcpkg (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git "$env:GITHUB_WORKSPACE\vcpkg"
+          & "$env:GITHUB_WORKSPACE\vcpkg\bootstrap-vcpkg.bat" -disableMetrics
+          Add-Content -Path $env:GITHUB_ENV -Value "VCPKG_ROOT=$env:GITHUB_WORKSPACE\vcpkg"
+
+      # ---------------------------------------------------------------
       - name: Show toolchain versions
         shell: bash
         run: |
           cmake --version
           ninja --version
-          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT"
-          "$VCPKG_INSTALLATION_ROOT/vcpkg" version || true
+          echo "VCPKG_ROOT=$VCPKG_ROOT"
+          "$VCPKG_ROOT/vcpkg" version || true
           c++ --version || cl 2>&1 | head -1 || true
 
       # ---------------------------------------------------------------
@@ -105,7 +124,7 @@ jobs:
           cmake -S . -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
             -DTRUESHOT_WARNINGS_AS_ERRORS=ON
 
       # ---------------------------------------------------------------
