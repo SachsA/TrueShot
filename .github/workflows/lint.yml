@@ -11,9 +11,6 @@ concurrency:
   group: lint-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
 jobs:
   # -----------------------------------------------------------------
   # clang-format — fails if any tracked C++ file is not formatted.
@@ -24,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # We use the pip-distributed clang-format wheel because:
       #  * it pins to an exact patch version (so CI and local dev never drift),
@@ -57,8 +54,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v4
-      - uses: editorconfig-checker/action-editorconfig-checker@v2
+      - uses: actions/checkout@v5
+      - uses: editorconfig-checker/action-editorconfig-checker@v3
 
   # -----------------------------------------------------------------
   # markdownlint — quick sanity on README / ROADMAP / CONTRIBUTING.
@@ -70,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: DavidAnson/markdownlint-cli2-action@v18
         with:
           globs: |
@@ -86,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install yamllint
         run: pip install yamllint
       - name: Run yamllint
