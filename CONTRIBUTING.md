@@ -144,14 +144,18 @@ enforced by branch protection on `main` (set up in GitHub repo settings).
 
 ### Reproducing CI locally
 
-If the CI fails, reproduce locally before pushing again:
+If the CI fails, reproduce locally before pushing again. To eliminate any
+chance of version drift between your machine and the CI, install the
+**exact pinned version of clang-format** the CI uses:
 
 ```bash
+pip install --user "clang-format==18.1.8"
+
 # Format check (same command CI runs)
-clang-format-18 --dry-run --Werror --style=file $(git ls-files '*.cpp' '*.h' '*.hpp')
+clang-format --dry-run --Werror --style=file $(git ls-files '*.cpp' '*.h' '*.hpp')
 
 # Auto-fix formatting
-clang-format-18 -i $(git ls-files '*.cpp' '*.h' '*.hpp')
+clang-format -i $(git ls-files '*.cpp' '*.h' '*.hpp')
 
 # Full strict build (will fail on any warning)
 cmake --preset strict

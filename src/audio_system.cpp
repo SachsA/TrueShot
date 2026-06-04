@@ -194,9 +194,8 @@ int AudioSystem::playSound(const std::string& soundName, const glm::vec3& positi
 
     // Debug output
     if (m_DebugVisualization) {
-        std::cout << "[AUDIO] Playing: " << soundName << " | Pos: (" << position.x << ", "
-                  << position.y << ", " << position.z << ")"
-                  << " | Dist: " << distance << "m"
+        std::cout << "[AUDIO] Playing: " << soundName << " | Pos: " << position.x << ","
+                  << position.y << "," << position.z << " | Dist: " << distance << "m"
                   << " | Vol: " << calculatedVolume << std::endl;
     }
 

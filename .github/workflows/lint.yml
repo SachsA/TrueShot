@@ -26,25 +26,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install clang-format
+      # We use the pip-distributed clang-format wheel because:
+      #  * it pins to an exact patch version (so CI and local dev never drift),
+      #  * the apt clang-format package varies subtly across Ubuntu point
+      #    releases on whitespace heuristics that have bitten us before.
+      - name: Install clang-format (pinned)
         run: |
-          sudo apt-get update
-          # Try a specific version first, fall back to whatever is available.
-          sudo apt-get install -y clang-format-18 \
-            || sudo apt-get install -y clang-format
-
-      - name: Resolve clang-format binary
-        id: cf
-        run: |
-          for bin in clang-format-18 clang-format-17 clang-format-16 clang-format; do
-            if command -v "$bin" >/dev/null 2>&1; then
-              echo "bin=$bin" >> "$GITHUB_OUTPUT"
-              "$bin" --version
-              exit 0
-            fi
-          done
-          echo "::error::no clang-format binary found"
-          exit 1
+          python -m pip install --upgrade pip
+          python -m pip install "clang-format==18.1.8"
+          clang-format --version
 
       - name: Run clang-format --dry-run --Werror
         run: |
@@ -56,8 +46,8 @@ jobs:
             echo "No C++ files to check."
             exit 0
           fi
-          echo "Checking ${#FILES[@]} files with ${{ steps.cf.outputs.bin }}..."
-          ${{ steps.cf.outputs.bin }} --dry-run --Werror --style=file "${FILES[@]}"
+          echo "Checking ${#FILES[@]} files..."
+          clang-format --dry-run --Werror --style=file "${FILES[@]}"
 
   # -----------------------------------------------------------------
   # EditorConfig — verify tabs/spaces/EOLs match .editorconfig.
