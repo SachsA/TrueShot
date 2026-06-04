@@ -73,6 +73,8 @@ if(MSVC)
         /permissive-
         /wd4100   # C4100 unreferenced formal parameter — matches GCC -Wno-unused-parameter
         /wd4458   # C4458 declaration hides class member — too noisy on getters/setters
+        /wd4267   # C4267 size_t -> int narrowing — GCC ignores it under -Wno-conversion
+        /wd4244   # C4244 same family (float -> int loss) — pervasive in audio/anim code
     )
     if(TRUESHOT_WARNINGS_AS_ERRORS)
         target_compile_options(${PROJECT_NAME} PRIVATE /WX)

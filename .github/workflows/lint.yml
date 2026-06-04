@@ -53,9 +53,13 @@ jobs:
     name: editorconfig-checker
     runs-on: ubuntu-latest
     timeout-minutes: 3
+    # The editorconfig-checker action is still on Node 20 (no v3 yet).
+    # Forcing Node 24 here keeps it running until the upstream catches up.
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - uses: actions/checkout@v5
-      - uses: editorconfig-checker/action-editorconfig-checker@v3
+      - uses: editorconfig-checker/action-editorconfig-checker@v2
 
   # -----------------------------------------------------------------
   # markdownlint — quick sanity on README / ROADMAP / CONTRIBUTING.
