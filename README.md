@@ -9,7 +9,7 @@
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=cplusplus&logoColor=white)](https://en.cppreference.com/w/cpp/17)
 [![CMake](https://img.shields.io/badge/CMake-3.16%2B-064F8C?logo=cmake&logoColor=white)](https://cmake.org/)
 [![OpenGL](https://img.shields.io/badge/OpenGL-3.3%20Core-5586A4?logo=opengl&logoColor=white)](https://www.opengl.org/)
-[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)]()
+![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 [![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
 
 </div>
@@ -66,7 +66,7 @@ prototype).
 
 ## Project structure
 
-```
+```text
 TrueShot/
 ├─ include/                 # public headers (one .h per subsystem)
 │   ├─ application.h        # top-level lifecycle (init / run / shutdown)
@@ -177,7 +177,7 @@ The build copies `shaders/` next to the executable automatically.
 
 ## Architecture overview
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────┐
 │                       Application                            │
 │  Owns the window, callbacks, main loop and every subsystem.  │

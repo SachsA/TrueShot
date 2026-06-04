@@ -173,11 +173,11 @@ void Application::processInput(float deltaTime) {
     if (!m_Audio) return;
     static bool plusPrev = false, minusPrev = false, mPrev = false;
 
-    const bool plusNow  = glfwGetKey(m_Window, GLFW_KEY_KP_ADD) == GLFW_PRESS ||
-                          glfwGetKey(m_Window, GLFW_KEY_EQUAL) == GLFW_PRESS;
+    const bool plusNow = glfwGetKey(m_Window, GLFW_KEY_KP_ADD) == GLFW_PRESS ||
+                         glfwGetKey(m_Window, GLFW_KEY_EQUAL) == GLFW_PRESS;
     const bool minusNow = glfwGetKey(m_Window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS ||
                           glfwGetKey(m_Window, GLFW_KEY_MINUS) == GLFW_PRESS;
-    const bool mNow     = glfwGetKey(m_Window, GLFW_KEY_M) == GLFW_PRESS;
+    const bool mNow = glfwGetKey(m_Window, GLFW_KEY_M) == GLFW_PRESS;
 
     if (plusNow && !plusPrev) {
         const float v = std::min(1.0f, m_Audio->getMasterVolume() + 0.1f);

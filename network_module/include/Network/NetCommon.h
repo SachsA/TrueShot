@@ -1,19 +1,21 @@
 #pragma once
-#include <cstdint>
 #include <array>
-#include <vector>
 #include <chrono>
+#include <cstdint>
+#include <vector>
 
 namespace Net {
 
-using Tick = uint32_t;
+using Tick     = uint32_t;
 using PlayerId = uint32_t;
 
-struct Vec3 { float x,y,z; };
+struct Vec3 {
+    float x, y, z;
+};
 
 struct InputState {
     Tick tick;
-    uint32_t seq; // sequence for ordered reliable acks
+    uint32_t seq;  // sequence for ordered reliable acks
     float forward; // -1..1
     float right;   // -1..1
     bool jump;

@@ -1,21 +1,29 @@
-        #include "Network/ENetWrapper.h"
+#include "Network/ENetWrapper.h"
 #include <iostream>
 namespace Net {
 
-ENetContext::~ENetContext() { destroy(); }
+ENetContext::~ENetContext() {
+    destroy();
+}
 
 bool ENetContext::createServer(uint16_t port, size_t maxClients) {
     if (host) destroy();
     enet_address_set_host(&address, "0.0.0.0");
     address.port = port;
-    host = enet_host_create(&address, (enet_uint32)maxClients, 2, 0, 0);
-    if (!host) { std::cerr<<"ENet server create failed"<<std::endl; return false; }
+    host         = enet_host_create(&address, (enet_uint32)maxClients, 2, 0, 0);
+    if (!host) {
+        std::cerr << "ENet server create failed" << std::endl;
+        return false;
+    }
     return true;
 }
 bool ENetContext::createClient() {
     if (host) destroy();
     host = enet_host_create(nullptr, 1, 2, 0, 0);
-    if (!host) { std::cerr<<"ENet client create failed"<<std::endl; return false; }
+    if (!host) {
+        std::cerr << "ENet client create failed" << std::endl;
+        return false;
+    }
     return true;
 }
 void ENetContext::destroy() {

@@ -40,11 +40,13 @@ Install dependencies once:
 3. **CMake** — install from [cmake.org](https://cmake.org/download/) (Windows
    x64 Installer) and tick *Add CMake to the system PATH*.
 4. **vcpkg** — clone, bootstrap, then add the folder to your PATH:
+
    ```powershell
    git clone https://github.com/microsoft/vcpkg.git
    .\vcpkg\bootstrap-vcpkg.bat
    .\vcpkg\vcpkg integrate install
    ```
+
    Set `VCPKG_ROOT` in your user environment so the build scripts and
    presets find it automatically.
 

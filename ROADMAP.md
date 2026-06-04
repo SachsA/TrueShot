@@ -73,7 +73,7 @@ Chaque section est étiquetée avec un mode d'exécution :
 18. [Phase 17 — Post-launch & live ops](#phase-17--post-launch--live-ops)
 19. [Phase 18 — Juridique, légal, business](#phase-18--juridique-légal-business)
 20. [Phase 19 — Marketing & growth](#phase-19--marketing--growth)
-21. [Phase 20 — Plateformes additionnelles](#phase-20--plateformes-additionnelles)
+21. [Phase 20 — Plateformes (rappel & bonus très lointain)](#phase-20--plateformes-rappel--bonus-très-lointain)
 
 ---
 
@@ -426,7 +426,7 @@ But : 10 joueurs sur un serveur jouent un match complet avec round structure.
 > miniaudio (cross-OS).
 >
 > **Budget samples de démarrage :** 500-3 k€ pour un pack arme + footsteps
-> + UI utilisable.
+> &nbsp;+ UI utilisable.
 
 ### 5.1 — Brancher OpenAL pour de vrai
 
@@ -783,8 +783,9 @@ But : 10 joueurs sur un serveur jouent un match complet avec round structure.
 > majeur ("AC propriétaire, zéro dépendance externe").
 >
 > **Plateformes :**
-> - **Windows :** kernel driver signé (EV cert obligatoire, ~250-400 €/an
->   + signature WHQL Microsoft).
+>
+> - **Windows :** kernel driver signé (EV cert obligatoire, ~250-400 €/an,
+>   plus signature WHQL Microsoft).
 > - **macOS :** Apple interdit les kexts depuis Big Sur. Sur Mac on reste
 >   en user-mode + Endpoint Security Framework. Conséquence : **matchs
 >   compétitifs officiels Windows-only au lancement**, Mac reste autorisé
@@ -897,8 +898,8 @@ But : 10 joueurs sur un serveur jouent un match complet avec round structure.
 > tax US par état, withholding taxes).
 >
 > **Loot boxes : interdites en Belgique et Pays-Bas**, fortement encadrées
-> UK / FR. On évite les loot boxes payantes ; on fait du **direct purchase
-> + battle pass** uniquement.
+> UK / FR. On évite les loot boxes payantes ; on fait du
+> **direct purchase + battle pass** uniquement.
 
 ### 10.1 — XP & niveaux
 
@@ -1159,7 +1160,7 @@ But : 10 joueurs sur un serveur jouent un match complet avec round structure.
 > lancement (3-5 personnes minimum).
 >
 > **Plateformes :** matrice de tests OBLIGATOIRE Windows + macOS + Linux
-> + Steam Deck à chaque release. CI doit refuser un merge si un OS
+> et Steam Deck à chaque release. CI doit refuser un merge si un OS
 > casse.
 
 ### 15.1 — Tests automatisés
@@ -1233,6 +1234,7 @@ But : 10 joueurs sur un serveur jouent un match complet avec round structure.
 > Steam app. Steam Deck verified à demander activement.
 >
 > **Coûts directs :**
+>
 > - Steam Direct : 100 $ par jeu publié (récupérables après 1000 $ de revenu).
 > - Age rating (IARC gratuit pour PEGI/ESRB en général, USK Allemagne payant).
 > - Comptable : 200-1000 €/mois selon volume.
@@ -1564,8 +1566,8 @@ mais pas encore rentable.
 
 - **Bootstrap solo (toi + moi) jusqu'au 1er playable :** ~30-60 k€ (assets,
   comptable, hébergement)
-- **Pre-launch + lancement Steam :** 500 k€ - 2 M€ (équipe core 1-2 ans
-  + marketing + infra)
+- **Pre-launch + lancement Steam :** 500 k€ - 2 M€ (équipe core 1-2 ans,
+  marketing et infra inclus)
 - **Post-launch année 1-2 :** 1-3 M€/an
 - **Total cumul jusqu'au break-even :** 3-8 M€ dans un scénario
   raisonnable, 8-20 M€ dans un scénario ambitieux esport

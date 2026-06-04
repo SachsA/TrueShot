@@ -282,8 +282,8 @@ float WeaponSystem::calculateDamage(const HitResult& hit) const {
         float falloffRange = m_CurrentWeapon->stats.maxRange - m_CurrentWeapon->stats.optimalRange;
         float falloffDistance = hit.distance - m_CurrentWeapon->stats.optimalRange;
         distanceFactor        = 1.0f - (falloffDistance / falloffRange) *
-                                           (1.0f - m_CurrentWeapon->stats.minDamagePercent);
-        distanceFactor        = std::max(m_CurrentWeapon->stats.minDamagePercent, distanceFactor);
+                                    (1.0f - m_CurrentWeapon->stats.minDamagePercent);
+        distanceFactor = std::max(m_CurrentWeapon->stats.minDamagePercent, distanceFactor);
     }
 
     // Hit location multiplier
