@@ -194,8 +194,8 @@ int AudioSystem::playSound(const std::string& soundName, const glm::vec3& positi
 
     // Debug output
     if (m_DebugVisualization) {
-        std::cout << "🔊 Playing: " << soundName << " | Pos: (" << position.x << ", " << position.y
-                  << ", " << position.z << ")"
+        std::cout << "[AUDIO] Playing: " << soundName << " | Pos: (" << position.x << ", "
+                  << position.y << ", " << position.z << ")"
                   << " | Dist: " << distance << "m"
                   << " | Vol: " << calculatedVolume << std::endl;
     }
@@ -220,7 +220,7 @@ int AudioSystem::playSound2D(const std::string& soundName, float volume, float p
     source->category  = Audio::AudioCategory::UI;
 
     if (m_DebugVisualization) {
-        std::cout << "🔊 Playing 2D: " << soundName << " | Vol: " << volume << std::endl;
+        std::cout << "[AUDIO] Playing 2D: " << soundName << " | Vol: " << volume << std::endl;
     }
 
     return sourceId;
@@ -255,7 +255,7 @@ void AudioSystem::onWeaponFire(const std::string& weaponName, const glm::vec3& p
     scheduleDelayedSound(weaponName + "_brass", position, 0.2f, 0.3f);
 
     if (m_DebugVisualization) {
-        std::cout << "🔫 " << weaponName << " fired at (" << position.x << ", " << position.y
+        std::cout << "[WEAPON]" << weaponName << " fired at (" << position.x << ", " << position.y
                   << ", " << position.z << ")" << std::endl;
     }
 }
@@ -276,8 +276,8 @@ void AudioSystem::onWeaponDraw(const std::string& weaponName, const glm::vec3& p
     }
 
     if (m_DebugVisualization) {
-        std::cout << "🔫 " << weaponName << " drew at (" << position.x << ", " << position.y << ", "
-                  << position.z << ")" << std::endl;
+        std::cout << "[WEAPON]" << weaponName << " drew at (" << position.x << ", " << position.y
+                  << ", " << position.z << ")" << std::endl;
     }
 }
 
@@ -296,7 +296,7 @@ void AudioSystem::onWeaponReload(const std::string& weaponName, const glm::vec3&
     }
 
     if (m_DebugVisualization) {
-        std::cout << "🔄 " << weaponName << " reload (" << reloadPhase << ")" << std::endl;
+        std::cout << "[RELOAD]" << weaponName << " reload (" << reloadPhase << ")" << std::endl;
     }
 }
 
@@ -371,7 +371,7 @@ void AudioSystem::onFootstep(const glm::vec3& position, Audio::SurfaceMaterial s
     }
 
     if (m_DebugVisualization && !isLocalPlayer) {
-        std::cout << "👟 Footstep on " << (int)surface << " | Speed: " << movementSpeed
+        std::cout << "[FOOT] Footstep on " << (int)surface << " | Speed: " << movementSpeed
                   << std::endl;
     }
 }
@@ -416,7 +416,7 @@ void AudioSystem::stopSound(int sourceId) {
         // In real implementation: alSourceStop(it->second->alSourceId);
 
         if (m_DebugVisualization) {
-            std::cout << "⏹️ Stopped source " << sourceId << std::endl;
+            std::cout << "[STOP] Stopped source " << sourceId << std::endl;
         }
     }
 }
@@ -775,7 +775,8 @@ void AudioSystem::updateCurrentAudioZone() {
             m_Listener.currentSurface = m_CurrentZone->defaultSurface;
 
             if (m_DebugVisualization) {
-                std::cout << "🏠 Entered audio zone: " << m_CurrentZone->reverb.name << std::endl;
+                std::cout << "[ZONE] Entered audio zone: " << m_CurrentZone->reverb.name
+                          << std::endl;
             }
         }
     }
