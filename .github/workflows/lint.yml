@@ -24,23 +24,37 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install clang-format
-        run: sudo apt-get install -y clang-format-18
+        run: |
+          sudo apt-get update
+          # Try a specific version first, fall back to whatever is available.
+          sudo apt-get install -y clang-format-18 \
+            || sudo apt-get install -y clang-format
 
-      - name: Show version
-        run: clang-format-18 --version
+      - name: Resolve clang-format binary
+        id: cf
+        run: |
+          for bin in clang-format-18 clang-format-17 clang-format-16 clang-format; do
+            if command -v "$bin" >/dev/null 2>&1; then
+              echo "bin=$bin" >> "$GITHUB_OUTPUT"
+              "$bin" --version
+              exit 0
+            fi
+          done
+          echo "::error::no clang-format binary found"
+          exit 1
 
       - name: Run clang-format --dry-run --Werror
         run: |
           set -e
           # All tracked C++ headers/sources, excluding 3rd party and build dirs.
           mapfile -t FILES < <(git ls-files '*.cpp' '*.h' '*.hpp' \
-            | grep -Ev '^(build/|network_module/build/|third_party/)')
+            | grep -Ev '^(build/|network_module/build/|third_party/)' || true)
           if [ ${#FILES[@]} -eq 0 ]; then
             echo "No C++ files to check."
             exit 0
           fi
-          echo "Checking ${#FILES[@]} files..."
-          clang-format-18 --dry-run --Werror --style=file "${FILES[@]}"
+          echo "Checking ${#FILES[@]} files with ${{ steps.cf.outputs.bin }}..."
+          ${{ steps.cf.outputs.bin }} --dry-run --Werror --style=file "${FILES[@]}"
 
   # -----------------------------------------------------------------
   # EditorConfig — verify tabs/spaces/EOLs match .editorconfig.

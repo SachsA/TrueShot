@@ -4,7 +4,6 @@
   "version-string": "0.2.0",
   "description": "Tactical 5v5 FPS in C++",
   "homepage": "https://github.com/SachsA/TrueShot",
-  "license": null,
   "dependencies": [
     "glm",
     "enet",
@@ -18,5 +17,5 @@
       "features": ["glfw-binding", "opengl3-binding"]
     }
   ],
-  "builtin-baseline": "fba75d09065fcc76a25dcf386b1d00d33f5175af"
+  "builtin-baseline": "6836eb3be8734a8eafb9dd1eb0e4847e375c9270"
 }

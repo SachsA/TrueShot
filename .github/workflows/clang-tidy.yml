@@ -17,14 +17,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install toolchain
+      - name: Export vcpkg cache tokens
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Install system deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            cmake ninja-build clang-tidy-18 pkg-config \
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build pkg-config \
             libgl1-mesa-dev libx11-dev libxrandr-dev libxinerama-dev \
             libxcursor-dev libxi-dev libxext-dev libwayland-dev \
             libxkbcommon-dev libasound2-dev
+
+      - name: Install clang-tidy
+        run: |
+          sudo apt-get install -y clang-tidy-18 \
+            || sudo apt-get install -y clang-tidy
+
+      - name: Resolve clang-tidy binary
+        id: ct
+        run: |
+          for bin in clang-tidy-18 clang-tidy-17 clang-tidy-16 clang-tidy; do
+            if command -v "$bin" >/dev/null 2>&1; then
+              echo "bin=$bin" >> "$GITHUB_OUTPUT"
+              "$bin" --version
+              exit 0
+            fi
+          done
+          echo "::error::no clang-tidy binary found"
+          exit 1
 
       - name: Configure (generate compile_commands.json)
         env:
@@ -35,9 +60,13 @@ jobs:
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
 
-      - name: Run clang-tidy on changed sources
+      - name: Run clang-tidy on project sources
         run: |
           mapfile -t FILES < <(git ls-files 'src/*.cpp' \
-            | grep -Ev '^(build/|network_module/build/|third_party/)')
-          clang-tidy-18 -p build "${FILES[@]}" \
+            | grep -Ev '^(build/|network_module/build/|third_party/)' || true)
+          if [ ${#FILES[@]} -eq 0 ]; then
+            echo "No sources to check."
+            exit 0
+          fi
+          ${{ steps.ct.outputs.bin }} -p build "${FILES[@]}" \
             --warnings-as-errors='*'

@@ -1,7 +1,7 @@
 name: build
 
 # When to run: every push to main and every PR.
-# Manual trigger available via the Actions tab (workflow_dispatch).
+# Manual trigger also available via the Actions tab.
 on:
   push:
     branches: [main]
@@ -26,24 +26,19 @@ concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
 
-# Environment variables shared by every job.
+# Shared env. vcpkg's GitHub Actions cache is opt-in via VCPKG_BINARY_SOURCES.
 env:
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_bincache
-  # Make sure CMake finds vcpkg manifest in the project root.
-  VCPKG_MANIFEST_MODE: "ON"
-  # Surface compile errors quickly instead of letting CMake retry forever.
-  CMAKE_GENERATOR: Ninja
 
 jobs:
   # ===================================================================
-  # build — compile + run smoke tests on every supported OS.
+  # build — compile + smoke test on every supported OS.
   # ===================================================================
   build:
     name: build (${{ matrix.os }}, ${{ matrix.build_type }})
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false # Always run all 6 jobs, even if one fails.
+      fail-fast: false # Run every matrix entry to see all failures.
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         build_type: [Debug, Release]
@@ -57,23 +52,32 @@ jobs:
           fetch-depth: 1
 
       # ---------------------------------------------------------------
-      - name: Install Ninja + system deps (Ubuntu)
+      # vcpkg expects its GHA cache token through these env vars.
+      # The github-script step exports them so vcpkg picks them up.
+      - name: Export vcpkg cache tokens
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      # ---------------------------------------------------------------
+      # System packages required by GLFW / OpenGL on Linux.
+      - name: Install system deps (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            ninja-build pkg-config \
+            pkg-config \
             libgl1-mesa-dev libx11-dev libxrandr-dev libxinerama-dev \
             libxcursor-dev libxi-dev libxext-dev libwayland-dev \
-            libxkbcommon-dev libasound2-dev
+            libxkbcommon-dev libasound2-dev xvfb
 
-      - name: Install Ninja (macOS)
-        if: runner.os == 'macOS'
-        run: brew install ninja
-
-      - name: Install Ninja (Windows)
-        if: runner.os == 'Windows'
-        run: choco install ninja -y
+      # ---------------------------------------------------------------
+      # Ninja — robust install with the dedicated action that puts it
+      # on PATH and validates the install on every OS.
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
 
       # ---------------------------------------------------------------
       # MSVC environment must be loaded before CMake on Windows so that
@@ -85,15 +89,6 @@ jobs:
           arch: x64
 
       # ---------------------------------------------------------------
-      # vcpkg comes pre-installed on every GitHub runner; we just
-      # enable the GitHub Actions binary cache for it.
-      - name: Setup vcpkg cache (GHA backend)
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL',   process.env.ACTIONS_CACHE_URL  || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
       - name: Show toolchain versions
         shell: bash
         run: |
@@ -101,6 +96,7 @@ jobs:
           ninja --version
           echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT"
           "$VCPKG_INSTALLATION_ROOT/vcpkg" version || true
+          c++ --version || cl 2>&1 | head -1 || true
 
       # ---------------------------------------------------------------
       - name: Configure
@@ -117,21 +113,12 @@ jobs:
         run: cmake --build build --config ${{ matrix.build_type }} --parallel
 
       # ---------------------------------------------------------------
-      # Smoke test: launch TrueShot for 2 s with a dummy display, just
-      # to confirm the executable starts and exits cleanly. Skipped on
-      # Windows where headless GL is painful (no xvfb equivalent).
-      - name: Smoke test (Linux, headless)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install -y xvfb
-          # The dedicated/headless mode will be a Phase 1.9 deliverable.
-          # For now, just check that the binary exists and prints the
-          # control banner without crashing in the configure step.
-          test -x build/bin/TrueShot
-          file build/bin/TrueShot
-
-      - name: Smoke test (macOS)
-        if: runner.os == 'macOS'
+      # Smoke test: confirm the executable exists and is a valid binary.
+      # Phase 1.9 will add a real headless run; for now we just check
+      # the artefact was produced.
+      - name: Smoke test (Linux / macOS)
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
           test -x build/bin/TrueShot
           file build/bin/TrueShot
@@ -140,19 +127,32 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $exe = "build/bin/${{ matrix.build_type }}/TrueShot.exe"
-          if (-not (Test-Path $exe)) { $exe = "build/bin/TrueShot.exe" }
-          Test-Path $exe
-          Get-Item $exe
+          $candidates = @(
+            "build/bin/${{ matrix.build_type }}/TrueShot.exe",
+            "build/bin/TrueShot.exe"
+          )
+          $found = $false
+          foreach ($exe in $candidates) {
+            if (Test-Path $exe) {
+              Write-Host "Found: $exe"
+              Get-Item $exe
+              $found = $true
+              break
+            }
+          }
+          if (-not $found) {
+            Write-Error "TrueShot.exe not found in any expected location"
+            exit 1
+          }
 
       # ---------------------------------------------------------------
-      # Package the binary + shaders for QA / playtesters.
+      # Package the Release artefact (binary + shaders + LICENSE)
+      # so playtesters can grab it from the run page.
       - name: Package artifact
         if: matrix.build_type == 'Release'
         shell: bash
         run: |
           mkdir -p dist/TrueShot-${{ runner.os }}
-          # Binary lives in build/bin (Linux/Mac) or build/bin/Release (Win/MSVC multi-config).
           cp -R build/bin/* dist/TrueShot-${{ runner.os }}/
           cp -R shaders     dist/TrueShot-${{ runner.os }}/
           cp README.md LICENSE dist/TrueShot-${{ runner.os }}/
@@ -167,9 +167,8 @@ jobs:
           if-no-files-found: error
 
   # ===================================================================
-  # required-checks — fan-in job that all branch protection rules
-  # depend on. Lets you change the matrix above without re-pointing
-  # the protection rules.
+  # required-checks — fan-in job that branch protection rules depend
+  # on. Lets us tweak the matrix above without re-pointing the rule.
   # ===================================================================
   required-checks:
     name: required-checks
@@ -180,7 +179,7 @@ jobs:
       - name: Fail if any build job failed
         run: |
           if [ "${{ needs.build.result }}" != "success" ]; then
-            echo "::error::build matrix did not fully succeed"
+            echo "::error::build matrix did not fully succeed (${{ needs.build.result }})"
             exit 1
           fi
           echo "All required checks passed."
