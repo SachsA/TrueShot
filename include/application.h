@@ -42,16 +42,16 @@ private:
 
     GLFWwindow* m_Window = nullptr;
 
-    std::unique_ptr<FPSCamera>        m_Camera;
+    std::unique_ptr<FPSCamera> m_Camera;
     std::unique_ptr<PlayerController> m_Player;
-    std::unique_ptr<WeaponSystem>     m_Weapons;
-    std::unique_ptr<AudioSystem>      m_Audio;
-    std::unique_ptr<GameWorld>        m_World;
-    std::unique_ptr<Renderer>         m_Renderer;
-    std::unique_ptr<Hud>              m_Hud;
+    std::unique_ptr<WeaponSystem> m_Weapons;
+    std::unique_ptr<AudioSystem> m_Audio;
+    std::unique_ptr<GameWorld> m_World;
+    std::unique_ptr<Renderer> m_Renderer;
+    std::unique_ptr<Hud> m_Hud;
 
     // Mouse state
-    bool  m_FirstMouse = true;
+    bool m_FirstMouse  = true;
     float m_LastMouseX = 0.0f;
     float m_LastMouseY = 0.0f;
 
@@ -60,10 +60,10 @@ private:
     float m_DebugInterval = 2.0f;
 
     // Edge-trigger storage for F1 (toggle HUD)
-    bool  m_F1Prev = false;
+    bool m_F1Prev = false;
 
     // Cached settings
-    int  m_Width  = 1280;
-    int  m_Height = 720;
+    int m_Width        = 1280;
+    int m_Height       = 720;
     bool m_Initialised = false;
 };

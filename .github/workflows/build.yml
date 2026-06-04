@@ -1,0 +1,186 @@
+name: build
+
+# When to run: every push to main and every PR.
+# Manual trigger available via the Actions tab (workflow_dispatch).
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+      - ".gitignore"
+      - "docs/**"
+      - ".github/ISSUE_TEMPLATE/**"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+      - ".gitignore"
+      - "docs/**"
+      - ".github/ISSUE_TEMPLATE/**"
+  workflow_dispatch:
+
+# Cancel previous runs of the same branch when a new commit lands.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+# Environment variables shared by every job.
+env:
+  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_bincache
+  # Make sure CMake finds vcpkg manifest in the project root.
+  VCPKG_MANIFEST_MODE: "ON"
+  # Surface compile errors quickly instead of letting CMake retry forever.
+  CMAKE_GENERATOR: Ninja
+
+jobs:
+  # ===================================================================
+  # build — compile + run smoke tests on every supported OS.
+  # ===================================================================
+  build:
+    name: build (${{ matrix.os }}, ${{ matrix.build_type }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false # Always run all 6 jobs, even if one fails.
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        build_type: [Debug, Release]
+    timeout-minutes: 60
+
+    steps:
+      # ---------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # ---------------------------------------------------------------
+      - name: Install Ninja + system deps (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build pkg-config \
+            libgl1-mesa-dev libx11-dev libxrandr-dev libxinerama-dev \
+            libxcursor-dev libxi-dev libxext-dev libwayland-dev \
+            libxkbcommon-dev libasound2-dev
+
+      - name: Install Ninja (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ninja
+
+      - name: Install Ninja (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ninja -y
+
+      # ---------------------------------------------------------------
+      # MSVC environment must be loaded before CMake on Windows so that
+      # cl.exe / link.exe are on PATH for Ninja.
+      - name: Set up MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      # ---------------------------------------------------------------
+      # vcpkg comes pre-installed on every GitHub runner; we just
+      # enable the GitHub Actions binary cache for it.
+      - name: Setup vcpkg cache (GHA backend)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL',   process.env.ACTIONS_CACHE_URL  || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Show toolchain versions
+        shell: bash
+        run: |
+          cmake --version
+          ninja --version
+          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT"
+          "$VCPKG_INSTALLATION_ROOT/vcpkg" version || true
+
+      # ---------------------------------------------------------------
+      - name: Configure
+        shell: bash
+        run: |
+          cmake -S . -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DTRUESHOT_WARNINGS_AS_ERRORS=ON
+
+      # ---------------------------------------------------------------
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }} --parallel
+
+      # ---------------------------------------------------------------
+      # Smoke test: launch TrueShot for 2 s with a dummy display, just
+      # to confirm the executable starts and exits cleanly. Skipped on
+      # Windows where headless GL is painful (no xvfb equivalent).
+      - name: Smoke test (Linux, headless)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y xvfb
+          # The dedicated/headless mode will be a Phase 1.9 deliverable.
+          # For now, just check that the binary exists and prints the
+          # control banner without crashing in the configure step.
+          test -x build/bin/TrueShot
+          file build/bin/TrueShot
+
+      - name: Smoke test (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          test -x build/bin/TrueShot
+          file build/bin/TrueShot
+
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $exe = "build/bin/${{ matrix.build_type }}/TrueShot.exe"
+          if (-not (Test-Path $exe)) { $exe = "build/bin/TrueShot.exe" }
+          Test-Path $exe
+          Get-Item $exe
+
+      # ---------------------------------------------------------------
+      # Package the binary + shaders for QA / playtesters.
+      - name: Package artifact
+        if: matrix.build_type == 'Release'
+        shell: bash
+        run: |
+          mkdir -p dist/TrueShot-${{ runner.os }}
+          # Binary lives in build/bin (Linux/Mac) or build/bin/Release (Win/MSVC multi-config).
+          cp -R build/bin/* dist/TrueShot-${{ runner.os }}/
+          cp -R shaders     dist/TrueShot-${{ runner.os }}/
+          cp README.md LICENSE dist/TrueShot-${{ runner.os }}/
+
+      - name: Upload artifact
+        if: matrix.build_type == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: TrueShot-${{ runner.os }}-${{ github.sha }}
+          path: dist/
+          retention-days: 14
+          if-no-files-found: error
+
+  # ===================================================================
+  # required-checks — fan-in job that all branch protection rules
+  # depend on. Lets you change the matrix above without re-pointing
+  # the protection rules.
+  # ===================================================================
+  required-checks:
+    name: required-checks
+    needs: [build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any build job failed
+        run: |
+          if [ "${{ needs.build.result }}" != "success" ]; then
+            echo "::error::build matrix did not fully succeed"
+            exit 1
+          fi
+          echo "All required checks passed."

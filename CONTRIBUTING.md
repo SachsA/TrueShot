@@ -127,6 +127,71 @@ cmake --build --preset strict
   pattern as `Target` — a plain struct with a method-level update +
   a `GameWorld`-style owner.
 
+## Continuous Integration
+
+Every push to `main` and every PR triggers two workflows on GitHub Actions:
+
+| Workflow | What it does | Where to look |
+|---|---|---|
+| `build` | Compiles the project on **Linux + macOS + Windows**, both in `Debug` and `Release`, with `-Werror` on. Uploads `Release` artifacts for download. | `.github/workflows/build.yml` |
+| `lint` | clang-format check, EditorConfig conformance, markdownlint, yamllint. Fast (~1 min). | `.github/workflows/lint.yml` |
+| `clang-tidy` | Deep static analysis (runs weekly on Monday + on-demand). | `.github/workflows/clang-tidy.yml` |
+
+**A PR is mergeable only when both `build` and `lint` are green.** This is
+enforced by branch protection on `main` (set up in GitHub repo settings).
+
+### Reproducing CI locally
+
+If the CI fails, reproduce locally before pushing again:
+
+```bash
+# Format check (same command CI runs)
+clang-format-18 --dry-run --Werror --style=file $(git ls-files '*.cpp' '*.h' '*.hpp')
+
+# Auto-fix formatting
+clang-format-18 -i $(git ls-files '*.cpp' '*.h' '*.hpp')
+
+# Full strict build (will fail on any warning)
+cmake --preset strict
+cmake --build --preset strict
+
+# Deep static analysis (slow)
+cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+      -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+clang-tidy-18 -p build $(git ls-files 'src/*.cpp')
+```
+
+### Updating dependencies
+
+Native deps are declared in **`vcpkg.json`** (manifest mode). Adding one:
+
+```bash
+# 1. Edit vcpkg.json — add the package to the dependencies array.
+# 2. Reconfigure locally — vcpkg installs it automatically.
+cmake --preset default
+# 3. Commit vcpkg.json. CI picks it up automatically.
+```
+
+When a new vcpkg release ships (every ~3 months), bump the
+`builtin-baseline` SHA in `vcpkg.json` to the latest commit on
+[microsoft/vcpkg main](https://github.com/microsoft/vcpkg/commits/master).
+
+### Updating CI when the project grows
+
+The CI is meant to evolve in lockstep with the project. Bookmarks:
+
+- **Phase 1 (network)** → add a `network-test` job that boots a server,
+  connects N fake clients, verifies state convergence.
+- **Phase 9 (anti-cheat)** → add a `security` job (CodeQL, dependency
+  scanning).
+- **Phase 16 (Steam)** → add a `package-steam` job that produces a
+  signed depot ready for `steamcmd app_build_*`.
+- **Phase 17 (live ops)** → add a `release` workflow that tags a
+  version, uploads to a Steam beta branch, posts to Discord.
+
+Each phase's section in [ROADMAP.md](ROADMAP.md) carries a "CI updates
+needed" reminder where relevant.
+
 ## Pull-request checklist
 
 Before opening a PR, please confirm:

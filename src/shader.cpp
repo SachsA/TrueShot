@@ -1,14 +1,15 @@
 // shader.cpp
 
-#include <glad/glad.h>      // must be included before any other GL/window header
+#include <glad/glad.h> // must be included before any other GL/window header
+
+#include <glm/gtc/type_ptr.hpp>
+
 #include "shader.h"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-
-#include <glm/gtc/type_ptr.hpp>
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath) {
     std::string vertexCode;
@@ -38,13 +39,13 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
     }
 
     if (vertexCode.empty() || fragmentCode.empty()) {
-        std::cerr << "ERROR::SHADER::EMPTY_SOURCE  vert='" << vertexPath
-                  << "'  frag='" << fragmentPath << "'\n";
+        std::cerr << "ERROR::SHADER::EMPTY_SOURCE  vert='" << vertexPath << "'  frag='"
+                  << fragmentPath << "'\n";
         return;
     }
 
-    const char* vSrc = vertexCode.c_str();
-    const char* fSrc = fragmentCode.c_str();
+    const char* vSrc          = vertexCode.c_str();
+    const char* fSrc          = fragmentCode.c_str();
 
     const unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vSrc, nullptr);
@@ -75,8 +76,7 @@ void Shader::use() {
 }
 
 void Shader::setMat4(const std::string& name, const glm::mat4& mat) const {
-    glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE,
-                       glm::value_ptr(mat));
+    glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
 }
 
 void Shader::setVec3(const std::string& name, const glm::vec3& value) const {
@@ -92,14 +92,13 @@ void Shader::setInt(const std::string& name, int value) const {
 }
 
 void Shader::checkCompileErrors(unsigned int shader, const std::string& type) {
-    int  success = 0;
+    int success        = 0;
     char infoLog[1024] = {};
     if (type != "PROGRAM") {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(shader, sizeof(infoLog), nullptr, infoLog);
-            std::cerr << "ERROR::SHADER_COMPILATION_ERROR (" << type << "):\n"
-                      << infoLog << '\n';
+            std::cerr << "ERROR::SHADER_COMPILATION_ERROR (" << type << "):\n" << infoLog << '\n';
         }
     } else {
         glGetProgramiv(shader, GL_LINK_STATUS, &success);

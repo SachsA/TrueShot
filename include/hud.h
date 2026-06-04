@@ -39,18 +39,16 @@ public:
 
     // Build the overlay widgets for this frame. Reads stats from the
     // arguments — does not mutate them.
-    void render(const GameWorld&        world,
-                const WeaponSystem&     weapons,
-                const PlayerController& player,
-                float                   deltaTime);
+    void render(const GameWorld& world, const WeaponSystem& weapons, const PlayerController& player,
+                float deltaTime);
 
     // Flush ImGui draw data to the current GL context. Call after the
     // 3D scene has been rendered but before swapping buffers.
     void endFrame();
 
     void setVisible(bool visible) { m_Visible = visible; }
-    bool isVisible() const        { return m_Visible; }
-    void toggleVisible()          { m_Visible = !m_Visible; }
+    bool isVisible() const { return m_Visible; }
+    void toggleVisible() { m_Visible = !m_Visible; }
 
     // Notify the HUD that the player just landed a hit.
     // Triggers the on-screen hit marker (coloured by severity):
@@ -60,21 +58,19 @@ public:
     void onHit(bool headshot, bool killed);
 
 private:
-    void drawStatsPanel(const GameWorld&        world,
-                        const WeaponSystem&     weapons,
-                        const PlayerController& player,
-                        float                   deltaTime);
+    void drawStatsPanel(const GameWorld& world, const WeaponSystem& weapons,
+                        const PlayerController& player, float deltaTime);
 
     void drawHitMarker(float deltaTime);
 
-    bool  m_Initialised = false;
-    bool  m_Visible     = true;
+    bool m_Initialised = false;
+    bool m_Visible     = true;
 
     // Smoothed FPS (low-pass) so the number doesn't flicker each frame.
     float m_SmoothedFps = 0.0f;
 
     // Hit marker state (counts down once a hit is registered).
-    float m_HitMarkerTimer = 0.0f;   // seconds remaining of fade-out
-    bool  m_LastHitWasHead = false;
-    bool  m_LastHitWasKill = false;
+    float m_HitMarkerTimer = 0.0f; // seconds remaining of fade-out
+    bool m_LastHitWasHead  = false;
+    bool m_LastHitWasKill  = false;
 };

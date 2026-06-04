@@ -1,15 +1,15 @@
 // glad must come before any other GL/window header.
 #include <glad/glad.h>
+
 #include <GLFW/glfw3.h>
 
-#include "hud.h"
+#include <imgui.h>
 
 #include "game_world.h"
+#include "hud.h"
+#include "player_controller.h"
 #include "weapon_system.h"
 #include "weapon_types.h"
-#include "player_controller.h"
-
-#include <imgui.h>
 // vcpkg installs the ImGui GLFW/OpenGL3 backends directly into the include
 // root (not under "backends/"), so include them by their flat name.
 #include <imgui_impl_glfw.h>
@@ -27,15 +27,17 @@ constexpr const char* kImGuiGlslVersion = "#version 330 core";
 
 // Returns the colour for an ammo bar based on how full the magazine is.
 ImU32 ammoColor(float fraction) {
-    if (fraction > 0.5f) return IM_COL32(120, 230, 120, 220);  // green
-    if (fraction > 0.2f) return IM_COL32(230, 200,  90, 220);  // amber
-    return                IM_COL32(230,  90,  90, 220);        // red
+    if (fraction > 0.5f) return IM_COL32(120, 230, 120, 220); // green
+    if (fraction > 0.2f) return IM_COL32(230, 200, 90, 220);  // amber
+    return IM_COL32(230, 90, 90, 220);                        // red
 }
 
 } // namespace
 
-Hud::Hud()  = default;
-Hud::~Hud() { shutdown(); }
+Hud::Hud() = default;
+Hud::~Hud() {
+    shutdown();
+}
 
 bool Hud::initialize(GLFWwindow* window) {
     if (m_Initialised) return true;
@@ -46,10 +48,10 @@ bool Hud::initialize(GLFWwindow* window) {
 
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.IniFilename  = nullptr;  // don't write imgui.ini next to the binary
+    io.IniFilename = nullptr; // don't write imgui.ini next to the binary
 
     ImGui::StyleColorsDark();
-    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiStyle& style      = ImGui::GetStyle();
     style.WindowRounding   = 6.0f;
     style.FrameRounding    = 4.0f;
     style.WindowBorderSize = 0.0f;
@@ -85,10 +87,8 @@ void Hud::beginFrame() {
     ImGui::NewFrame();
 }
 
-void Hud::render(const GameWorld&        world,
-                 const WeaponSystem&     weapons,
-                 const PlayerController& player,
-                 float                   deltaTime) {
+void Hud::render(const GameWorld& world, const WeaponSystem& weapons,
+                 const PlayerController& player, float deltaTime) {
     if (!m_Initialised || !m_Visible) return;
     drawStatsPanel(world, weapons, player, deltaTime);
     drawHitMarker(deltaTime);
@@ -99,7 +99,7 @@ void Hud::onHit(bool headshot, bool killed) {
     // a "headshot" overrides a body shot, and a body shot only sticks
     // if nothing better is already showing.
     constexpr float kMarkerDuration = 0.35f;
-    m_HitMarkerTimer = kMarkerDuration;
+    m_HitMarkerTimer                = kMarkerDuration;
 
     if (killed) {
         m_LastHitWasKill = true;
@@ -120,29 +120,33 @@ void Hud::drawHitMarker(float deltaTime) {
 
     m_HitMarkerTimer -= deltaTime;
     if (m_HitMarkerTimer <= 0.0f) {
-        m_HitMarkerTimer  = 0.0f;
-        m_LastHitWasHead  = false;
-        m_LastHitWasKill  = false;
+        m_HitMarkerTimer = 0.0f;
+        m_LastHitWasHead = false;
+        m_LastHitWasKill = false;
         return;
     }
 
     // Fade from full opacity at the start to zero by the end.
     constexpr float kMarkerDuration = 0.35f;
-    const float t     = std::clamp(m_HitMarkerTimer / kMarkerDuration, 0.0f, 1.0f);
-    const float alpha = t; // linear fade
+    const float t                   = std::clamp(m_HitMarkerTimer / kMarkerDuration, 0.0f, 1.0f);
+    const float alpha               = t; // linear fade
 
     // Pick colour: red kill > yellow head > white body.
     int cr = 255, cg = 255, cb = 255;
     if (m_LastHitWasKill) {
-        cr = 230; cg = 60;  cb = 60;
+        cr = 230;
+        cg = 60;
+        cb = 60;
     } else if (m_LastHitWasHead) {
-        cr = 245; cg = 210; cb = 70;
+        cr = 245;
+        cg = 210;
+        cb = 70;
     }
     const ImU32 colour = IM_COL32(cr, cg, cb, int(alpha * 230.0f));
 
     // Marker grows briefly on the first frame, then settles — a small
     // "punch" feel without needing a dedicated animation curve.
-    const float growth = 1.0f + (1.0f - t) * 0.25f;
+    const float growth      = 1.0f + (1.0f - t) * 0.25f;
 
     const ImGuiViewport* vp = ImGui::GetMainViewport();
     const ImVec2 centre(vp->WorkPos.x + vp->WorkSize.x * 0.5f,
@@ -157,27 +161,23 @@ void Hud::drawHitMarker(float deltaTime) {
     ImGui::SetNextWindowPos(vp->WorkPos, ImGuiCond_Always);
     ImGui::SetNextWindowSize(vp->WorkSize, ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.0f);
-    ImGui::Begin("##hitmarker",
-                 nullptr,
-                 ImGuiWindowFlags_NoDecoration |
-                 ImGuiWindowFlags_NoMove |
-                 ImGuiWindowFlags_NoSavedSettings |
-                 ImGuiWindowFlags_NoFocusOnAppearing |
-                 ImGuiWindowFlags_NoNav |
-                 ImGuiWindowFlags_NoInputs |
-                 ImGuiWindowFlags_NoBringToFrontOnFocus);
+    ImGui::Begin("##hitmarker", nullptr,
+                 ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
+                     ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoInputs |
+                     ImGuiWindowFlags_NoBringToFrontOnFocus);
 
     ImDrawList* dl = ImGui::GetWindowDrawList();
 
     // Top-left, top-right, bottom-left, bottom-right ticks.
     dl->AddLine(ImVec2(centre.x - gap - length, centre.y - gap - length),
-                ImVec2(centre.x - gap,          centre.y - gap),          colour, thick);
+                ImVec2(centre.x - gap, centre.y - gap), colour, thick);
     dl->AddLine(ImVec2(centre.x + gap + length, centre.y - gap - length),
-                ImVec2(centre.x + gap,          centre.y - gap),          colour, thick);
+                ImVec2(centre.x + gap, centre.y - gap), colour, thick);
     dl->AddLine(ImVec2(centre.x - gap - length, centre.y + gap + length),
-                ImVec2(centre.x - gap,          centre.y + gap),          colour, thick);
+                ImVec2(centre.x - gap, centre.y + gap), colour, thick);
     dl->AddLine(ImVec2(centre.x + gap + length, centre.y + gap + length),
-                ImVec2(centre.x + gap,          centre.y + gap),          colour, thick);
+                ImVec2(centre.x + gap, centre.y + gap), colour, thick);
 
     ImGui::End();
 }
@@ -188,17 +188,14 @@ void Hud::endFrame() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void Hud::drawStatsPanel(const GameWorld&        world,
-                         const WeaponSystem&     weapons,
-                         const PlayerController& player,
-                         float                   deltaTime) {
+void Hud::drawStatsPanel(const GameWorld& world, const WeaponSystem& weapons,
+                         const PlayerController& player, float deltaTime) {
     // ---- FPS (exponential moving average) -----------------------------
     if (deltaTime > 0.0f) {
         const float instantFps = 1.0f / deltaTime;
         // 0.1 weight on the new sample = ~10-frame smoothing window.
-        m_SmoothedFps = (m_SmoothedFps <= 0.0f)
-            ? instantFps
-            : (m_SmoothedFps * 0.9f + instantFps * 0.1f);
+        m_SmoothedFps =
+            (m_SmoothedFps <= 0.0f) ? instantFps : (m_SmoothedFps * 0.9f + instantFps * 0.1f);
     }
 
     const ImGuiViewport* vp = ImGui::GetMainViewport();
@@ -210,18 +207,13 @@ void Hud::drawStatsPanel(const GameWorld&        world,
         ImGui::SetNextWindowPos(ImVec2(vp->WorkPos.x + 16.0f, vp->WorkPos.y + 16.0f),
                                 ImGuiCond_Always);
         ImGui::SetNextWindowBgAlpha(0.55f);
-        ImGui::Begin("##scoreboard",
-                     nullptr,
-                     ImGuiWindowFlags_NoDecoration |
-                     ImGuiWindowFlags_AlwaysAutoResize |
-                     ImGuiWindowFlags_NoMove |
-                     ImGuiWindowFlags_NoSavedSettings |
-                     ImGuiWindowFlags_NoFocusOnAppearing |
-                     ImGuiWindowFlags_NoNav |
-                     ImGuiWindowFlags_NoInputs);
+        ImGui::Begin("##scoreboard", nullptr,
+                     ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
+                         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings |
+                         ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav |
+                         ImGuiWindowFlags_NoInputs);
 
-        ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.30f, 1.0f),
-                           "SCORE  %d", world.score());
+        ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.30f, 1.0f), "SCORE  %d", world.score());
         ImGui::Separator();
         ImGui::Text("Kills     %d", world.kills());
         ImGui::Text("Hits      %d / %d", world.hits(), world.shots());
@@ -239,26 +231,20 @@ void Hud::drawStatsPanel(const GameWorld&        world,
         const float fraction  = std::clamp(float(ws.currentAmmo) / float(magSize), 0.0f, 1.0f);
 
         const ImVec2 panelSize(260.0f, 96.0f);
-        ImGui::SetNextWindowPos(
-            ImVec2(vp->WorkPos.x + vp->WorkSize.x - panelSize.x - 16.0f,
-                   vp->WorkPos.y + vp->WorkSize.y - panelSize.y - 16.0f),
-            ImGuiCond_Always);
+        ImGui::SetNextWindowPos(ImVec2(vp->WorkPos.x + vp->WorkSize.x - panelSize.x - 16.0f,
+                                       vp->WorkPos.y + vp->WorkSize.y - panelSize.y - 16.0f),
+                                ImGuiCond_Always);
         ImGui::SetNextWindowSize(panelSize, ImGuiCond_Always);
         ImGui::SetNextWindowBgAlpha(0.55f);
-        ImGui::Begin("##weaponpanel",
-                     nullptr,
-                     ImGuiWindowFlags_NoDecoration |
-                     ImGuiWindowFlags_NoMove |
-                     ImGuiWindowFlags_NoSavedSettings |
-                     ImGuiWindowFlags_NoFocusOnAppearing |
-                     ImGuiWindowFlags_NoNav |
-                     ImGuiWindowFlags_NoInputs);
+        ImGui::Begin("##weaponpanel", nullptr,
+                     ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+                         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
+                         ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoInputs);
 
         ImGui::TextColored(ImVec4(0.85f, 0.95f, 1.0f, 1.0f), "%s", w->name.c_str());
 
         char ammoText[64];
-        std::snprintf(ammoText, sizeof(ammoText),
-                      "%d / %d", ws.currentAmmo, ws.reserveAmmo);
+        std::snprintf(ammoText, sizeof(ammoText), "%d / %d", ws.currentAmmo, ws.reserveAmmo);
 
         // Push a colour onto the progress bar that reflects ammo level.
         ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImColor(ammoColor(fraction)).Value);
@@ -284,19 +270,14 @@ void Hud::drawStatsPanel(const GameWorld&        world,
 
         const ImVec2 panelSize(220.0f, 96.0f);
         ImGui::SetNextWindowPos(
-            ImVec2(vp->WorkPos.x + 16.0f,
-                   vp->WorkPos.y + vp->WorkSize.y - panelSize.y - 16.0f),
+            ImVec2(vp->WorkPos.x + 16.0f, vp->WorkPos.y + vp->WorkSize.y - panelSize.y - 16.0f),
             ImGuiCond_Always);
         ImGui::SetNextWindowSize(panelSize, ImGuiCond_Always);
         ImGui::SetNextWindowBgAlpha(0.55f);
-        ImGui::Begin("##movement",
-                     nullptr,
-                     ImGuiWindowFlags_NoDecoration |
-                     ImGuiWindowFlags_NoMove |
-                     ImGuiWindowFlags_NoSavedSettings |
-                     ImGuiWindowFlags_NoFocusOnAppearing |
-                     ImGuiWindowFlags_NoNav |
-                     ImGuiWindowFlags_NoInputs);
+        ImGui::Begin("##movement", nullptr,
+                     ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+                         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
+                         ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoInputs);
 
         ImGui::Text("Speed   %4d u/s", int(mv.speed));
         ImGui::Text("Bhop    x%d", mv.consecutiveHops);

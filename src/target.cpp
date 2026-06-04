@@ -6,18 +6,15 @@
 
 // Slab-based ray vs AABB intersection.
 // Returns the nearest positive intersection distance along the ray.
-bool Target::intersectRay(const glm::vec3& origin,
-                          const glm::vec3& dir,
-                          float maxDistance,
-                          float& outDistance,
-                          glm::vec3& outHitPoint) const {
+bool Target::intersectRay(const glm::vec3& origin, const glm::vec3& dir, float maxDistance,
+                          float& outDistance, glm::vec3& outHitPoint) const {
     if (!alive) return false;
 
     const glm::vec3 minB = position - halfExtents * scale;
     const glm::vec3 maxB = position + halfExtents * scale;
 
-    float tmin = -std::numeric_limits<float>::infinity();
-    float tmax =  std::numeric_limits<float>::infinity();
+    float tmin           = -std::numeric_limits<float>::infinity();
+    float tmax           = std::numeric_limits<float>::infinity();
 
     for (int i = 0; i < 3; ++i) {
         const float o = origin[i];

@@ -1,0 +1,48 @@
+name: Feature request
+description: Suggest a new feature or improvement.
+title: "[feature] "
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What gameplay / dev / UX problem is the feature trying to solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: How would you solve it? Be specific — sketches and mockups welcome.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Related ROADMAP phase
+      options:
+        - "Phase 1 — Netcode"
+        - "Phase 2 — Match flow"
+        - "Phase 3 — Maps"
+        - "Phase 4 — Graphics / DA"
+        - "Phase 5 — Audio"
+        - "Phase 6 — UI / UX"
+        - "Phase 7 — Backend"
+        - "Phase 8 — Infra"
+        - "Phase 9 — Anti-cheat"
+        - "Phase 10 — Economy"
+        - "Phase 11 — Social"
+        - "Phase 12 — Mods"
+        - "Phase 13 — Bots / AI"
+        - "Phase 14 — Esport"
+        - "Phase 15 — QA"
+        - "Other / unsure"
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches and why they were rejected.

@@ -1,23 +1,24 @@
 // glad must come before GLFW (and any header pulling system OpenGL headers).
 #include <glad/glad.h>
+
 #include <GLFW/glfw3.h>
 
 #include "application.h"
-#include "fps_camera.h"
-#include "player_controller.h"
-#include "weapon_system.h"
 #include "audio_system.h"
-#include "renderer.h"
+#include "fps_camera.h"
 #include "game_world.h"
-#include "physics_types.h"
 #include "hud.h"
+#include "physics_types.h"
+#include "player_controller.h"
+#include "renderer.h"
+#include "weapon_system.h"
 
 #include <algorithm>
 #include <iostream>
 
-Application::Application()  = default;
+Application::Application() = default;
 Application::~Application() {
-    if (m_Hud)   m_Hud  ->shutdown();
+    if (m_Hud) m_Hud->shutdown();
     if (m_Audio) m_Audio->shutdown();
     if (m_Window) {
         glfwDestroyWindow(m_Window);
@@ -62,7 +63,7 @@ bool Application::init(int width, int height, const char* title) {
     }
     glfwMakeContextCurrent(m_Window);
     glfwSetWindowUserPointer(m_Window, this);
-    glfwSetCursorPosCallback     (m_Window, &Application::mouseCallbackThunk);
+    glfwSetCursorPosCallback(m_Window, &Application::mouseCallbackThunk);
     glfwSetFramebufferSizeCallback(m_Window, &Application::resizeCallbackThunk);
     glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -85,7 +86,7 @@ bool Application::init(int width, int height, const char* title) {
 
     m_Weapons->setAudioSystem(m_Audio.get());
     m_Weapons->setGameWorld(m_World.get());
-    m_Player ->setAudioSystem(m_Audio.get());
+    m_Player->setAudioSystem(m_Audio.get());
 
     int fbW = m_Width, fbH = m_Height;
     glfwGetFramebufferSize(m_Window, &fbW, &fbH);
@@ -109,27 +110,26 @@ bool Application::init(int width, int height, const char* title) {
 }
 
 void Application::printControls() const {
-    std::cout <<
-        "==============================\n"
-        "  TRUESHOT - Tactical FPS\n"
-        "==============================\n"
-        "MOVEMENT\n"
-        "  WASD       Move (strafe-jump for speed!)\n"
-        "  SPACE      Jump / Bhop\n"
-        "  CTRL / C   Crouch (slower, lower spread)\n"
-        "  Mouse      Look around\n"
-        "WEAPONS\n"
-        "  Mouse1     Fire\n"
-        "  Mouse2     Aim Down Sights (ADS)\n"
-        "  R          Reload\n"
-        "  1..5       Glock / Deagle / AK / M4 / AWP\n"
-        "AUDIO\n"
-        "  + / -      Master volume\n"
-        "  M          Toggle audio debug\n"
-        "MISC\n"
-        "  F1         Toggle HUD\n"
-        "  ESC        Quit\n"
-        "==============================\n\n";
+    std::cout << "==============================\n"
+                 "  TRUESHOT - Tactical FPS\n"
+                 "==============================\n"
+                 "MOVEMENT\n"
+                 "  WASD       Move (strafe-jump for speed!)\n"
+                 "  SPACE      Jump / Bhop\n"
+                 "  CTRL / C   Crouch (slower, lower spread)\n"
+                 "  Mouse      Look around\n"
+                 "WEAPONS\n"
+                 "  Mouse1     Fire\n"
+                 "  Mouse2     Aim Down Sights (ADS)\n"
+                 "  R          Reload\n"
+                 "  1..5       Glock / Deagle / AK / M4 / AWP\n"
+                 "AUDIO\n"
+                 "  + / -      Master volume\n"
+                 "  M          Toggle audio debug\n"
+                 "MISC\n"
+                 "  F1         Toggle HUD\n"
+                 "  ESC        Quit\n"
+                 "==============================\n\n";
 }
 
 void Application::onMouseMove(double xpos, double ypos) {
@@ -142,8 +142,8 @@ void Application::onMouseMove(double xpos, double ypos) {
     const float xoffset = float(xpos) - m_LastMouseX;
     const float yoffset = m_LastMouseY - float(ypos); // y inverted
 
-    m_LastMouseX = float(xpos);
-    m_LastMouseY = float(ypos);
+    m_LastMouseX        = float(xpos);
+    m_LastMouseY        = float(ypos);
 
     if (m_Player) m_Player->processMouseInput(xoffset, yoffset);
 }
@@ -159,7 +159,7 @@ void Application::processInput(float deltaTime) {
         glfwSetWindowShouldClose(m_Window, true);
     }
 
-    if (m_Player)  m_Player ->processInput(m_Window, deltaTime);
+    if (m_Player) m_Player->processInput(m_Window, deltaTime);
     if (m_Weapons) m_Weapons->processInput(m_Window, deltaTime);
 
     // HUD toggle (F1, edge-triggered).
@@ -173,11 +173,11 @@ void Application::processInput(float deltaTime) {
     if (!m_Audio) return;
     static bool plusPrev = false, minusPrev = false, mPrev = false;
 
-    const bool plusNow = glfwGetKey(m_Window, GLFW_KEY_KP_ADD)      == GLFW_PRESS ||
-                         glfwGetKey(m_Window, GLFW_KEY_EQUAL)       == GLFW_PRESS;
+    const bool plusNow  = glfwGetKey(m_Window, GLFW_KEY_KP_ADD) == GLFW_PRESS ||
+                          glfwGetKey(m_Window, GLFW_KEY_EQUAL) == GLFW_PRESS;
     const bool minusNow = glfwGetKey(m_Window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS ||
-                          glfwGetKey(m_Window, GLFW_KEY_MINUS)       == GLFW_PRESS;
-    const bool mNow     = glfwGetKey(m_Window, GLFW_KEY_M)           == GLFW_PRESS;
+                          glfwGetKey(m_Window, GLFW_KEY_MINUS) == GLFW_PRESS;
+    const bool mNow     = glfwGetKey(m_Window, GLFW_KEY_M) == GLFW_PRESS;
 
     if (plusNow && !plusPrev) {
         const float v = std::min(1.0f, m_Audio->getMasterVolume() + 0.1f);
@@ -206,24 +206,20 @@ void Application::printDebugInfo() {
     const auto& mv = m_Player->getMovementState();
 
     std::cout << "\n=== TRUESHOT DEBUG ===\n";
-    std::cout << "MOVEMENT  speed=" << int(mv.speed)
-              << "  max=" << int(mv.maxSpeed)
-              << "  bhop=" << mv.consecutiveHops
-              << "  ground=" << (mv.onGround ? "Y" : "N") << '\n';
+    std::cout << "MOVEMENT  speed=" << int(mv.speed) << "  max=" << int(mv.maxSpeed)
+              << "  bhop=" << mv.consecutiveHops << "  ground=" << (mv.onGround ? "Y" : "N")
+              << '\n';
 
     if (m_Weapons && m_Weapons->getCurrentWeapon()) {
         const auto* w  = m_Weapons->getCurrentWeapon();
         const auto& ws = m_Weapons->getWeaponState();
-        std::cout << "WEAPON    " << w->name
-                  << "  " << ws.currentAmmo << "/" << ws.reserveAmmo
+        std::cout << "WEAPON    " << w->name << "  " << ws.currentAmmo << "/" << ws.reserveAmmo
                   << "  spread=" << m_Weapons->getCurrentSpread().x << "°\n";
     }
 
-    std::cout << "SCORE     "    << m_World->score()
-              << "  hits="       << m_World->hits()
-              << "/"             << m_World->shots()
-              << "  acc="        << int(m_World->accuracy() * 100.0f) << '%'
-              << "  kills="      << m_World->kills() << '\n';
+    std::cout << "SCORE     " << m_World->score() << "  hits=" << m_World->hits() << "/"
+              << m_World->shots() << "  acc=" << int(m_World->accuracy() * 100.0f) << '%'
+              << "  kills=" << m_World->kills() << '\n';
     std::cout << "======================\n\n";
 }
 
@@ -236,13 +232,13 @@ int Application::run() {
         const float currentFrame = float(glfwGetTime());
         const float deltaTime    = std::min(0.1f, currentFrame - lastFrame); // clamp big stalls
         lastFrame                = currentFrame;
-        m_DebugTimer            += deltaTime;
+        m_DebugTimer += deltaTime;
 
         processInput(deltaTime);
 
-        if (m_Player)  m_Player ->update(deltaTime);
+        if (m_Player) m_Player->update(deltaTime);
         if (m_Weapons) m_Weapons->update(deltaTime);
-        if (m_World)   m_World  ->update(deltaTime);
+        if (m_World) m_World->update(deltaTime);
         if (m_Audio) {
             m_Audio->update(deltaTime);
             m_Audio->setListenerFromCamera(m_Camera.get(), m_Player.get());

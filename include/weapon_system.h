@@ -1,8 +1,9 @@
 #pragma once
 
+#include <GLFW/glfw3.h>
+
 #include "weapon_types.h"
 
-#include <GLFW/glfw3.h>
 #include <memory>
 #include <unordered_map>
 
@@ -31,18 +32,18 @@ public:
     // Hook the HUD so fire() can trigger the on-screen hit marker.
     // Optional — if unset, hits silently register on the world only.
     void setHud(Hud* hud) { m_Hud = hud; }
-    
+
     // Weapon management
     bool equipWeapon(const std::string& weaponName);
     void switchToWeapon(int slot);
     void dropWeapon();
-    
+
     // Shooting mechanics
     bool canFire() const;
     void fire();
     HitResult performRaycast(const glm::vec3& origin, const glm::vec3& direction) const;
     float calculateDamage(const HitResult& hit) const;
-    
+
     // Weapon states
     void startReload();
     void cancelReload();
@@ -50,7 +51,7 @@ public:
     void startADS();
     void stopADS();
     bool isAiming() const;
-    
+
     // Getters
     const Weapons::WeaponConfig* getCurrentWeapon() const;
     const WeaponState& getWeaponState() const { return m_WeaponState; }
@@ -59,7 +60,7 @@ public:
 
     // Audio integration
     void setAudioSystem(AudioSystem* audioSystem) { m_AudioSystem = audioSystem; }
-    
+
     // Debug info
     void printDebugInfo() const;
 
@@ -70,26 +71,26 @@ private:
     void updateSpread(float deltaTime);
     void updateADS(float deltaTime);
     void applyViewPunch();
-    
+
     // Recoil system
     void addRecoil();
     void resetRecoil();
     glm::vec2 getRecoilPatternPoint(int shotIndex) const;
     void applyRecoilToCamera();
-    
+
     // Accuracy system
     float calculateCurrentSpread() const;
     glm::vec3 applySpreadToDirection(const glm::vec3& baseDirection) const;
-    
+
     // Animation system
     void updateWeaponSway(float deltaTime);
     void updateWeaponBob(float deltaTime);
     glm::vec3 calculateWeaponPosition() const;
-    
+
     // State management
     void changeWeaponState(Weapons::WeaponState newState);
     void updateStateMachine(float deltaTime);
-    
+
     // Input helpers
     void updateInputTiming(float deltaTime);
 
@@ -100,34 +101,34 @@ private:
     // Optional audio system for sound effects
     AudioSystem* m_AudioSystem = nullptr;
     // Optional game world used for hit detection
-    GameWorld*  m_World = nullptr;
+    GameWorld* m_World = nullptr;
     // Optional HUD for hit-marker feedback
-    Hud*        m_Hud   = nullptr;
-    
+    Hud* m_Hud = nullptr;
+
     // Current weapon
     std::unique_ptr<Weapons::WeaponConfig> m_CurrentWeapon;
     WeaponState m_WeaponState;
     ShootingInput m_Input;
-    
+
     // Weapon database
     std::unordered_map<std::string, std::unique_ptr<Weapons::WeaponConfig>> m_WeaponConfigs;
-    
+
     // Timing
     float m_GameTime = 0.0f;
-    
+
     // Sway & bob
     glm::vec3 m_BaseWeaponPosition{0.5f, -0.3f, 0.8f}; // Relative to camera
     glm::vec2 m_SwayAmount{0.0f};
     float m_BobTime = 0.0f;
-    
+
     // View punch (screen shake from recoil)
     glm::vec2 m_ViewPunch{0.0f};
     glm::vec2 m_ViewPunchVelocity{0.0f};
-    
+
     // Performance tracking
-    mutable float m_DebugTimer = 0.0f;
+    mutable float m_DebugTimer         = 0.0f;
     mutable int m_ShotsFiredThisSecond = 0;
-    mutable float m_AverageSpread = 0.0f;
+    mutable float m_AverageSpread      = 0.0f;
 };
 
 // Weapon factory for creating predefined weapons
@@ -138,10 +139,11 @@ public:
     static std::unique_ptr<Weapons::WeaponConfig> createAWP();
     static std::unique_ptr<Weapons::WeaponConfig> createGlock();
     static std::unique_ptr<Weapons::WeaponConfig> createDeagle();
-    
+
 private:
     // Recoil pattern generators
     static std::vector<Weapons::RecoilPoint> generateAK47Pattern();
     static std::vector<Weapons::RecoilPoint> generateM4A4Pattern();
-    static std::vector<Weapons::RecoilPoint> generateControlledPattern(float verticalStrength, float horizontalVariation, int patternLength);
+    static std::vector<Weapons::RecoilPoint>
+    generateControlledPattern(float verticalStrength, float horizontalVariation, int patternLength);
 };

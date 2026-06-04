@@ -1,10 +1,11 @@
 #pragma once
 
-#include "physics_types.h"
-#include "audio_system.h"
+#include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
-#include <GLFW/glfw3.h>
+
+#include "audio_system.h"
+#include "physics_types.h"
 
 class FPSCamera;
 
@@ -14,7 +15,7 @@ public:
 
     // Main update function - fixed timestep
     void update(float deltaTime);
-    
+
     // Input processing
     void processInput(GLFWwindow* window, float deltaTime);
     void processMouseInput(float xOffset, float yOffset);
@@ -24,12 +25,14 @@ public:
     glm::vec3 getVelocity() const { return m_State.velocity; }
     float getSpeed() const { return m_State.speed; }
     bool isOnGround() const { return m_State.onGround; }
-    bool isCrouching() const { return m_Input.crouch || m_CurrentEyeHeight < (Physics::PLAYER_HEIGHT - 0.05f); }
+    bool isCrouching() const {
+        return m_Input.crouch || m_CurrentEyeHeight < (Physics::PLAYER_HEIGHT - 0.05f);
+    }
     float getEyeHeight() const { return m_CurrentEyeHeight; }
 
     // Setters
     void setAudioSystem(AudioSystem* audioSystem) { m_AudioSystem = audioSystem; }
-    
+
     // Debug info
     const MovementState& getMovementState() const { return m_State; }
 
@@ -38,28 +41,28 @@ private:
     void updatePhysics(float deltaTime);
     void updateGroundState();
     void applyMovement(float deltaTime);
-    
+
     // Movement types
     void handleGroundMovement(float deltaTime);
     void handleAirMovement(float deltaTime);
     void handleJump();
-    
+
     // Physics helpers
     glm::vec3 calculateWishDirection() const;
     void accelerate(const glm::vec3& wishDir, float wishSpeed, float acceleration, float deltaTime);
     void applyFriction(float deltaTime);
     void applyGravity(float deltaTime);
-    
+
     // Strafe jumping optimizations
     float calculateStrafeEfficiency() const;
     void optimizeAirMovement(const glm::vec3& wishDir, float deltaTime);
     void handleBunnyHop();
-    
+
     // Collision améliorée
     bool checkGroundCollision(const glm::vec3& position) const;
     glm::vec3 resolveCollisions(const glm::vec3& position);
     void handleWallCollision(const glm::vec3& wallNormal);
-    
+
     // Input processing amélioré
     void updateInputTiming(float deltaTime);
 
@@ -81,8 +84,8 @@ private:
 
     // Per-instance state (was previously stored as method-local statics
     // — broken if more than one PlayerController exists).
-    bool  m_PrevOnGround     = true;
-    float m_GroundTime       = 0.0f;
+    bool m_PrevOnGround = true;
+    float m_GroundTime  = 0.0f;
 
     // Crouch — smoothly interpolated eye height.
     float m_CurrentEyeHeight = Physics::PLAYER_HEIGHT;

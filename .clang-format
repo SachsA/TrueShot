@@ -1,0 +1,78 @@
+# TrueShot — coding style for C++17.
+# Run `clang-format -i $(git ls-files '*.cpp' '*.h')` to apply.
+---
+Language:        Cpp
+BasedOnStyle:    LLVM
+Standard:        c++17
+
+# Indentation
+IndentWidth:     4
+TabWidth:        4
+UseTab:          Never
+ContinuationIndentWidth: 4
+AccessModifierOffset: -4
+
+# Line length
+ColumnLimit:     100
+
+# Braces
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+
+# Alignment
+AlignConsecutiveDeclarations: false
+AlignConsecutiveAssignments:  AcrossEmptyLines
+AlignAfterOpenBracket: Align
+AlignTrailingComments: true
+AlignOperands:  Align
+
+# Pointers / refs glued to type ("int* p", not "int *p").
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+# Includes
+# Critical ordering: glad MUST come before GLFW (and any other header that
+# might pull in the system OpenGL headers). We force this with
+# IncludeCategories — each block keeps its relative priority across the
+# whole file (IncludeBlocks: Regroup merges them then re-sorts).
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  # 1 — glad MUST be the very first thing included.
+  - Regex:    '^<glad/.*>'
+    Priority: 1
+  # 2 — GLFW comes right after glad.
+  - Regex:    '^<GLFW/.*>'
+    Priority: 2
+  # 3 — other third-party single-quoted system headers (imgui, glm, etc.).
+  - Regex:    '^<(imgui|glm|enet|AL)/.*>'
+    Priority: 3
+  - Regex:    '^<imgui.*>'
+    Priority: 3
+  # 4 — project headers in double quotes (anything starting with a letter).
+  - Regex:    '^"[a-zA-Z_]+\.h"$'
+    Priority: 4
+  # 5 — standard library and everything else.
+  - Regex:    '.*'
+    Priority: 5
+# Disable "main include" auto-promotion: we want glad to win, period.
+# A regex that never matches effectively disables the feature.
+IncludeIsMainRegex: '\^IMPOSSIBLE_MATCH\^'
+
+# Spacing
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceAfterCStyleCast: false
+
+# Misc
+FixNamespaceComments: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 2
+NamespaceIndentation: None
+ReflowComments: true
+SortUsingDeclarations: true

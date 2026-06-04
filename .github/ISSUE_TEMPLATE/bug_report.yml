@@ -1,0 +1,67 @@
+name: Bug report
+description: Something is broken or behaving unexpectedly.
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please fill in as much as you can —
+        the more context, the faster we can fix it.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the bug, what you expected, and what you got.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered list of actions a fresh contributor could follow to see the bug.
+      placeholder: |
+        1. Launch TrueShot
+        2. Switch to AWP (key 5)
+        3. Fire at the target at -10 m
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      multiple: true
+      options:
+        - Windows 10
+        - Windows 11
+        - macOS (Intel)
+        - macOS (Apple Silicon)
+        - Ubuntu
+        - Other Linux
+        - Steam Deck
+    validations:
+      required: true
+
+  - type: input
+    id: commit
+    attributes:
+      label: Git commit / version
+      placeholder: "e.g. v0.2.1 or commit abc123"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console output / crash log
+      render: text
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, GPU model, driver version, etc.

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discord (community + playtest)
+    url: https://discord.gg/your-server-here
+    about: Real-time chat with the dev and playtesters. Casual questions go here.
+  - name: Security report (private)
+    url: mailto:security@truestot.gg
+    about: Don't open a public issue for security bugs — email instead.

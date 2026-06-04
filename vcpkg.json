@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "trueshot",
+  "version-string": "0.2.0",
+  "description": "Tactical 5v5 FPS in C++",
+  "homepage": "https://github.com/SachsA/TrueShot",
+  "license": null,
+  "dependencies": [
+    "glm",
+    "enet",
+    "glfw3",
+    {
+      "name": "glad",
+      "features": ["gl-api-33"]
+    },
+    {
+      "name": "imgui",
+      "features": ["glfw-binding", "opengl3-binding"]
+    }
+  ],
+  "builtin-baseline": "fba75d09065fcc76a25dcf386b1d00d33f5175af"
+}

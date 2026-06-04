@@ -724,20 +724,43 @@ But : 10 joueurs sur un serveur jouent un match complet avec round structure.
 - [ ] Patcher delta (binary diff, BPS / xdelta)
 - [ ] Hot-fix rapide (1h de QA → push)
 
-### 8.8 — CI/CD multi-OS (à mettre en place tôt)
+### 8.8 — CI/CD multi-OS (mise en place — H0 ✅)
 
-> **Mode :** 🟢 **Ensemble**. À mettre en place dès la Phase 1 idéalement,
-> pour ne jamais merger du code qui casse un OS.
+> **Mode :** 🟢 **Ensemble**. Installé avant Phase 1 pour ne jamais
+> merger du code qui casse un OS.
 
-- [ ] Workflow GitHub Actions multi-OS (windows-latest, macos-latest,
-      ubuntu-latest)
-- [ ] vcpkg en cache (sinon 30+ min par build)
-- [ ] Étape `cmake --preset strict` qui refuse les warnings (`-Werror`)
-- [ ] Étape unit tests + smoke tests
-- [ ] Artifacts uploadés (TrueShot-{os}-{sha}.zip) pour QA manuel
-- [ ] Notification Discord en cas de fail
-- [ ] Branche `main` protégée : pas de merge sans CI verte sur les 3 OS
-- [ ] Release tags → build signé + draft Steam upload
+État actuel :
+
+- [x] Workflow `build.yml` — matrix `[ubuntu, macos, windows] × [Debug, Release]`
+- [x] vcpkg en mode manifest (`vcpkg.json`) + binary cache GHA
+- [x] `TRUESHOT_WARNINGS_AS_ERRORS=ON` activé en CI (équivaut à `cmake --preset strict`)
+- [x] Smoke test : présence du binaire compilé sur chaque OS
+- [x] Artifacts uploadés (`TrueShot-{OS}-{sha}`) en Release, retention 14 jours
+- [x] Concurrency control : un seul build par branche, ancien annulé
+- [x] Workflow `lint.yml` — clang-format, EditorConfig, markdownlint, yamllint
+- [x] Workflow `clang-tidy.yml` — analyse statique hebdo + on-demand
+- [x] Configs versionnées : `.clang-format`, `.clang-tidy`, `.editorconfig`,
+      `.markdownlint.json`, `.yamllint.yml`
+- [x] PR template + ISSUE templates (bug / feature)
+- [x] Documentation CI dans `CONTRIBUTING.md`
+
+À ajouter au fil des phases :
+
+- [ ] **Phase 1** : job `network-test` (boucle serveur + N clients fake, assert
+      convergence des positions)
+- [ ] **Phase 2** : job `gameplay-smoke` (match scripté de bout en bout)
+- [ ] **Phase 4** : job `shaders-validate` (glslang validator + spirv-cross)
+- [ ] **Phase 7** : job `backend-test` (lance la DB en service, teste les
+      endpoints REST)
+- [ ] **Phase 9** : job `security` (CodeQL, dependency scanning, secret scan)
+- [ ] **Phase 15** : job `perf-regression` (Tracy benchmarks vs baseline)
+- [ ] **Phase 16** : job `package-steam` (depot signé prêt pour
+      `steamcmd app_build_*`)
+- [ ] **Phase 17** : workflow `release.yml` (tag → upload Steam beta branch
+      → poste sur Discord)
+- [ ] Notification Discord/Slack en cas de fail sur `main`
+- [ ] Branche `main` protégée GitHub : requirement = `required-checks` job
+      green (déjà câblé dans build.yml)
 
 ### 8.8 — Budget infrastructure
 

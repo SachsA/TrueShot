@@ -1,0 +1,43 @@
+name: clang-tidy
+
+# Deep static analysis. Too slow for every PR — runs weekly + on demand.
+on:
+  schedule:
+    - cron: "0 4 * * 1" # Every Monday at 04:00 UTC.
+  workflow_dispatch:
+
+concurrency:
+  group: clang-tidy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  clang-tidy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake ninja-build clang-tidy-18 pkg-config \
+            libgl1-mesa-dev libx11-dev libxrandr-dev libxinerama-dev \
+            libxcursor-dev libxi-dev libxext-dev libwayland-dev \
+            libxkbcommon-dev libasound2-dev
+
+      - name: Configure (generate compile_commands.json)
+        env:
+          VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+
+      - name: Run clang-tidy on changed sources
+        run: |
+          mapfile -t FILES < <(git ls-files 'src/*.cpp' \
+            | grep -Ev '^(build/|network_module/build/|third_party/)')
+          clang-tidy-18 -p build "${FILES[@]}" \
+            --warnings-as-errors='*'

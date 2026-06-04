@@ -1,0 +1,86 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # -----------------------------------------------------------------
+  # clang-format — fails if any tracked C++ file is not formatted.
+  # Run locally with: clang-format -i $(git ls-files '*.cpp' '*.h')
+  # -----------------------------------------------------------------
+  clang-format:
+    name: clang-format
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: sudo apt-get install -y clang-format-18
+
+      - name: Show version
+        run: clang-format-18 --version
+
+      - name: Run clang-format --dry-run --Werror
+        run: |
+          set -e
+          # All tracked C++ headers/sources, excluding 3rd party and build dirs.
+          mapfile -t FILES < <(git ls-files '*.cpp' '*.h' '*.hpp' \
+            | grep -Ev '^(build/|network_module/build/|third_party/)')
+          if [ ${#FILES[@]} -eq 0 ]; then
+            echo "No C++ files to check."
+            exit 0
+          fi
+          echo "Checking ${#FILES[@]} files..."
+          clang-format-18 --dry-run --Werror --style=file "${FILES[@]}"
+
+  # -----------------------------------------------------------------
+  # EditorConfig — verify tabs/spaces/EOLs match .editorconfig.
+  # -----------------------------------------------------------------
+  editorconfig:
+    name: editorconfig-checker
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: editorconfig-checker/action-editorconfig-checker@v2
+
+  # -----------------------------------------------------------------
+  # markdownlint — quick sanity on README / ROADMAP / CONTRIBUTING.
+  # Configured in .markdownlint.json (lenient — we don't want it
+  # to flag every emoji or long URL).
+  # -----------------------------------------------------------------
+  markdownlint:
+    name: markdownlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DavidAnson/markdownlint-cli2-action@v18
+        with:
+          globs: |
+            **/*.md
+            !network_module/build/**
+            !build/**
+
+  # -----------------------------------------------------------------
+  # YAML lint — catch typos in workflow files themselves.
+  # -----------------------------------------------------------------
+  yamllint:
+    name: yamllint
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install yamllint
+        run: pip install yamllint
+      - name: Run yamllint
+        run: yamllint -c .yamllint.yml .github/workflows
