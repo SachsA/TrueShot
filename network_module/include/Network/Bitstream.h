@@ -181,20 +181,6 @@ struct BitWriter {
         writeU16(n);
         if (n != 0) write(s.data(), n);
     }
-
-    // -------------------------------------------------------------------
-    // LEGACY: raw POD write (host endianness, no padding control).
-    //
-    // Kept only for the original Server.cpp / Client.cpp prototypes
-    // until Phase 1.3 rewrites them on top of the typed API above.
-    // Do NOT use in new code — it leaks host alignment / endianness
-    // onto the wire and will break the moment a non-x86 client joins.
-    // -------------------------------------------------------------------
-    template <typename T>
-    [[deprecated("use writeU32 / writeFloat / writeQ16_16 / etc. instead")]]
-    void writePOD(const T& v) {
-        write(&v, sizeof(T));
-    }
 };
 
 // =======================================================================
@@ -335,16 +321,6 @@ struct BitReader {
         p += n;
         remaining -= n;
         return true;
-    }
-
-    // -------------------------------------------------------------------
-    // LEGACY: raw POD read (host endianness, no padding control).
-    // See note on BitWriter::writePOD — slated for removal in Phase 1.3.
-    // -------------------------------------------------------------------
-    template <typename T>
-    [[deprecated("use readU32 / readFloat / readQ16_16 / etc. instead")]]
-    bool readPOD(T& out) {
-        return read(&out, sizeof(T));
     }
 };
 
