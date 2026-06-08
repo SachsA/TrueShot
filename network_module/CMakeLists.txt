@@ -7,10 +7,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(unofficial-enet CONFIG REQUIRED)
 
 # ---------------------------------------------------------------- library
-# Only the support code (no main()) goes into the static library.
+# Support code + the production Server class go into the static library.
+# Server.cpp's main() is guarded by `#ifdef TRUESHOT_SERVER`, so when
+# we don't define that macro for the library target, only the class
+# definition is compiled. The standalone `trueshot_server` executable
+# compiles Server.cpp a second time with the macro on to get its main.
 add_library(trueshot_network STATIC
     src/ENetWrapper.cpp
     src/NetCommon.cpp
+    src/Server.cpp
 )
 
 target_include_directories(trueshot_network
@@ -28,13 +33,16 @@ if(WIN32)
 endif()
 
 # ---------------------------------------------------------------- executables
-# Server.cpp / Client.cpp each define a main(), but only when the matching
-# TRUESHOT_SERVER / TRUESHOT_CLIENT macro is defined. Wire that in here so
-# each executable has exactly one entry point.
-add_executable(trueshot_server src/Server.cpp)
-target_compile_definitions(trueshot_server PRIVATE TRUESHOT_SERVER)
-target_link_libraries     (trueshot_server PRIVATE trueshot_network)
+# Standalone server: just a main() linking against the library which
+# contains the actual Server class. Avoids ODR violations from
+# compiling Server.cpp twice.
+add_executable(trueshot_server src/main_server.cpp)
+target_link_libraries(trueshot_server PRIVATE trueshot_network)
 
+# Client.cpp is still a self-contained prototype with its main()
+# guarded by TRUESHOT_CLIENT. Phase 1.4 has moved the real client code
+# into NetworkClient (game-side); this binary stays as a CI smoke test
+# until we delete it in a later phase.
 add_executable(trueshot_client src/Client.cpp)
 target_compile_definitions(trueshot_client PRIVATE TRUESHOT_CLIENT)
-target_link_libraries     (trueshot_client PRIVATE trueshot_network)
+target_link_libraries(trueshot_client PRIVATE trueshot_network)
