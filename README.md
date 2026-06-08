@@ -35,32 +35,51 @@
 ## About
 
 TrueShot is an in-development tactical first-person shooter inspired by the
-movement and gunplay of competitive Source-engine titles. The current build is
-a single-player practice range that exercises the core systems (movement,
-weapons, audio, networking) before they are wired together into the full 5v5
-match flow.
+movement and gunplay of competitive Source-engine titles. We're currently
+mid-**Phase 1** (1v1 LAN netcode) — the build runs both as a single-player
+practice range and as a networked client/server pair, sharing the same C++
+codebase. The full 5v5 match flow lands in Phase 2.
 
-This repository hosts both the **client** (rendered with OpenGL 3.3 + GLFW)
-and a separate **network module** (ENet-based authoritative server / client
-prototype).
+This repository hosts:
+
+- the **TrueShot** client (OpenGL 3.3 + GLFW + Dear ImGui)
+- the **`trueshot_server`** standalone authoritative server (ENet, 128 Hz tick)
+- a shared **network module** (`Net::Server`, `NetworkClient`, packet codec,
+  `RemotePlayer` interpolation) reusable in listen-server mode
+
+See [**docs/adr/0002-netcode-architecture.md**](docs/adr/0002-netcode-architecture.md)
+for the netcode design decisions (128 Hz, server-authoritative, listen-server,
+custom kernel anti-cheat in Phase 9).
 
 ## Features
 
-- **Source-style movement** — strafe-jumping, bunny-hopping, fixed 64-tick
+- **Source-style movement** — strafe-jumping, bunny-hopping, fixed-timestep
   physics, wall bounces, friction, air-control and crouch (eye-height
   interp + reduced ground speed) modelled after CS-style values.
 - **Weapon system** — five weapons (Glock, Deagle, AK-47, M4A4, AWP) with
   their own damage, recoil patterns, fire modes, ADS times and reload
   behaviour.
-- **Real hit detection** — ray-vs-AABB raycasting against an `GameWorld` of
+- **Real hit detection** — ray-vs-AABB raycasting against a `GameWorld` of
   scoring targets, with location-based damage (head / chest / legs).
 - **Score & accuracy tracking** — kills, hits, shots fired, accuracy %.
 - **HUD overlay** — Dear ImGui panels for score, ammo, accuracy, speed, FPS
   and bhop combo. Toggle with `F1`.
 - **Audio system** — OpenAL-ready architecture with 3D sources, footsteps,
   weapon cues and reverb zones.
-- **Network module** — ENet-based prototype with input snapshots, server
-  reconciliation scaffolding and a tiny bit-stream codec.
+- **128 Hz authoritative netcode** — ENet over UDP with two channels
+  (reliable + unreliable sequenced), Q16.16 fixed-point positions, Q15
+  quantised angles, varint zigzag. Server clamps every input as the
+  foundation for Phase 9's custom anti-cheat. See ADR 0002.
+- **Snapshot interpolation** — remote players are rendered 100 ms behind the
+  latest snapshot using a 64-sample ring buffer per entity, freezing on
+  starvation rather than extrapolating into nonsense. See ADR 0004.
+- **Listen-server ready** — the `Net::Server` is built as a library so a
+  client can host locally in addition to running the standalone
+  `trueshot_server` binary.
+- **Multi-OS CI/CD** — every push runs on Windows, macOS and Linux in
+  Debug + Release with `-Werror`, plus clang-format, EditorConfig and
+  markdownlint gates. Builds are reproducible against a pinned
+  `clang-format-18.1.8`.
 - **Modern CMake** — single `CMakeLists.txt`, presets, warnings enabled,
   optional Werror.
 
@@ -81,14 +100,30 @@ TrueShot/
 │   ├─ audio_system.h       # 3D audio, footsteps, reverb
 │   ├─ audio_types.h
 │   ├─ hud.h                # ImGui-based in-game overlay
-│   └─ shader.h
-├─ src/                     # implementations
+│   ├─ shader.h
+│   └─ net/
+│       ├─ tick_clock.h     # fixed 128 Hz accumulator
+│       ├─ network_client.h # ENet client socket + metrics
+│       └─ remote_player.h  # snapshot interpolation registry
+├─ src/                     # client implementations
 ├─ shaders/                 # GLSL (basic.vert / basic.frag)
-├─ network_module/          # ENet client/server prototype + library
+├─ network_module/          # shared Net library + trueshot_server
+│   ├─ include/Network/
+│   │   ├─ Bitstream.h      # LE primitives, Q16.16, Q15 angles, varint
+│   │   ├─ NetCommon.h      # protocol constants + POD types
+│   │   ├─ PacketTypes.h    # PacketType enum + serialize/deserialize
+│   │   └─ Server.h         # Net::Server (listen + standalone)
+│   └─ src/
+│       ├─ Server.cpp
+│       └─ main_server.cpp  # trueshot_server entry point
+├─ docs/adr/                # architecture decision records
+├─ .github/workflows/       # multi-OS CI (build + lint + clang-tidy)
 ├─ CMakeLists.txt
 ├─ CMakePresets.json
+├─ vcpkg.json               # manifest mode deps
 ├─ RunTrueShot.sh           # macOS / Linux build & run
 ├─ RunTrueShot.bat          # Windows build & run
+├─ CHANGELOG.md
 ├─ CONTRIBUTING.md
 ├─ LICENSE
 └─ README.md
@@ -158,6 +193,28 @@ cmake --build build --parallel
 
 The build copies `shaders/` next to the executable automatically.
 
+### Run modes
+
+The client supports three modes selectable on the command line:
+
+```bash
+# 1. Offline practice range (default — no network)
+./build/bin/TrueShot
+
+# 2. Networked client — connect to a remote server
+./build/bin/TrueShot --server 192.168.1.42
+./build/bin/TrueShot --server 192.168.1.42:7777    # custom port
+
+# 3. Standalone authoritative server (no rendering, no window)
+./build/bin/trueshot_server                         # binds on :7777
+./build/bin/trueshot_server 9000                    # custom port
+```
+
+A typical 1v1 LAN session uses one machine running `trueshot_server` and two
+machines running `TrueShot --server <ip>`. Listen-server mode (one client
+hosts and plays at the same time) is wired into the same `Net::Server`
+library and lands fully in Phase 2.
+
 ## Controls
 
 | Action | Key |
@@ -182,32 +239,55 @@ The build copies `shaders/` next to the executable automatically.
 │                       Application                            │
 │  Owns the window, callbacks, main loop and every subsystem.  │
 ├──────────────────────────────────────────────────────────────┤
-│  FPSCamera    PlayerController    WeaponSystem               │
+│  FPSCamera    PlayerController    WeaponSystem    Hud        │
 │  GameWorld    AudioSystem         Renderer                   │
+├──────────────────────────────────────────────────────────────┤
+│  NetworkClient        RemotePlayerRegistry      (client mode)│
 └──────────────────────────────────────────────────────────────┘
-        │                │                  │
-        ▼                ▼                  ▼
-   yaw/pitch      64-tick physics    raycast vs targets
-                                     score / accuracy
+        │                │                       │
+        ▼                ▼                       ▼
+   yaw/pitch       fixed-timestep         raycast vs targets
+                   physics                score / accuracy
+
+┌──────────────────────────────────────────────────────────────┐
+│      trueshot_server  (or any client in listen-server mode)  │
+│  Net::Server — 128 Hz authoritative tick, broadcasts         │
+│  Snapshot to every peer with personalized ackSeq.            │
+│  Hard-clamps every InputState (anti-cheat foundation).       │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 - `Application` is the only owner of subsystem lifetimes; everything else
   takes raw pointers / references.
-- `Renderer` only knows about the camera, the world, the weapon (for FOV)
-  and the player — it never reaches back into input, audio or globals.
+- `Renderer` only knows about the camera, the world, the weapon (for FOV),
+  the player and (optionally) the `RemotePlayerRegistry` — it never reaches
+  back into input, audio or globals.
 - `WeaponSystem::fire()` performs a real ray-vs-AABB raycast against
   `GameWorld::raycastTargets()` and applies damage based on hit location.
+- **Server-authoritative.** The client predicts movement locally (Phase 1.7),
+  but the server is the source of truth. Every `InputState` is clamped on
+  arrival, every position broadcast back is what actually happened on the
+  server. This is the foundation Phase 9's custom kernel anti-cheat plugs
+  into.
+- **No console** in any code path — Windows/macOS/Linux only (Steam +
+  Steam Deck via Proton/native). See [ROADMAP.md](ROADMAP.md) Phase 20.
 
 ## Roadmap
 
-The current build is **Phase 0 — Fondations techniques** (single-player
-practice range). The next milestone is **Phase 1 — Netcode jouable
-(1v1 LAN)**.
+The current build sits **mid-Phase 1 — Netcode jouable (1v1 LAN)**. Phase 0
+(fondations techniques) is complete; sub-phases 1.0 through 1.6 (design doc,
+tick clock, bitstream, packet types, NetworkClient, authoritative server,
+snapshot interpolation) are landed. The next milestones are 1.7 (client
+prediction + reconciliation), 1.8 (lag compensation), 1.9 (network HUD)
+and 1.10 (multi-OS LAN test pass).
 
 For the **full exhaustive roadmap** — network, anti-cheat, maps, art
 direction, audio production, backend, e-sport, legal, marketing — see
 [**ROADMAP.md**](ROADMAP.md). Twenty phases, ~400 atomic tasks, with
 execution mode (solo / freelance / team) and budget estimates for each.
+
+Recent changes are tracked in [**CHANGELOG.md**](CHANGELOG.md). Design
+decisions live under [**docs/adr/**](docs/adr/).
 
 ## Contributing
 

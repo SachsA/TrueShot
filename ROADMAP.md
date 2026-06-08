@@ -85,7 +85,7 @@ Chaque section est étiquetée avec un mode d'exécution :
 
 - [x] Architecture C++17 / CMake / vcpkg
 - [x] Renderer OpenGL 3.3, classes Application/Renderer/GameWorld
-- [x] Movement Source-style (strafe jump, bhop, crouch, 64-tick physics)
+- [x] Movement Source-style (strafe jump, bhop, crouch, fixed-timestep physics — bumped to 128 Hz in Phase 1.1)
 - [x] 5 armes avec recoil patterns, ADS, reload
 - [x] Hit detection réelle (ray vs AABB) + damage par zone
 - [x] HUD ImGui (score, ammo, accuracy, FPS, speed) + hit markers
@@ -106,74 +106,130 @@ Chaque section est étiquetée avec un mode d'exécution :
 > Si on bloque ici, le projet bloque entièrement.
 >
 > **Durée estimée :** 2-4 mois en solo full-time, plus en partiel.
+>
+> **Décisions cadre (cf. [ADR 0002](docs/adr/0002-netcode-architecture.md)) :**
+>
+> - **128 Hz** tick rate fixe.
+> - **Server-authoritative** dès le départ — le client prédit, le serveur tranche.
+> - **Listen-server** : un client peut héberger localement (mode "Host & Play"),
+>   en plus du binaire `trueshot_server` standalone.
+> - **Pas de modèle de personnage propre** en Phase 1 — placeholder cubes,
+>   les vrais models arrivent en Phase 4.
 
 But : deux joueurs sur le même LAN voient leurs mouvements et leurs tirs.
 
-### 1.1 — Tick rate & boucle serveur
+### 1.0 — Design doc netcode
 
-- [ ] Choisir le tick rate cible (64 → 128 selon perfs ; viser 128 pour le compétitif)
-- [ ] Implémenter une boucle serveur à tick fixe (`std::chrono` + sleep busy-wait)
-- [ ] Gérer le drift d'horloge (jitter buffer côté client)
-- [ ] Mesurer la stabilité du tick (variance < 1 ms)
+- [x] ADR 0002 — architecture netcode (tick rate, protocole, listen-server,
+      lag compensation, anti-cheat foundation)
 
-### 1.2 — Sérialisation
+### 1.1 — Tick clock 128 Hz
 
-- [ ] Étendre `Bitstream` pour types complexes (quat, fixed-point pour positions)
-- [ ] Définir le schéma de `InputState` (boutons + view angles + timestamps)
-- [ ] Définir le schéma de `Snapshot` (état complet des entités)
-- [ ] Versioning du protocole (handshake avec version au connect)
-- [ ] Endianness (réseau = big-endian, host peut être little)
+- [x] `TickClock` à pas fixe (accumulator capé à 0.25 s, viser 128 Hz)
+- [x] Mesure de la stabilité du tick (variance < 1 ms en pratique)
+- [x] Constantes `FIXED_TIMESTEP` partagées client + serveur
 
-### 1.3 — Client-side prediction
+### 1.2 — Sérialisation Bitstream
 
-- [ ] Buffer ring des inputs locaux (dernières 1 sec)
-- [ ] Application immédiate des inputs sur la position locale
-- [ ] Réception du snapshot serveur → comparaison position prédite/autoritaire
-- [ ] Replay des inputs non encore ack'd
-- [ ] Tolérance de seuil (snap si désync > 50 cm, sinon lerp)
+- [x] `writeU8/16/32/64` + `readU8/16/32/64` little-endian explicite
+- [x] `writeFloat` / `readFloat` via memcpy bit-cast
+- [x] `writeQ16_16` — fixed-point 4 octets, ±32 km, précision 1/65536
+- [x] `writeAngleQ15` — angle quantifié 2 octets (0.0055° de précision à 180°)
+- [x] `writeVec3Q` — 12 octets
+- [x] `writeVarU32` / `writeVarI32` — varint zigzag (1-5 octets)
+- [x] `writeString` length-prefixed
+- [x] Toutes les `read*` retournent `bool` (false sur overflow)
 
-### 1.4 — Server reconciliation
+### 1.3 — Types de paquets & schémas
 
-- [ ] Le serveur applique les inputs reçus dans l'ordre
-- [ ] Le serveur ack le dernier `seq` traité dans chaque snapshot
-- [ ] Le serveur valide la fenêtre temporelle (anti-speedhack)
-- [ ] Le serveur clamp les inputs hors-limites (anti-injection)
+- [x] Enum `PacketType` (Handshake / HandshakeAck / Disconnect / Ping / Pong /
+      ClientInput / Snapshot / Event / RPC)
+- [x] `InputState` (tick, seq, moveForward/Right, yaw, pitch, buttons,
+      clientPingMs)
+- [x] `EntityState` (id, pos Q16.16, yaw Q15, pitch Q15, stateFlags)
+- [x] `Snapshot` (tick, ackSeq, vector\<EntityState\>)
+- [x] `Handshake` (protocole, versions client, playerName)
+- [x] Versioning protocole : `kProtocolVersion = 1`, handshake bloquant si
+      mismatch
 
-### 1.5 — Interpolation des entités distantes
+### 1.4 — `NetworkClient` dans `Application`
 
-- [ ] Buffer de snapshots côté client (delay ~100 ms)
-- [ ] Interpolation linéaire entre 2 snapshots
-- [ ] Extrapolation courte (max 100 ms) si snapshot manqué
-- [ ] Snap si écart > 2 m
+- [x] Classe `NetworkClient` (ENet, 2 channels reliable + unreliable sequenced)
+- [x] API `initialize` / `shutdown` / `connectTo` / `disconnect` / `tick` /
+      `sendInput` / `popSnapshot`
+- [x] Métriques : `state`, `roundTripMs`, `packetsSent/Recv`, `bytesSent/Recv`,
+      `localId`
+- [x] CLI `--offline`, `--server host[:port]`, `--help`
+- [x] Boucle réseau intégrée à `Application` avec input accumulator 128 Hz
+- [x] Refcount partagé du `enet_initialize` (préparation listen-server)
 
-### 1.6 — Lag compensation
+### 1.5 — Serveur autoritaire + listen-server foundation
 
-- [ ] Le serveur garde l'historique des positions (1 sec)
-- [ ] Quand un client tire, rewind les ennemis à `(now - clientPing - interpDelay)`
-- [ ] Faire le raycast contre les positions rewindées
-- [ ] Limite : refuser le rewind si > 200 ms (anti-laggers exploit)
+- [x] Classe `Net::Server` (`start`, `stop`, `step`) — boucle 128 Hz à
+      accumulator, capée à 0.25 s
+- [x] Per-peer `PlayerState` avec `lastAckedSeq`
+- [x] **Hard input clamp côté serveur** (foundation anti-cheat) : moveForward/
+      moveRight ∈ [-1, 1], yaw ∈ ±180°, pitch ∈ ±89°
+- [x] Broadcast Snapshot par peer avec `ackSeq` personnalisé
+- [x] Binaire `trueshot_server` standalone (`network_module/src/main_server.cpp`)
+- [x] Library `Net::Server` réutilisable pour le mode listen-server (Phase 2)
+- [x] Cross-platform Windows linker (`ws2_32`, `winmm`)
 
-### 1.7 — Delta compression
+### 1.6 — Remote player + interpolation
+
+- [x] `RemotePlayer` avec ring buffer 64 samples (~500 ms d'historique à 128 Hz)
+- [x] `RemotePlayerRegistry` — exclut le `localPlayerId` (rendu via prédiction)
+- [x] Interpolation linéaire 100 ms (`kInterpDelaySeconds = 0.100`)
+- [x] Fallback freeze si extrapolation \> 100 ms (pas d'extrapolation par
+      vélocité en Phase 1 — voir ADR 0004)
+- [x] `Renderer::drawRemotePlayers` — cubes verticaux placeholder
+- [x] Pruning automatique du ring buffer (window = 4× interp delay)
+
+### 1.7 — Client prediction + server reconciliation
+
+- [ ] Buffer ring des inputs locaux (dernière seconde)
+- [ ] Application immédiate des inputs sur la position locale (prédiction)
+- [ ] À réception d'un Snapshot avec `ackSeq` : comparer position prédite/
+      autoritaire pour le local player
+- [ ] Replay des inputs non encore ack'd à partir de l'état autoritaire
+- [ ] Seuil de snap (snap si désync \> 50 cm, sinon lerp doux sur 100 ms)
+- [ ] Brancher les vrais inputs du `PlayerController` (moveForward/Right,
+      buttons) dans `InputState`
+
+### 1.8 — Lag compensation pour le tir
+
+- [ ] Historique des positions ennemies côté serveur (1 s glissante)
+- [ ] Au tir : rewind les ennemis à `now - clientPing - interpDelay`
+- [ ] Raycast contre les positions rewindées
+- [ ] Cap à 200 ms (au-delà, refuser le rewind — anti-laggers exploit)
+- [ ] Anti-cheat : valider que `clientPingMs` rapporté est cohérent avec le RTT
+      mesuré côté serveur
+
+### 1.9 — Network metrics + HUD
+
+- [ ] Afficher RTT, packet loss, bandwidth in/out dans le HUD (`F2` ?)
+- [ ] Graphique du jitter tick par tick (style `cl_showperformance` Source)
+- [ ] Compteur de snapshots reçus / interpolation buffer health
+- [ ] Indicateur de désync (delta entre tick local prédit et tick serveur ack'd)
+
+### 1.10 — Test 1v1 LAN
+
+- [ ] Simulateur de pertes (drop 1 paquet sur 20)
+- [ ] Simulateur de latence (ajout 50-100 ms via `tc`/`clumsy`)
+- [ ] Simulateur de jitter (±20 ms)
+- [ ] Test 1v1 LAN Windows ↔ macOS stable 10 min
+- [ ] Test 1v1 LAN Windows ↔ Linux stable 10 min
+- [ ] Test 1v1 LAN macOS ↔ Linux stable 10 min
+
+### 1.11 — Delta compression (à reporter)
+
+> **Pas pour Phase 1.x.** Replanifié quand la bandwidth deviendra un problème
+> mesuré (probablement Phase 2.x ou Phase 8 avec les serveurs dédiés).
 
 - [ ] Snapshots envoyés en delta depuis le dernier ack
 - [ ] Baseline snapshot (full state) tous les N ticks ou sur demande
 - [ ] Bit-mask des champs modifiés par entité
 - [ ] Compression LZ4 optionnelle sur la couche transport
-
-### 1.8 — Tests réseau
-
-- [ ] Simulateur de pertes (drop 1 paquet sur 20)
-- [ ] Simulateur de latence (ajout 50-100 ms)
-- [ ] Simulateur de jitter (variance +/- 20 ms)
-- [ ] Test 1v1 LAN stable pendant 10 min
-
-### 1.9 — Intégration côté jeu
-
-- [ ] Créer `NetworkClient` qui pousse l'`InputState` à chaque tick
-- [ ] Brancher `NetworkClient` dans `Application` à côté de `WeaponSystem`
-- [ ] `RemotePlayer` entity rendu par `Renderer` (cube ou capsule de base)
-- [ ] Gestion `connect`, `disconnect`, `timeout`
-- [ ] Logs réseau (RTT, packet loss, bandwidth)
 
 ---
 

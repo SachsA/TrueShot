@@ -6,6 +6,7 @@
 
 #include "fps_camera.h"
 #include "game_world.h"
+#include "net/remote_player.h"
 #include "player_controller.h"
 #include "renderer.h"
 #include "weapon_system.h"
@@ -136,7 +137,8 @@ void Renderer::buildCrosshair() {
 }
 
 void Renderer::render(const FPSCamera& camera, const GameWorld& world, const WeaponSystem& weapons,
-                      const PlayerController& /*player*/, float gameTime) {
+                      const PlayerController& /*player*/, float gameTime,
+                      const Net::RemotePlayerRegistry* remotes) {
     glClearColor(0.05f, 0.10f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -160,6 +162,9 @@ void Renderer::render(const FPSCamera& camera, const GameWorld& world, const Wea
 
     drawFloor(view, projection);
     drawTargets(world, view, projection, gameTime);
+    if (remotes) {
+        drawRemotePlayers(*remotes, view, projection, gameTime);
+    }
     drawCrosshair();
 }
 
@@ -180,6 +185,30 @@ void Renderer::drawTargets(const GameWorld& world, const glm::mat4& /*view*/,
         model           = glm::translate(model, t.position);
         model           = glm::rotate(model, gameTime * t.spinSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
         model           = glm::scale(model, glm::vec3(t.scale));
+
+        m_Shader->setMat4("model", model);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    }
+    glBindVertexArray(0);
+}
+
+void Renderer::drawRemotePlayers(const Net::RemotePlayerRegistry& remotes,
+                                 const glm::mat4& /*view*/, const glm::mat4& /*proj*/,
+                                 float gameTime) {
+    // Remote players are drawn as upright cubes at the interpolated server
+    // position. Phase 1.6 is intentionally placeholder geometry — proper
+    // character models land in the rendering phase.
+    glBindVertexArray(m_CubeVAO);
+    for (const auto& [id, player] : remotes.players()) {
+        glm::vec3 pos;
+        float yaw = 0.0f, pitch = 0.0f;
+        uint8_t flags = 0;
+        if (!player.sample(static_cast<double>(gameTime), pos, yaw, pitch, flags)) continue;
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model           = glm::translate(model, pos);
+        model           = glm::rotate(model, glm::radians(yaw), glm::vec3(0.0f, 1.0f, 0.0f));
+        model           = glm::scale(model, glm::vec3(0.8f, 1.8f, 0.4f));
 
         m_Shader->setMat4("model", model);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);

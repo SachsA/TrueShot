@@ -10,6 +10,9 @@ class FPSCamera;
 class GameWorld;
 class WeaponSystem;
 class PlayerController;
+namespace Net {
+class RemotePlayerRegistry;
+}
 
 // Owns all OpenGL resources (VAO/VBO/EBO + shader) and renders
 // the scene each frame. Knows nothing about input, audio, or physics.
@@ -28,9 +31,12 @@ public:
     void onResize(int width, int height);
 
     // Draw a frame. The renderer pulls camera/world state from
-    // its arguments — it never stores them long-term.
+    // its arguments — it never stores them long-term. `remotes` may be
+    // null (offline mode) — in network mode it provides the interpolated
+    // poses of every other player to render as placeholder cubes.
     void render(const FPSCamera& camera, const GameWorld& world, const WeaponSystem& weapons,
-                const PlayerController& player, float gameTime);
+                const PlayerController& player, float gameTime,
+                const Net::RemotePlayerRegistry* remotes = nullptr);
 
     int width() const { return m_Width; }
     int height() const { return m_Height; }
@@ -43,6 +49,8 @@ private:
     void drawFloor(const glm::mat4& view, const glm::mat4& proj);
     void drawTargets(const GameWorld& world, const glm::mat4& view, const glm::mat4& proj,
                      float gameTime);
+    void drawRemotePlayers(const Net::RemotePlayerRegistry& remotes, const glm::mat4& view,
+                           const glm::mat4& proj, float gameTime);
     void drawCrosshair();
 
     std::unique_ptr<Shader> m_Shader;

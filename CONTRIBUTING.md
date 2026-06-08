@@ -122,12 +122,48 @@ cmake --build --preset strict
 - `Application` is the only place that owns subsystems.
 - Per-subsystem dependencies go through setters (`setAudioSystem`,
   `setGameWorld`) so each system can be tested in isolation.
-- The fixed timestep (64 Hz) lives in `PlayerController::update`. Don't
-  duplicate it elsewhere.
+- The fixed simulation timestep is **128 Hz** (`Physics::FIXED_TIMESTEP`).
+  Both the client input loop and `Net::Server::step` run on the same
+  accumulator. Don't duplicate that timestep anywhere else.
 - Anything time-based must accept a `deltaTime`; never assume 60 FPS.
 - New gameplay entities (pickups, doors, etc.) should follow the same
   pattern as `Target` — a plain struct with a method-level update +
   a `GameWorld`-style owner.
+
+### Netcode rules (Phase 1+)
+
+- **Server is authoritative.** The client predicts movement locally
+  (Phase 1.7) but never trusts its own state. Every value the server
+  reads from a packet must be clamped against legitimate ranges before
+  being fed to the simulation. See
+  [ADR-003](docs/adr/0003-listen-server-and-input-clamping.md).
+- **Endianness is explicit.** Never `memcpy` a multi-byte primitive onto
+  the wire directly. Use the `Bitstream` helpers (`writeU16`, `writeQ16_16`,
+  `writeAngleQ15`, etc.) — they encode little-endian regardless of host.
+- **No `enet/enet.h` in public headers.** Use `void*` opaque pointers with
+  `asHost(void*)` / `asPeer(void*)` helpers inside the `.cpp`. This keeps
+  ENet out of every translation unit that includes the network headers.
+- **One simulation, two hosting models.** `Net::Server` is a library that
+  both `trueshot_server` (executable) and the future listen-server mode
+  link against. Don't fork the server logic.
+- **Local player is rendered from prediction, remote players from
+  interpolation.** Snapshot interpolation runs 100 ms behind the latest
+  snapshot. See
+  [ADR-004](docs/adr/0004-snapshot-interpolation.md).
+
+### Architecture Decision Records (ADRs)
+
+Major architectural choices are recorded as ADRs under
+[`docs/adr/`](docs/adr/). Read the relevant ADR before touching the
+subsystem it covers; add a new ADR when you make a decision that future-
+you (or someone else) would benefit from understanding the *why* behind.
+
+Current ADRs:
+
+- [ADR-001 — Render API](docs/adr/0001-render-api.md)
+- [ADR-002 — Netcode architecture](docs/adr/0002-netcode-architecture.md)
+- [ADR-003 — Listen-server & input clamping](docs/adr/0003-listen-server-and-input-clamping.md)
+- [ADR-004 — Snapshot interpolation](docs/adr/0004-snapshot-interpolation.md)
 
 ## Continuous Integration
 
@@ -202,11 +238,17 @@ needed" reminder where relevant.
 
 Before opening a PR, please confirm:
 
-- [ ] Builds clean under `cmake --preset strict` (no warnings).
+- [ ] Builds clean under `cmake --preset strict` (no warnings) on at
+      least your dev OS — CI will run the other two.
+- [ ] `clang-format --dry-run --Werror --style=file` passes on the
+      changed files (use the pinned `clang-format==18.1.8`).
 - [ ] No new global variables.
 - [ ] No GL calls outside `Renderer` / shaders.
+- [ ] No `enet/enet.h` leaked into a public header.
 - [ ] Headers use `#pragma once` and forward declarations where possible.
 - [ ] Public functions have a 1-line comment explaining intent.
 - [ ] Player-visible behaviour change is reflected in `README.md`
       (controls, features) when relevant.
-- [ ] Updated the roadmap if you've closed an item.
+- [ ] Updated `ROADMAP.md` if you've closed an item, and `CHANGELOG.md`
+      under `[Unreleased]`.
+- [ ] If the change is architectural, added an ADR under `docs/adr/`.

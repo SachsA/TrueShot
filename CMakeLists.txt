@@ -49,6 +49,7 @@ add_executable(${PROJECT_NAME}
     src/hud.cpp
     src/tick_clock.cpp
     src/network_client.cpp
+    src/remote_player.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE

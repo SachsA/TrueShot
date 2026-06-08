@@ -34,11 +34,14 @@ Spell it out: "Built on macOS arm64 in Debug, ran the game, fired
 ## Checklist
 
 - [ ] Builds clean under `cmake --preset strict` locally
-- [ ] `clang-format-18 --dry-run --Werror` passes
+- [ ] `clang-format-18 --dry-run --Werror` passes (pinned `clang-format==18.1.8`)
 - [ ] Tested on **Windows + macOS** at minimum (Linux verified by CI)
 - [ ] No new global variables
 - [ ] No new GL calls outside `Renderer` / shaders
+- [ ] No `enet/enet.h` leaked into a public header
 - [ ] No `static` locals that should be instance members
 - [ ] Public functions have a 1-line comment explaining intent
 - [ ] README / ROADMAP updated if user-visible behaviour changed
+- [ ] CHANGELOG.md `[Unreleased]` updated for any user/dev-visible change
+- [ ] ADR added under `docs/adr/` if the change is architectural
 - [ ] CI is green

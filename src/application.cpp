@@ -15,6 +15,7 @@
 
 #include "Network/NetCommon.h"
 #include "net/network_client.h"
+#include "net/remote_player.h"
 #include <algorithm>
 #include <iostream>
 
@@ -128,6 +129,7 @@ bool Application::init(const AppConfig& config) {
         } else {
             std::cout << "[App] Network mode = Client → " << config.serverHost << ':'
                       << config.serverPort << '\n';
+            m_Remotes = std::make_unique<Net::RemotePlayerRegistry>();
         }
     }
 
@@ -298,11 +300,14 @@ int Application::run() {
                     m_Net->sendInput(in);
                 }
             }
-            // Drain incoming snapshots. Phase 1.6 will hand these to a
-            // RemotePlayer registry; for now we just count them.
+            // Drain incoming snapshots into the RemotePlayer registry, which
+            // builds a 100 ms interpolated view of every other player.
             Net::Snapshot snap;
             while (m_Net->popSnapshot(snap)) {
-                (void)snap; // intentionally unused — Phase 1.6
+                if (m_Remotes) {
+                    m_Remotes->ingestSnapshot(snap, static_cast<double>(currentFrame),
+                                              m_Net->localId());
+                }
             }
         }
 
@@ -313,7 +318,8 @@ int Application::run() {
         if (m_Hud) m_Hud->beginFrame();
 
         if (m_Renderer && m_Camera && m_World && m_Weapons && m_Player) {
-            m_Renderer->render(*m_Camera, *m_World, *m_Weapons, *m_Player, currentFrame);
+            m_Renderer->render(*m_Camera, *m_World, *m_Weapons, *m_Player, currentFrame,
+                               m_Remotes.get());
         }
 
         // HUD is drawn after the 3D scene so it composites on top.

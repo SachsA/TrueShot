@@ -14,6 +14,9 @@ class Renderer;
 class GameWorld;
 class Hud;
 class NetworkClient;
+namespace Net {
+class RemotePlayerRegistry;
+}
 
 // Configuration consumed by Application::init(). Lets a caller (main.cpp)
 // pick the launch mode without baking it into the class. Phase 1.4 only
@@ -74,7 +77,8 @@ private:
     std::unique_ptr<GameWorld> m_World;
     std::unique_ptr<Renderer> m_Renderer;
     std::unique_ptr<Hud> m_Hud;
-    std::unique_ptr<NetworkClient> m_Net; // null in offline mode
+    std::unique_ptr<NetworkClient> m_Net;                  // null in offline mode
+    std::unique_ptr<Net::RemotePlayerRegistry> m_Remotes;  // empty in offline mode
 
     // Mouse state
     bool m_FirstMouse  = true;
