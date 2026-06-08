@@ -149,13 +149,17 @@ jobs:
       # ---------------------------------------------------------------
       # Configure with retry — vcpkg downloads sources from github.com,
       # and intermittent 5xx/504 errors during dep install would otherwise
-      # fail the whole job. Up to 3 attempts with 30 s back-off.
+      # fail the whole job. Up to 5 attempts with growing back-off.
       - name: Configure
         uses: nick-fields/retry@v3
+        env:
+          # Force vcpkg's own retry logic to kick in harder before we
+          # bail out of the attempt.
+          X_VCPKG_FORCE_DOWNLOAD_RETRY: "1"
         with:
-          timeout_minutes: 30
-          max_attempts: 3
-          retry_wait_seconds: 30
+          timeout_minutes: 45
+          max_attempts: 5
+          retry_wait_seconds: 60
           shell: bash
           command: |
             cmake -S . -B build \

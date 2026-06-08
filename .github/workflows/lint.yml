@@ -53,12 +53,21 @@ jobs:
     name: editorconfig-checker
     runs-on: ubuntu-latest
     timeout-minutes: 3
-    # Note: editorconfig-checker is still on Node 20 — GitHub will warn
-    # about deprecation. Harmless until the upstream releases a Node 24
-    # version. No action needed from us.
     steps:
       - uses: actions/checkout@v5
-      - uses: editorconfig-checker/action-editorconfig-checker@v2
+
+      # Install via pip rather than fetching the upstream release binary
+      # from github.com — way more resilient to GitHub 504s. The
+      # `editorconfig-checker` PyPI wheel just bundles the Go binary
+      # and serves it from PyPI's CDN.
+      - name: Install editorconfig-checker
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "editorconfig-checker==3.0.3"
+          ec --version
+
+      - name: Run editorconfig-checker
+        run: ec --exclude '(^|/)(build|\.git|vcpkg|vcpkg_installed|network_module/build)/'
 
   # -----------------------------------------------------------------
   # markdownlint — quick sanity on README / ROADMAP / CONTRIBUTING.
