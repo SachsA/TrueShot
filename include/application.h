@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
+#include <string>
 
 struct GLFWwindow;
 
@@ -11,6 +13,25 @@ class AudioSystem;
 class Renderer;
 class GameWorld;
 class Hud;
+class NetworkClient;
+
+// Configuration consumed by Application::init(). Lets a caller (main.cpp)
+// pick the launch mode without baking it into the class. Phase 1.4 only
+// implements `Offline` (the existing solo practice) and `Client` (connect
+// to a remote server). Listen-server lands in Phase 1.5.
+struct AppConfig {
+    enum class Mode {
+        Offline = 0, // Single-player practice range (default).
+        Client,      // Join a remote server at `serverHost:serverPort`.
+    };
+
+    int width              = 1280;
+    int height             = 720;
+    std::string title      = "TrueShot - Tactical FPS";
+    Mode mode              = Mode::Offline;
+    std::string serverHost = "127.0.0.1";
+    uint16_t serverPort    = 7777;
+};
 
 // Top-level owner of every subsystem. Replaces the previous global
 // state in main.cpp. Lifetime: construct, init(), run(), then destruct.
@@ -22,8 +43,12 @@ public:
     Application(const Application&)            = delete;
     Application& operator=(const Application&) = delete;
 
-    // Create the GLFW window, GL context, audio, world, weapons.
+    // Create the GLFW window, GL context, audio, world, weapons, and
+    // (optionally) the network client.
     // Returns false on any unrecoverable init failure.
+    bool init(const AppConfig& config);
+
+    // Convenience overload kept for backwards compat — runs offline.
     bool init(int width, int height, const char* title);
 
     // Run the main loop until the user closes the window.
@@ -49,6 +74,7 @@ private:
     std::unique_ptr<GameWorld> m_World;
     std::unique_ptr<Renderer> m_Renderer;
     std::unique_ptr<Hud> m_Hud;
+    std::unique_ptr<NetworkClient> m_Net; // null in offline mode
 
     // Mouse state
     bool m_FirstMouse  = true;

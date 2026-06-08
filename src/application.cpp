@@ -13,11 +13,14 @@
 #include "renderer.h"
 #include "weapon_system.h"
 
+#include "Network/NetCommon.h"
+#include "net/network_client.h"
 #include <algorithm>
 #include <iostream>
 
 Application::Application() = default;
 Application::~Application() {
+    if (m_Net) m_Net->shutdown();
     if (m_Hud) m_Hud->shutdown();
     if (m_Audio) m_Audio->shutdown();
     if (m_Window) {
@@ -40,8 +43,16 @@ void Application::resizeCallbackThunk(GLFWwindow* w, int width, int height) {
 }
 
 bool Application::init(int width, int height, const char* title) {
-    m_Width  = width;
-    m_Height = height;
+    AppConfig cfg;
+    cfg.width  = width;
+    cfg.height = height;
+    cfg.title  = title ? title : "TrueShot";
+    return init(cfg);
+}
+
+bool Application::init(const AppConfig& config) {
+    m_Width  = config.width;
+    m_Height = config.height;
 
     if (!glfwInit()) {
         std::cerr << "[App] Failed to init GLFW\n";
@@ -56,7 +67,7 @@ bool Application::init(int width, int height, const char* title) {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 #endif
 
-    m_Window = glfwCreateWindow(m_Width, m_Height, title, nullptr, nullptr);
+    m_Window = glfwCreateWindow(m_Width, m_Height, config.title.c_str(), nullptr, nullptr);
     if (!m_Window) {
         std::cerr << "[App] Failed to create GLFW window\n";
         return false;
@@ -104,6 +115,21 @@ bool Application::init(int width, int height, const char* title) {
 
     // Let the weapon system trigger hit-marker feedback through the HUD.
     if (m_Hud) m_Weapons->setHud(m_Hud.get());
+
+    // ----- Optional networking -----
+    if (config.mode == AppConfig::Mode::Client) {
+        m_Net = std::make_unique<NetworkClient>();
+        if (!m_Net->initialize()) {
+            std::cerr << "[App] NetworkClient init failed — falling back to offline\n";
+            m_Net.reset();
+        } else if (!m_Net->connectTo(config.serverHost, config.serverPort)) {
+            std::cerr << "[App] connectTo() failed — falling back to offline\n";
+            m_Net.reset();
+        } else {
+            std::cout << "[App] Network mode = Client → " << config.serverHost << ':'
+                      << config.serverPort << '\n';
+        }
+    }
 
     printControls();
     return true;
@@ -226,7 +252,10 @@ void Application::printDebugInfo() {
 int Application::run() {
     if (!m_Window) return 1;
 
-    float lastFrame = float(glfwGetTime());
+    float lastFrame    = float(glfwGetTime());
+    uint32_t localTick = 0;
+    uint32_t inputSeq  = 0;
+    double netAccum    = 0.0;
 
     while (!glfwWindowShouldClose(m_Window)) {
         const float currentFrame = float(glfwGetTime());
@@ -242,6 +271,39 @@ int Application::run() {
         if (m_Audio) {
             m_Audio->update(deltaTime);
             m_Audio->setListenerFromCamera(m_Camera.get(), m_Player.get());
+        }
+
+        // ----- Network step -----
+        // We send one ClientInput per simulation tick (128 Hz). The frame
+        // rate is independent — we use an accumulator over the network
+        // tick interval so a 200 FPS client sends 128 packets/s, not 200.
+        if (m_Net) {
+            m_Net->tick();
+            netAccum += static_cast<double>(deltaTime);
+            const double netStep = static_cast<double>(Physics::FIXED_TIMESTEP);
+            while (netAccum >= netStep) {
+                netAccum -= netStep;
+                ++localTick;
+                ++inputSeq;
+                if (m_Player && m_Camera) {
+                    Net::InputState in;
+                    in.tick         = localTick;
+                    in.seq          = inputSeq;
+                    in.moveForward  = 0; // wired up properly in Phase 1.7
+                    in.moveRight    = 0;
+                    in.yaw          = m_Camera->getYaw();
+                    in.pitch        = m_Camera->getPitch();
+                    in.buttons      = 0;
+                    in.clientPingMs = static_cast<uint16_t>(m_Net->roundTripMs());
+                    m_Net->sendInput(in);
+                }
+            }
+            // Drain incoming snapshots. Phase 1.6 will hand these to a
+            // RemotePlayer registry; for now we just count them.
+            Net::Snapshot snap;
+            while (m_Net->popSnapshot(snap)) {
+                (void)snap; // intentionally unused — Phase 1.6
+            }
         }
 
         printDebugInfo();
