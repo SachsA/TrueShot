@@ -56,18 +56,33 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # Install via pip rather than fetching the upstream release binary
-      # from github.com — way more resilient to GitHub 504s. The
-      # `editorconfig-checker` PyPI wheel just bundles the Go binary
-      # and serves it from PyPI's CDN.
+      # Download the Go binary directly from the release CDN with retry
+      # — more reliable than the GitHub Action which fails on 504s.
       - name: Install editorconfig-checker
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install "editorconfig-checker==3.0.3"
-          ec --version
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 5
+          retry_wait_seconds: 30
+          shell: bash
+          command: |
+            set -euo pipefail
+            VERSION=v3.0.3
+            URL="https://github.com/editorconfig-checker/editorconfig-checker/releases/download/${VERSION}/ec-linux-amd64.tar.gz"
+            mkdir -p "$HOME/.local/bin"
+            curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors \
+              "$URL" -o /tmp/ec.tar.gz
+            tar -xzf /tmp/ec.tar.gz -C /tmp
+            install -m 0755 /tmp/bin/ec-linux-amd64 "$HOME/.local/bin/ec"
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Show editorconfig-checker version
+        run: ec --version
 
       - name: Run editorconfig-checker
-        run: ec --exclude '(^|/)(build|\.git|vcpkg|vcpkg_installed|network_module/build)/'
+        # `.ecrc` at repo root provides the excludes + disables IndentSize
+        # (which fights with clang-format continuation-line alignment).
+        run: ec
 
   # -----------------------------------------------------------------
   # markdownlint — quick sanity on README / ROADMAP / CONTRIBUTING.

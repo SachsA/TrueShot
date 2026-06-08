@@ -1,0 +1,15 @@
+{
+  "Disable": {
+    "IndentSize": true
+  },
+  "Exclude": [
+    "^build/",
+    "^network_module/build/",
+    "^vcpkg/",
+    "^vcpkg_installed/",
+    "^\\.git/",
+    "\\.DS_Store$",
+    "^docs/.*\\.md$",
+    "\\.bat$"
+  ]
+}
