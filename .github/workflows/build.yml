@@ -75,7 +75,9 @@ jobs:
       # ---------------------------------------------------------------
       # Ninja — robust install on the 3 OS.
       - name: Install Ninja
-        uses: seanmiddleditch/gha-setup-ninja@v6
+        # v6 is broken upstream (invalid zip download). Pinning v5 which
+        # is stable. Still runs on Node 20 — warning is informational.
+        uses: seanmiddleditch/gha-setup-ninja@v5
 
       # ---------------------------------------------------------------
       # MSVC env so cl.exe / link.exe are visible to Ninja.
