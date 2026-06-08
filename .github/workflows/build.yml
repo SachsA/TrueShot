@@ -147,14 +147,22 @@ jobs:
           c++ --version || cl 2>&1 | head -1 || true
 
       # ---------------------------------------------------------------
+      # Configure with retry — vcpkg downloads sources from github.com,
+      # and intermittent 5xx/504 errors during dep install would otherwise
+      # fail the whole job. Up to 3 attempts with 30 s back-off.
       - name: Configure
-        shell: bash
-        run: |
-          cmake -S . -B build \
-            -G Ninja \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
-            -DTRUESHOT_WARNINGS_AS_ERRORS=ON
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 30
+          shell: bash
+          command: |
+            cmake -S . -B build \
+              -G Ninja \
+              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+              -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+              -DTRUESHOT_WARNINGS_AS_ERRORS=ON
 
       # ---------------------------------------------------------------
       - name: Build
