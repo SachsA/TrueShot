@@ -26,9 +26,13 @@ concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
 
-# Shared env. vcpkg's GitHub Actions cache is opt-in via VCPKG_BINARY_SOURCES.
+# Shared env. The `x-gha` binary cache backend was removed by vcpkg
+# in late 2025, so we cache the whole vcpkg installation directory via
+# actions/cache instead — see the "Cache vcpkg" step below. Re-enable
+# binary caching here only if vcpkg adds a replacement upstream.
 env:
-  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+  # Keep a saner network policy: 5 attempts instead of vcpkg's default 3.
+  X_VCPKG_NUGET_ID_PREFIX: ""
 
 jobs:
   # ===================================================================
@@ -52,13 +56,22 @@ jobs:
           fetch-depth: 1
 
       # ---------------------------------------------------------------
-      # vcpkg expects its GHA cache token through these env vars.
-      - name: Export vcpkg cache tokens
-        uses: actions/github-script@v8
+      # Cache the vcpkg-installed dependencies. We key on:
+      #   - vcpkg.json content (deps + baseline)
+      #   - the triplet (per-OS)
+      # That way a vcpkg.json bump triggers a fresh install, but everything
+      # else (incl. workflow changes) reuses the cache.
+      - name: Cache vcpkg installed packages
+        uses: actions/cache@v4
         with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          path: |
+            ${{ github.workspace }}/vcpkg/installed
+            ${{ github.workspace }}/vcpkg/buildtrees
+            ${{ github.workspace }}/vcpkg/packages
+            ${{ github.workspace }}/vcpkg/downloads
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
 
       # ---------------------------------------------------------------
       # System packages required by GLFW / OpenGL on Linux.
@@ -97,16 +110,30 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          git clone https://github.com/microsoft/vcpkg.git "$GITHUB_WORKSPACE/vcpkg"
-          "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          # Idempotent: if the cache restored vcpkg/, just refresh git
+          # so the baseline SHA resolves. Otherwise clone fresh.
+          if [ ! -d "$GITHUB_WORKSPACE/vcpkg/.git" ]; then
+            git clone https://github.com/microsoft/vcpkg.git "$GITHUB_WORKSPACE/vcpkg"
+          else
+            git -C "$GITHUB_WORKSPACE/vcpkg" fetch --quiet origin
+          fi
+          if [ ! -x "$GITHUB_WORKSPACE/vcpkg/vcpkg" ]; then
+            "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          fi
           echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> "$GITHUB_ENV"
 
       - name: Bootstrap vcpkg (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          git clone https://github.com/microsoft/vcpkg.git "$env:GITHUB_WORKSPACE\vcpkg"
-          & "$env:GITHUB_WORKSPACE\vcpkg\bootstrap-vcpkg.bat" -disableMetrics
+          if (-not (Test-Path "$env:GITHUB_WORKSPACE\vcpkg\.git")) {
+            git clone https://github.com/microsoft/vcpkg.git "$env:GITHUB_WORKSPACE\vcpkg"
+          } else {
+            git -C "$env:GITHUB_WORKSPACE\vcpkg" fetch --quiet origin
+          }
+          if (-not (Test-Path "$env:GITHUB_WORKSPACE\vcpkg\vcpkg.exe")) {
+            & "$env:GITHUB_WORKSPACE\vcpkg\bootstrap-vcpkg.bat" -disableMetrics
+          }
           Add-Content -Path $env:GITHUB_ENV -Value "VCPKG_ROOT=$env:GITHUB_WORKSPACE\vcpkg"
 
       # ---------------------------------------------------------------
