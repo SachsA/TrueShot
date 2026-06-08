@@ -23,8 +23,10 @@ const float OPTIMAL_STRAFE_ANGLE = 30.0f;   // Degrees - optimal mouse/movement 
 const float MAX_AIR_SPEED_CAP    = 3000.0f; // Absolute maximum (pour éviter les bugs)
 const float BHOP_SPEED_LOSS      = 0.95f;   // 5% loss on bad landing
 
-// Fixed timestep pour consistency
-const float TICK_RATE      = 64.0f; // 64 tick/sec
+// Fixed timestep — competitive 128 Hz simulation (CS2 / Valorant / FACEIT
+// standard). Server and client run their simulation at this rate. See
+// docs/adr/0002-netcode-architecture.md for the rationale.
+const float TICK_RATE      = 128.0f;
 const float FIXED_TIMESTEP = 1.0f / TICK_RATE;
 
 // Ground detection améliorée

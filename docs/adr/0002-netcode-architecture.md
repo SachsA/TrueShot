@@ -119,7 +119,7 @@ All numbers are little-endian. Positions/velocities use **fixed-point
 16.16** for compactness and determinism. View angles use uint16
 quantised over [−180°, +180°] / [−90°, +90°].
 
-```
+```text
 ClientInput  (channel 1, unreliable sequenced):
     uint8   type       = 0x01
     uint8   protocol   = 1

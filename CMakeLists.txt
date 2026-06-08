@@ -47,6 +47,7 @@ add_executable(${PROJECT_NAME}
     src/weapon_system.cpp
     src/audio_system.cpp
     src/hud.cpp
+    src/tick_clock.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
