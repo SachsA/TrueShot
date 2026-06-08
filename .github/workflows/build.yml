@@ -110,31 +110,54 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          # Idempotent: if the cache restored vcpkg/, just refresh git
-          # so the baseline SHA resolves. Otherwise clone fresh.
-          if [ ! -d "$GITHUB_WORKSPACE/vcpkg/.git" ]; then
-            git clone https://github.com/microsoft/vcpkg.git "$GITHUB_WORKSPACE/vcpkg"
+          VCPKG_DIR="$GITHUB_WORKSPACE/vcpkg"
+          # The actions/cache step restores vcpkg/buildtrees, packages,
+          # downloads and installed/ — but NOT the vcpkg/.git folder
+          # (we only cache build artefacts, not the git history). So
+          # three states are possible:
+          #   1. vcpkg/ doesn't exist at all       → clone fresh
+          #   2. vcpkg/ exists, has .git           → refresh
+          #   3. vcpkg/ exists, no .git           → clone INTO existing
+          #      dir (needs init + remote add + checkout)
+          if [ ! -d "$VCPKG_DIR" ]; then
+            git clone https://github.com/microsoft/vcpkg.git "$VCPKG_DIR"
+          elif [ -d "$VCPKG_DIR/.git" ]; then
+            git -C "$VCPKG_DIR" fetch --quiet origin
           else
-            git -C "$GITHUB_WORKSPACE/vcpkg" fetch --quiet origin
+            (
+              cd "$VCPKG_DIR"
+              git init -q
+              git remote add origin https://github.com/microsoft/vcpkg.git
+              git fetch --quiet --depth=1 origin master
+              git reset --quiet --hard FETCH_HEAD
+            )
           fi
-          if [ ! -x "$GITHUB_WORKSPACE/vcpkg/vcpkg" ]; then
-            "$GITHUB_WORKSPACE/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          if [ ! -x "$VCPKG_DIR/vcpkg" ]; then
+            "$VCPKG_DIR/bootstrap-vcpkg.sh" -disableMetrics
           fi
-          echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> "$GITHUB_ENV"
+          echo "VCPKG_ROOT=$VCPKG_DIR" >> "$GITHUB_ENV"
 
       - name: Bootstrap vcpkg (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          if (-not (Test-Path "$env:GITHUB_WORKSPACE\vcpkg\.git")) {
-            git clone https://github.com/microsoft/vcpkg.git "$env:GITHUB_WORKSPACE\vcpkg"
+          $VcpkgDir = "$env:GITHUB_WORKSPACE\vcpkg"
+          if (-not (Test-Path $VcpkgDir)) {
+            git clone https://github.com/microsoft/vcpkg.git $VcpkgDir
+          } elseif (Test-Path "$VcpkgDir\.git") {
+            git -C $VcpkgDir fetch --quiet origin
           } else {
-            git -C "$env:GITHUB_WORKSPACE\vcpkg" fetch --quiet origin
+            Push-Location $VcpkgDir
+            git init -q
+            git remote add origin https://github.com/microsoft/vcpkg.git
+            git fetch --quiet --depth=1 origin master
+            git reset --quiet --hard FETCH_HEAD
+            Pop-Location
           }
-          if (-not (Test-Path "$env:GITHUB_WORKSPACE\vcpkg\vcpkg.exe")) {
-            & "$env:GITHUB_WORKSPACE\vcpkg\bootstrap-vcpkg.bat" -disableMetrics
+          if (-not (Test-Path "$VcpkgDir\vcpkg.exe")) {
+            & "$VcpkgDir\bootstrap-vcpkg.bat" -disableMetrics
           }
-          Add-Content -Path $env:GITHUB_ENV -Value "VCPKG_ROOT=$env:GITHUB_WORKSPACE\vcpkg"
+          Add-Content -Path $env:GITHUB_ENV -Value "VCPKG_ROOT=$VcpkgDir"
 
       # ---------------------------------------------------------------
       - name: Show toolchain versions
