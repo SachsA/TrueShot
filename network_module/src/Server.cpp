@@ -48,6 +48,42 @@ void enetRelease() {
 constexpr float kServerMoveSpeed = 5.0f; // units/s
 constexpr float kFixedDt         = 1.0f / 128.0f;
 
+// Phase 1.10 network simulator helpers. Defined here so Server::step
+// can call them from the deferred-packet drain without a forward
+// declaration dance.
+
+// One thread-local RNG. The simulator only runs on the server thread,
+// so a thread_local instance avoids both locking and reseeding.
+std::mt19937& netSimRng() {
+    static thread_local std::mt19937 rng(std::random_device{}());
+    return rng;
+}
+
+bool rollLossDrop(float probability) {
+    if (probability <= 0.0f) return false;
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    return dist(netSimRng()) < probability;
+}
+
+double rollJitterSec(uint32_t jitterMs) {
+    if (jitterMs == 0) return 0.0;
+    std::uniform_int_distribution<int> dist(-static_cast<int>(jitterMs),
+                                            static_cast<int>(jitterMs));
+    return dist(netSimRng()) * 0.001;
+}
+
+void enetEnqueue(void* peer, const std::vector<uint8_t>& bytes, uint8_t channel,
+                 uint64_t& packetsSent) {
+    if (!peer || bytes.empty()) return;
+    ENetPacket* pkt = enet_packet_create(bytes.data(), bytes.size(), ENET_PACKET_FLAG_UNSEQUENCED);
+    if (!pkt) return;
+    if (enet_peer_send(asPeer(peer), channel, pkt) == 0) {
+        ++packetsSent;
+    } else {
+        enet_packet_destroy(pkt);
+    }
+}
+
 } // namespace
 
 namespace Net {
@@ -343,42 +379,6 @@ void Server::broadcastSnapshot() {
         sendTo(peer, bw.buf, kChannelUnreliable);
     }
 }
-
-namespace {
-
-// One thread-local RNG. The simulator only runs on the server thread,
-// so a thread_local instance avoids both locking and reseeding.
-std::mt19937& netSimRng() {
-    static thread_local std::mt19937 rng(std::random_device{}());
-    return rng;
-}
-
-bool rollLossDrop(float probability) {
-    if (probability <= 0.0f) return false;
-    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-    return dist(netSimRng()) < probability;
-}
-
-double rollJitterSec(uint32_t jitterMs) {
-    if (jitterMs == 0) return 0.0;
-    std::uniform_int_distribution<int> dist(-static_cast<int>(jitterMs),
-                                            static_cast<int>(jitterMs));
-    return dist(netSimRng()) * 0.001;
-}
-
-void enetEnqueue(void* peer, const std::vector<uint8_t>& bytes, uint8_t channel,
-                 uint64_t& packetsSent) {
-    if (!peer || bytes.empty()) return;
-    ENetPacket* pkt = enet_packet_create(bytes.data(), bytes.size(), ENET_PACKET_FLAG_UNSEQUENCED);
-    if (!pkt) return;
-    if (enet_peer_send(asPeer(peer), channel, pkt) == 0) {
-        ++packetsSent;
-    } else {
-        enet_packet_destroy(pkt);
-    }
-}
-
-} // namespace
 
 void Server::sendTo(void* peer, const std::vector<uint8_t>& bytes, uint8_t channel) {
     if (!peer || bytes.empty()) return;
