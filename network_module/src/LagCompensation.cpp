@@ -31,32 +31,47 @@ const HistorySample& PlayerHistory::at(size_t reverseIndex) const {
 bool PlayerHistory::sampleAt(double tTarget, glm::vec3& outPos, float& outYaw) const {
     if (m_Count == 0) return false;
 
-    // Walk newest -> oldest, find the pair enclosing tTarget.
-    const HistorySample* newer = nullptr;
+    // The ring stores samples in insertion order, which the server
+    // guarantees is strictly increasing tServer (samples are pushed
+    // once per tick). `at(0)` is the newest, `at(m_Count - 1)` the
+    // oldest.
+    //
+    // tTarget falls into one of three buckets:
+    //   1. tTarget > newest        → no future sample exists, pin to newest.
+    //   2. tTarget < oldest        → too far in the past, refuse.
+    //   3. otherwise               → find the enclosing pair and lerp.
+
+    const HistorySample& newest = at(0);
+    const HistorySample& oldest = at(m_Count - 1);
+
+    if (tTarget >= newest.tServer) {
+        outPos = newest.pos;
+        outYaw = newest.yaw;
+        return true;
+    }
+    if (tTarget < oldest.tServer) {
+        return false;
+    }
+
+    // Walk newest → oldest. Stop at the first sample with `tServer <=
+    // tTarget` — that's the older bound. The previous iteration's
+    // sample is the newer bound.
+    const HistorySample* newer = &newest;
     const HistorySample* older = nullptr;
-    for (size_t i = 0; i < m_Count; ++i) {
+    for (size_t i = 1; i < m_Count; ++i) {
         const auto& s = at(i);
-        if (s.tServer >= tTarget) {
-            newer = &s;
-        } else {
+        if (s.tServer <= tTarget) {
             older = &s;
             break;
         }
+        newer = &s;
     }
 
-    if (!older && !newer) return false;
-
-    // tTarget is newer than anything we have — pin to the freshest.
     if (!older) {
+        // Shouldn't happen given the bucket checks above, but guard.
         outPos = newer->pos;
         outYaw = newer->yaw;
         return true;
-    }
-
-    // tTarget is older than anything we have — refuse rather than
-    // extrapolate backwards into garbage.
-    if (!newer) {
-        return false;
     }
 
     const double span = newer->tServer - older->tServer;
