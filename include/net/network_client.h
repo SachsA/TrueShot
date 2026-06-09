@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Network/NetCommon.h"
+
 #include <atomic>
 #include <cstdint>
 #include <deque>

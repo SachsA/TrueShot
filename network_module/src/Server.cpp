@@ -3,6 +3,7 @@
 #include "Network/Bitstream.h"
 #include "Network/PacketTypes.h"
 #include "Network/Server.h"
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>

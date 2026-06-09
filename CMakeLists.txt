@@ -70,6 +70,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 # config doesn't propagate these, so we add them explicitly.
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE ws2_32 winmm)
+
+    # ENet's enetwin32.h drags in <windows.h>, which leaks min/max
+    # macros that break std::clamp / std::max. Define NOMINMAX globally
+    # for any TU touching the network headers in this target too.
+    target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX)
 endif()
 
 # ---------------------------------------------------------------- warnings

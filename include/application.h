@@ -77,8 +77,9 @@ private:
     std::unique_ptr<GameWorld> m_World;
     std::unique_ptr<Renderer> m_Renderer;
     std::unique_ptr<Hud> m_Hud;
-    std::unique_ptr<NetworkClient> m_Net;                  // null in offline mode
-    std::unique_ptr<Net::RemotePlayerRegistry> m_Remotes;  // empty in offline mode
+    // Both null in offline mode; populated when AppConfig::Mode == Client.
+    std::unique_ptr<NetworkClient> m_Net;
+    std::unique_ptr<Net::RemotePlayerRegistry> m_Remotes;
 
     // Mouse state
     bool m_FirstMouse  = true;

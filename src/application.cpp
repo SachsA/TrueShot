@@ -3,19 +3,19 @@
 
 #include <GLFW/glfw3.h>
 
+#include "Network/NetCommon.h"
 #include "application.h"
 #include "audio_system.h"
 #include "fps_camera.h"
 #include "game_world.h"
 #include "hud.h"
+#include "net/network_client.h"
+#include "net/remote_player.h"
 #include "physics_types.h"
 #include "player_controller.h"
 #include "renderer.h"
 #include "weapon_system.h"
 
-#include "Network/NetCommon.h"
-#include "net/network_client.h"
-#include "net/remote_player.h"
 #include <algorithm>
 #include <iostream>
 

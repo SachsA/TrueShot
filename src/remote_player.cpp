@@ -1,6 +1,5 @@
-#include "net/remote_player.h"
-
 #include "Network/PacketTypes.h"
+#include "net/remote_player.h"
 
 #include <algorithm>
 
@@ -13,19 +12,19 @@ namespace Net {
 void RemotePlayer::pushSample(Tick tick, double localTimestamp, const glm::vec3& pos, float yaw,
                               float pitch, uint8_t stateFlags) {
     RemotePlayerSample s;
-    s.tick       = tick;
-    s.timestamp  = localTimestamp;
-    s.pos        = pos;
-    s.yaw        = yaw;
-    s.pitch      = pitch;
-    s.stateFlags = stateFlags;
+    s.tick             = tick;
+    s.timestamp        = localTimestamp;
+    s.pos              = pos;
+    s.yaw              = yaw;
+    s.pitch            = pitch;
+    s.stateFlags       = stateFlags;
 
     m_Ring[m_RingHead] = s;
     m_RingHead         = (m_RingHead + 1) % kRingSize;
     if (m_SampleCount < kRingSize) ++m_SampleCount;
 
-    // Keep the window tight. Anything older than 4x the interp delay
-    // is irrecoverable for our purposes.
+    // Keep the window tight. Anything older than 4x the interp delay is
+    // irrecoverable for our purposes.
     prune(localTimestamp);
 }
 
@@ -45,8 +44,8 @@ void RemotePlayer::prune(double renderTimeNow) {
     }
 }
 
-bool RemotePlayer::sample(double renderTimeNow, glm::vec3& outPos, float& outYaw,
-                          float& outPitch, uint8_t& outFlags) const {
+bool RemotePlayer::sample(double renderTimeNow, glm::vec3& outPos, float& outYaw, float& outPitch,
+                          uint8_t& outFlags) const {
     if (m_SampleCount == 0) return false;
 
     const double renderTime = renderTimeNow - kInterpDelaySeconds;
@@ -67,17 +66,17 @@ bool RemotePlayer::sample(double renderTimeNow, glm::vec3& outPos, float& outYaw
 
     if (!newer && !older) return false;
 
-    // No old sample yet — render at the newest available (extrapolation
-    // forward would only make sense if we had a velocity; we don't here).
+    // No old sample yet - render at the newest available (extrapolation
+    // forward would only make sense if we had a velocity; we don't).
     if (!older) {
-        outPos    = newer->pos;
-        outYaw    = newer->yaw;
-        outPitch  = newer->pitch;
-        outFlags  = newer->stateFlags;
+        outPos   = newer->pos;
+        outYaw   = newer->yaw;
+        outPitch = newer->pitch;
+        outFlags = newer->stateFlags;
         return (outFlags & EntityFlag::Alive) != 0;
     }
 
-    // We have an older sample but no newer one — we've fallen behind.
+    // We have an older sample but no newer one - we've fallen behind.
     // Extrapolate linearly forward up to kExtrapolationMaxSeconds, then
     // freeze.
     if (!newer) {
@@ -86,7 +85,7 @@ bool RemotePlayer::sample(double renderTimeNow, glm::vec3& outPos, float& outYaw
         outYaw          = older->yaw;
         outPitch        = older->pitch;
         outFlags        = older->stateFlags;
-        (void)dt; // No velocity yet — freezing is correct for Phase 1.6.
+        (void)dt; // No velocity yet - freezing is correct for Phase 1.6.
         return (outFlags & EntityFlag::Alive) != 0;
     }
 
@@ -98,10 +97,10 @@ bool RemotePlayer::sample(double renderTimeNow, glm::vec3& outPos, float& outYaw
         if (t < 0.0f) t = 0.0f;
         if (t > 1.0f) t = 1.0f;
     }
-    outPos    = glm::mix(older->pos, newer->pos, t);
-    outYaw    = older->yaw + (newer->yaw - older->yaw) * t;
-    outPitch  = older->pitch + (newer->pitch - older->pitch) * t;
-    outFlags  = newer->stateFlags; // flags don't interpolate
+    outPos   = glm::mix(older->pos, newer->pos, t);
+    outYaw   = older->yaw + (newer->yaw - older->yaw) * t;
+    outPitch = older->pitch + (newer->pitch - older->pitch) * t;
+    outFlags = newer->stateFlags; // flags don't interpolate
     return (outFlags & EntityFlag::Alive) != 0;
 }
 
@@ -118,8 +117,7 @@ void RemotePlayerRegistry::ingestSnapshot(const Snapshot& snap, double localTime
         if (it == m_Players.end()) {
             it = m_Players.emplace(e.id, RemotePlayer(e.id)).first;
         }
-        it->second.pushSample(snap.tick, localTimestamp,
-                              glm::vec3(e.pos.x, e.pos.y, e.pos.z),
+        it->second.pushSample(snap.tick, localTimestamp, glm::vec3(e.pos.x, e.pos.y, e.pos.z),
                               e.yaw, e.pitch, e.stateFlags);
     }
 }

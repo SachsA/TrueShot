@@ -1,4 +1,5 @@
 #include "net/tick_clock.h"
+
 #include <algorithm>
 
 TickClock::TickClock(double tickRateHz) {

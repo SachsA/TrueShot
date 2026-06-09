@@ -30,6 +30,13 @@ target_link_libraries(trueshot_network
 # doesn't propagate those transitive system libs. Link them ourselves.
 if(WIN32)
     target_link_libraries(trueshot_network PUBLIC ws2_32 winmm)
+
+    # ENet's enetwin32.h pulls <windows.h>, which leaks the legacy
+    # min/max macros. They collide with std::min/std::max and produce
+    # cryptic C2589/C2059 errors at every `std::clamp` or `std::max`
+    # call site. NOMINMAX disables them globally for any TU that pulls
+    # the network headers (transitively reaches windows.h).
+    target_compile_definitions(trueshot_network PUBLIC NOMINMAX)
 endif()
 
 # ---------------------------------------------------------------- executables

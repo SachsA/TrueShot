@@ -2,6 +2,7 @@
 #include "Network/ENetWrapper.h"
 #include "Network/NetCommon.h"
 #include "Network/PacketTypes.h"
+
 #include <deque>
 #include <iostream>
 #include <string>

@@ -53,8 +53,9 @@ IncludeCategories:
     Priority: 3
   - Regex:    '^<imgui.*>'
     Priority: 3
-  # 4 — project headers in double quotes (anything starting with a letter).
-  - Regex:    '^"[a-zA-Z_]+\.h"$'
+  # 4 — project headers in double quotes (anything starting with a letter,
+  # with optional subdirectory like "net/foo.h" or "Network/Bar.h").
+  - Regex:    '^"[a-zA-Z_][a-zA-Z0-9_/]*\.h"$'
     Priority: 4
   # 5 — standard library and everything else.
   - Regex:    '.*'

@@ -5,6 +5,7 @@
 // executable).
 
 #include "Network/Server.h"
+
 #include <chrono>
 #include <cstdlib>
 #include <iostream>

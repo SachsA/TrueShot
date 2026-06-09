@@ -1,15 +1,15 @@
 #pragma once
 
-#include "Network/NetCommon.h"
-
 #include <glm/glm.hpp>
+
+#include "Network/NetCommon.h"
 
 #include <array>
 #include <cstdint>
 #include <unordered_map>
 
 // ---------------------------------------------------------------------
-// Remote players — entities replicated from the server.
+// Remote players - entities replicated from the server.
 //
 // The client never simulates the position of a remote player. Instead
 // it keeps a small history of snapshots (timestamped server ticks) and
@@ -19,7 +19,8 @@
 // With kInterpDelay = 100 ms at 128 Hz we always have at least 12-13
 // snapshots in the buffer, so a single dropped packet is invisible.
 //
-// See docs/adr/0002-netcode-architecture.md.
+// See docs/adr/0002-netcode-architecture.md and
+// docs/adr/0004-snapshot-interpolation.md.
 // ---------------------------------------------------------------------
 
 namespace Net {
@@ -27,15 +28,15 @@ namespace Net {
 // One sampled snapshot for one entity. Reconstructed from the
 // authoritative EntityState in the server Snapshot.
 struct RemotePlayerSample {
-    Tick     tick      = 0;    // server tick this sample represents
-    double   timestamp = 0.0;  // local wall time we received it
-    glm::vec3 pos      {0.0f};
-    float    yaw       = 0.0f;
-    float    pitch     = 0.0f;
-    uint8_t  stateFlags = 0;
+    Tick tick        = 0;   // server tick this sample represents
+    double timestamp = 0.0; // local wall time we received it
+    glm::vec3 pos{0.0f};
+    float yaw          = 0.0f;
+    float pitch        = 0.0f;
+    uint8_t stateFlags = 0;
 };
 
-// Interpolation delay — how far behind the most recent snapshot we
+// Interpolation delay - how far behind the most recent snapshot we
 // render remote entities, in seconds. 100 ms is the standard FPS
 // netcode trade-off: small enough that flicks feel responsive, big
 // enough to absorb 1-2 packet losses.
@@ -51,33 +52,33 @@ public:
 
     PlayerId id() const { return m_Id; }
 
-    // Push a server-side sample for this player. `localTimestamp` is
-    // the wall clock at the moment we received the packet, used as the
+    // Push a server-side sample for this player. `localTimestamp` is the
+    // wall clock at the moment we received the packet, used as the
     // reference for the interpolation delay.
-    void pushSample(Tick tick, double localTimestamp, const glm::vec3& pos, float yaw,
-                    float pitch, uint8_t stateFlags);
+    void pushSample(Tick tick, double localTimestamp, const glm::vec3& pos, float yaw, float pitch,
+                    uint8_t stateFlags);
 
     // Returns the position/yaw/pitch/flags that should be rendered at
-    // wall time `renderTimeNow - kInterpDelaySeconds`. Sets `outAlive`
-    // to false if we have no samples yet or the entity is dead.
+    // wall time `renderTimeNow - kInterpDelaySeconds`. Returns false if
+    // we have no samples yet or the entity is dead.
     bool sample(double renderTimeNow, glm::vec3& outPos, float& outYaw, float& outPitch,
                 uint8_t& outFlags) const;
 
     bool hasSamples() const { return m_SampleCount > 0; }
 
-    // Drop samples older than the interpolation window — keeps the ring
+    // Drop samples older than the interpolation window - keeps the ring
     // buffer compact. Called automatically inside pushSample().
     void prune(double renderTimeNow);
 
 private:
     PlayerId m_Id = 0;
 
-    // Ring buffer. 64 samples = 500 ms of history at 128 Hz, plenty
-    // for the 100 ms interp delay + any reasonable jitter.
+    // Ring buffer. 64 samples = 500 ms of history at 128 Hz, plenty for
+    // the 100 ms interp delay + any reasonable jitter.
     static constexpr size_t kRingSize = 64;
     std::array<RemotePlayerSample, kRingSize> m_Ring{};
-    size_t   m_RingHead    = 0; // index of the next slot to write
-    size_t   m_SampleCount = 0; // total alive entries in the ring (<= kRingSize)
+    size_t m_RingHead    = 0; // index of the next slot to write
+    size_t m_SampleCount = 0; // total alive entries (<= kRingSize)
 
     // Helper: get the i-th newest sample (0 = newest).
     const RemotePlayerSample& at(size_t reverseIndex) const;
@@ -88,7 +89,7 @@ private:
 class RemotePlayerRegistry {
 public:
     // Called for every Snapshot received. The localPlayerId is excluded
-    // from the registry — the local player is rendered from prediction,
+    // from the registry - the local player is rendered from prediction,
     // not from server snapshots.
     void ingestSnapshot(const Snapshot& snap, double localTimestamp, PlayerId localPlayerId);
 
