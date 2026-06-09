@@ -7,6 +7,7 @@ project(TrueShot
 
 # ---------------------------------------------------------------- options
 option(TRUESHOT_BUILD_NETWORK     "Build the network module (server/client)" ON)
+option(TRUESHOT_BUILD_TESTS       "Build the unit tests (requires gtest)"    OFF)
 option(TRUESHOT_WARNINGS_AS_ERRORS "Treat compiler warnings as errors"        OFF)
 
 # ---------------------------------------------------------------- defaults
@@ -119,11 +120,21 @@ if(TRUESHOT_BUILD_NETWORK)
     add_subdirectory(network_module)
 endif()
 
+# ---------------------------------------------------------------- tests
+# Unit tests live under tests/ and rely on trueshot_network being built
+# (they exercise Server-side library directly). Opt-in via
+# -DTRUESHOT_BUILD_TESTS=ON. The CI build job enables this.
+if(TRUESHOT_BUILD_TESTS AND TRUESHOT_BUILD_NETWORK)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
 # ---------------------------------------------------------------- summary
 message(STATUS "")
 message(STATUS "TrueShot ${PROJECT_VERSION} configured:")
 message(STATUS "  Build type     : ${CMAKE_BUILD_TYPE}")
 message(STATUS "  Compiler       : ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "  Network module : ${TRUESHOT_BUILD_NETWORK}")
+message(STATUS "  Unit tests     : ${TRUESHOT_BUILD_TESTS}")
 message(STATUS "  Werror         : ${TRUESHOT_WARNINGS_AS_ERRORS}")
 message(STATUS "")

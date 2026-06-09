@@ -189,16 +189,23 @@ jobs:
               -G Ninja \
               -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
               -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
-              -DTRUESHOT_WARNINGS_AS_ERRORS=ON
+              -DTRUESHOT_WARNINGS_AS_ERRORS=ON \
+              -DTRUESHOT_BUILD_TESTS=ON
 
       # ---------------------------------------------------------------
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }} --parallel
 
       # ---------------------------------------------------------------
+      # Unit tests (Phase 1.10): GoogleTest cases under tests/ — net
+      # simulation determinism, bitstream round-trips, lag-comp math,
+      # client prediction reconciliation. Cross-OS by construction.
+      - name: Run unit tests
+        working-directory: build
+        run: ctest --output-on-failure --build-config ${{ matrix.build_type }}
+
+      # ---------------------------------------------------------------
       # Smoke test: confirm the executable exists and is a valid binary.
-      # Phase 1.9 will add a real headless run; for now we just check
-      # the artefact was produced.
       - name: Smoke test (Linux / macOS)
         if: runner.os != 'Windows'
         shell: bash

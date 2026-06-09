@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <random>
 
 using namespace Net;
 
@@ -133,6 +134,21 @@ void Server::step(double frameDeltaSeconds) {
         m_ServerTimeSec += kStep;
         simulateTick();
         broadcastSnapshot();
+    }
+
+    // 3) Phase 1.10: release any deferred packets whose simulated delay
+    //    has elapsed. We use a stable partition so order is preserved
+    //    relative to enqueue order (within the same release time).
+    if (!m_DeferredOut.empty()) {
+        auto it =
+            std::stable_partition(m_DeferredOut.begin(), m_DeferredOut.end(),
+                                  [now = m_ServerTimeSec](const DeferredPacket& d) {
+                                      return d.releaseAtServerSec > now; // keep = still pending
+                                  });
+        for (auto sendIt = it; sendIt != m_DeferredOut.end(); ++sendIt) {
+            enetEnqueue(sendIt->peer, sendIt->bytes, sendIt->channel, m_PacketsSent);
+        }
+        m_DeferredOut.erase(it, m_DeferredOut.end());
     }
 }
 
@@ -328,15 +344,77 @@ void Server::broadcastSnapshot() {
     }
 }
 
-void Server::sendTo(void* peer, const std::vector<uint8_t>& bytes, uint8_t channel) {
+namespace {
+
+// One thread-local RNG. The simulator only runs on the server thread,
+// so a thread_local instance avoids both locking and reseeding.
+std::mt19937& netSimRng() {
+    static thread_local std::mt19937 rng(std::random_device{}());
+    return rng;
+}
+
+bool rollLossDrop(float probability) {
+    if (probability <= 0.0f) return false;
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    return dist(netSimRng()) < probability;
+}
+
+double rollJitterSec(uint32_t jitterMs) {
+    if (jitterMs == 0) return 0.0;
+    std::uniform_int_distribution<int> dist(-static_cast<int>(jitterMs),
+                                            static_cast<int>(jitterMs));
+    return dist(netSimRng()) * 0.001;
+}
+
+void enetEnqueue(void* peer, const std::vector<uint8_t>& bytes, uint8_t channel,
+                 uint64_t& packetsSent) {
     if (!peer || bytes.empty()) return;
     ENetPacket* pkt = enet_packet_create(bytes.data(), bytes.size(), ENET_PACKET_FLAG_UNSEQUENCED);
     if (!pkt) return;
     if (enet_peer_send(asPeer(peer), channel, pkt) == 0) {
-        ++m_PacketsSent;
+        ++packetsSent;
     } else {
         enet_packet_destroy(pkt);
     }
+}
+
+} // namespace
+
+void Server::sendTo(void* peer, const std::vector<uint8_t>& bytes, uint8_t channel) {
+    if (!peer || bytes.empty()) return;
+
+    // Fast path: no simulation, hand straight to ENet.
+    if (m_NetSim.lossProbability <= 0.0f && m_NetSim.baseDelayMs == 0 && m_NetSim.jitterMs == 0) {
+        enetEnqueue(peer, bytes, channel, m_PacketsSent);
+        return;
+    }
+
+    // Loss: drop the packet entirely.
+    if (rollLossDrop(m_NetSim.lossProbability)) {
+        ++m_NetSimDropped;
+        return;
+    }
+
+    // Delay + jitter: queue for later release. We allow negative jitter
+    // but clamp the resulting release time to "now" so we never send
+    // packets before they were originally enqueued.
+    const double baseSec   = m_NetSim.baseDelayMs * 0.001;
+    const double jitterSec = rollJitterSec(m_NetSim.jitterMs);
+    double release         = m_ServerTimeSec + baseSec + jitterSec;
+    if (release < m_ServerTimeSec) release = m_ServerTimeSec;
+
+    if (release <= m_ServerTimeSec) {
+        // Effectively zero delay after jitter — pass through.
+        enetEnqueue(peer, bytes, channel, m_PacketsSent);
+        return;
+    }
+
+    DeferredPacket dp;
+    dp.peer               = peer;
+    dp.bytes              = bytes;
+    dp.channel            = channel;
+    dp.releaseAtServerSec = release;
+    m_DeferredOut.push_back(std::move(dp));
 }
 
 } // namespace Net

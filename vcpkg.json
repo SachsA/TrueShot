@@ -15,7 +15,8 @@
     {
       "name": "imgui",
       "features": ["glfw-binding", "opengl3-binding"]
-    }
+    },
+    "gtest"
   ],
   "builtin-baseline": "6836eb3be8734a8eafb9dd1eb0e4847e375c9270"
 }

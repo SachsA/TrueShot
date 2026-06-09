@@ -10,6 +10,45 @@ in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+### Added — Phase 1.10 (Test 1v1 LAN)
+
+- **GoogleTest suite** under `tests/` covering the netcode invariants
+  cross-platform (Windows + macOS + Linux × Debug + Release in CI):
+  - `test_netsim.cpp` — determinism of `stepSim`, hard clamps, button
+    bitfield → `EntityFlag` mapping.
+  - `test_bitstream.cpp` — round-trip for U8/U16/U32/float, Q16.16
+    fixed-point, Q15 angle quantisation, varint zigzag, overflow
+    detection.
+  - `test_player_history.cpp` — 128-sample ring buffer, midpoint
+    interpolation, refusal to extrapolate backwards, rewind cap.
+  - `test_lag_compensation.cpp` — `computeViewTime` formula, hitbox
+    geometry parity with the renderer cube.
+  - `test_client_prediction.cpp` — predict + reconcile no-op match,
+    pending input replay, snap on big drift, ring overflow.
+- New CMake option `TRUESHOT_BUILD_TESTS` (default OFF, ON in CI). Adds
+  `gtest` to `vcpkg.json` and a `tests/` subdirectory.
+- New CI step `ctest --output-on-failure --build-config <type>` in
+  `build.yml`, run after the build on every OS × build type.
+- **Server-side network simulator** for reproducing bad conditions on
+  demand, without OS firewalls or `tc`/`clumsy`:
+  - `Net::Server::NetSimSettings { lossProbability, baseDelayMs,
+    jitterMs }` + `setNetSimSettings` API.
+  - `Server::sendTo` drops packets with probability `P` and/or
+    enqueues them with a release timestamp.
+  - `Server::step` drains the deferred queue using `std::stable_partition`
+    so packets keep their enqueue order at the same release time.
+- `trueshot_server` CLI flags:
+  - `--port <N>` (also accepts a bare positional first arg for
+    backwards compat).
+  - `--simulate-loss <0.0-1.0>`
+  - `--simulate-delay <ms>` (0-5000)
+  - `--simulate-jitter <ms>` (0-1000)
+  - `--help`
+- `docs/test/phase-1-lan-test-plan.md` — six scenarios × three OS
+  pairs × ten-minute sessions, with explicit acceptance criteria
+  (no crash, no permanent desync, bandwidth ceiling, hit
+  registration).
+
 ### Added — Phase 1.9 (Network metrics + HUD)
 
 - **`Net::NetMetrics`** — POD aggregating every netcode number the HUD

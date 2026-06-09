@@ -96,7 +96,14 @@ cmake --build --preset debug
 cmake --preset strict
 cmake --build --preset strict
 
-# 5. Commit & open a PR against main
+# 5. Run the unit tests (Phase 1.10 onward)
+cmake -S . -B build/tests \
+      -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+      -DTRUESHOT_BUILD_TESTS=ON
+cmake --build build/tests --parallel
+ctest --test-dir build/tests --output-on-failure
+
+# 6. Commit & open a PR against main
 ```
 
 ## Coding style

@@ -62,6 +62,18 @@ public:
     Server(const Server&)            = delete;
     Server& operator=(const Server&) = delete;
 
+    // Simulated bad-network knobs (Phase 1.10). Applied to outbound
+    // packets only — inbound is left untouched because the client side
+    // does its own simulation (see CLI on the client in Phase 2). All
+    // zero = pass-through (production default).
+    struct NetSimSettings {
+        float lossProbability = 0.0f; // 0.0 to 1.0
+        uint32_t baseDelayMs  = 0;    // constant added to every send
+        uint32_t jitterMs     = 0;    // random uniform [-jitter, +jitter]
+    };
+    void setNetSimSettings(const NetSimSettings& s) { m_NetSim = s; }
+    NetSimSettings netSimSettings() const { return m_NetSim; }
+
     // Init ENet + bind the UDP listening port. Returns false on error.
     bool start(uint16_t port = kDefaultPort, size_t maxClients = 32);
 
@@ -132,6 +144,19 @@ private:
 
     // For debug log: total hits the server has resolved since start.
     uint64_t m_LagCompHits = 0;
+
+    // Phase 1.10: simulated bad-network knobs + deferred-send queue.
+    // When `m_NetSim` has any non-zero field, sendTo() drops or buffers
+    // packets instead of handing them straight to ENet.
+    NetSimSettings m_NetSim;
+    struct DeferredPacket {
+        void* peer;
+        std::vector<uint8_t> bytes;
+        uint8_t channel;
+        double releaseAtServerSec;
+    };
+    std::vector<DeferredPacket> m_DeferredOut;
+    uint64_t m_NetSimDropped = 0;
 };
 
 } // namespace Net

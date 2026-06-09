@@ -252,12 +252,41 @@ But : deux joueurs sur le même LAN voient leurs mouvements et leurs tirs.
 
 ### 1.10 — Test 1v1 LAN
 
-- [ ] Simulateur de pertes (drop 1 paquet sur 20)
-- [ ] Simulateur de latence (ajout 50-100 ms via `tc`/`clumsy`)
-- [ ] Simulateur de jitter (±20 ms)
-- [ ] Test 1v1 LAN Windows ↔ macOS stable 10 min
-- [ ] Test 1v1 LAN Windows ↔ Linux stable 10 min
-- [ ] Test 1v1 LAN macOS ↔ Linux stable 10 min
+**Automated (CI-enforced) :**
+
+- [x] Suite GoogleTest `tests/` (gtest via vcpkg, opt-in via
+      `-DTRUESHOT_BUILD_TESTS=ON`).
+- [x] `test_netsim.cpp` — déterminisme `stepSim`, clamp inputs, buttons
+      → flags.
+- [x] `test_bitstream.cpp` — round-trip U8/U16/U32, float, Q16.16, Q15,
+      varint U32/I32, overflow returns false.
+- [x] `test_player_history.cpp` — ring buffer 128, interpolation mid-
+      point, refus extrapolation backwards, ring overflow.
+- [x] `test_lag_compensation.cpp` — formule `computeViewTime`, hitbox
+      dimensions, cap 200 ms.
+- [x] `test_client_prediction.cpp` — predict + reconcile match, replay
+      pending inputs, big drift snap, overflow.
+- [x] CI job `ctest --output-on-failure` ajouté à `build.yml` sur 3 OS ×
+      2 build types = 6 runners.
+
+**Network simulator (server-side, CLI) :**
+
+- [x] `Server::NetSimSettings { lossProbability, baseDelayMs, jitterMs }`.
+- [x] `trueshot_server --simulate-loss <P> --simulate-delay <ms>
+      --simulate-jitter <ms>`.
+- [x] Drop probabiliste dans `sendTo` ; file différée drainée dans `step`
+      avec timestamps de release.
+- [x] Backwards-compat positional first arg = port.
+
+**Manual cross-OS pass :**
+
+- [x] Test plan documenté dans
+      [docs/test/phase-1-lan-test-plan.md](docs/test/phase-1-lan-test-plan.md)
+      (6 scénarios × 3 paires d'OS, 10 min chacun, acceptance criteria).
+- [ ] *(À exécuter par Alex sur ses machines)* Windows ↔ macOS S1+S3+S5
+- [ ] *(À exécuter par Alex sur ses machines)* Windows ↔ Linux S1+S3+S5
+- [ ] *(À exécuter par Alex sur ses machines)* macOS ↔ Linux S1+S3+S5
+- [ ] *(À exécuter par Alex)* Listen-server localhost S1
 
 ### 1.11 — Delta compression (à reporter)
 

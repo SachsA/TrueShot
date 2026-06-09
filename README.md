@@ -221,7 +221,13 @@ The client supports three modes selectable on the command line:
 
 # 3. Standalone authoritative server (no rendering, no window)
 ./build/bin/trueshot_server                         # binds on :7777
-./build/bin/trueshot_server 9000                    # custom port
+./build/bin/trueshot_server --port 9000             # custom port
+
+# 3b. Server with simulated bad network (for testing — Phase 1.10)
+./build/bin/trueshot_server --simulate-loss 0.05    # 5 % packet loss
+./build/bin/trueshot_server --simulate-delay 50 \
+                            --simulate-jitter 20    # +50 ms +/- 20 ms
+./build/bin/trueshot_server --help                  # list every flag
 ```
 
 A typical 1v1 LAN session uses one machine running `trueshot_server` and two
@@ -289,13 +295,16 @@ library and lands fully in Phase 2.
 
 ## Roadmap
 
-The current build sits **mid-Phase 1 — Netcode jouable (1v1 LAN)**. Phase 0
-(fondations techniques) is complete; sub-phases 1.0 through 1.9 (design doc,
-tick clock, bitstream, packet types, NetworkClient, authoritative server,
-snapshot interpolation, client prediction + reconciliation, server-side
-lag compensation, network HUD overlay) are landed. The next milestone is
-1.10 (multi-OS LAN test pass) — after which Phase 1 ships and we move to
-Phase 2 (full match flow, HP, rounds, voice chat).
+Phase 1 — Netcode jouable (1v1 LAN) — is **code-complete**. Sub-phases
+1.0 through 1.10 are all landed: design doc, tick clock, bitstream,
+packet types, NetworkClient, authoritative server, snapshot
+interpolation, client prediction + reconciliation, lag compensation,
+network HUD overlay, GoogleTest suite, and the server-side bad-network
+simulator. The remaining work is the manual cross-OS LAN test pass
+described in
+[docs/test/phase-1-lan-test-plan.md](docs/test/phase-1-lan-test-plan.md);
+once that's signed off, we move to Phase 2 (full match flow, HP,
+rounds, voice chat).
 
 For the **full exhaustive roadmap** — network, anti-cheat, maps, art
 direction, audio production, backend, e-sport, legal, marketing — see
