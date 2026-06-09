@@ -85,8 +85,7 @@ tree. The two constants **must** stay in sync; a static assertion
 across the boundary is added in Phase 1.10 when we wire up the test
 harness.
 
-### 3. Sample lookup = linear interpolation between two enclosing
-       samples
+### 3. Sample lookup = linear interpolation between two enclosing samples
 
 `PlayerHistory::sampleAt(tTarget)` walks newest → oldest, finds the
 two samples enclosing `tTarget`, and lerps between them. This is the
@@ -144,7 +143,7 @@ sanity cap.
 
 `handleFire` resolves the raycast and logs the resolved hit:
 
-```
+```text
 [Server] LAG-COMP HIT shooter=1 victim=2 dist=4.3m ping=42ms
 ```
 

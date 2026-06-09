@@ -242,15 +242,21 @@ void Server::applyInput(PlayerState& ps, const InputState& in) {
     // Identical formula = identical output bits = no constant
     // reconciliation snaps on the client. See docs/adr/0002 and the
     // Phase 1.7 client prediction comment in application.cpp.
+    //
+    // PlayerState carries our wire-friendly POD `Net::Vec3` (defined in
+    // NetCommon.h) while NetSim works in glm::vec3. We copy field-by-
+    // field so neither type needs to know about the other.
     SimState s;
-    s.pos        = ps.pos;
+    s.pos        = glm::vec3(ps.pos.x, ps.pos.y, ps.pos.z);
     s.yaw        = ps.yaw;
     s.pitch      = ps.pitch;
     s.stateFlags = ps.stateFlags;
 
     stepSim(s, in);
 
-    ps.pos          = s.pos;
+    ps.pos.x        = s.pos.x;
+    ps.pos.y        = s.pos.y;
+    ps.pos.z        = s.pos.z;
     ps.yaw          = s.yaw;
     ps.pitch        = s.pitch;
     ps.stateFlags   = s.stateFlags;
