@@ -83,6 +83,10 @@ custom kernel anti-cheat in Phase 9).
   `T_now - RTT/2 - 100 ms` (where the shooter actually saw their target)
   before resolving the ray-vs-AABB hit test. Rewinds beyond 200 ms are
   refused as a "lag-for-free-shots" anti-cheat measure. See ADR 0006.
+- **In-game network panel** — toggle with `F2`: connection state, RTT,
+  local/server tick, bandwidth (up + down, EMA-smoothed), snapshot rate,
+  pending input count, last reconciliation correction, remote player
+  count. Colour-coded for glance-ability (RTT/correction thresholds).
 - **Listen-server ready** — the `Net::Server` is built as a library so a
   client can host locally in addition to running the standalone
   `trueshot_server` binary.
@@ -240,6 +244,7 @@ library and lands fully in Phase 2.
 | Master volume | `+` / `-` |
 | Toggle audio debug | `M` |
 | Toggle HUD | `F1` |
+| Toggle network panel (online) | `F2` |
 | Quit | `Esc` |
 
 ## Architecture overview
@@ -285,11 +290,12 @@ library and lands fully in Phase 2.
 ## Roadmap
 
 The current build sits **mid-Phase 1 — Netcode jouable (1v1 LAN)**. Phase 0
-(fondations techniques) is complete; sub-phases 1.0 through 1.8 (design doc,
+(fondations techniques) is complete; sub-phases 1.0 through 1.9 (design doc,
 tick clock, bitstream, packet types, NetworkClient, authoritative server,
 snapshot interpolation, client prediction + reconciliation, server-side
-lag compensation) are landed. The next milestones are 1.9 (network HUD)
-and 1.10 (multi-OS LAN test pass).
+lag compensation, network HUD overlay) are landed. The next milestone is
+1.10 (multi-OS LAN test pass) — after which Phase 1 ships and we move to
+Phase 2 (full match flow, HP, rounds, voice chat).
 
 For the **full exhaustive roadmap** — network, anti-cheat, maps, art
 direction, audio production, backend, e-sport, legal, marketing — see

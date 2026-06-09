@@ -10,6 +10,28 @@ in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+### Added — Phase 1.9 (Network metrics + HUD)
+
+- **`Net::NetMetrics`** — POD aggregating every netcode number the HUD
+  can display: connection state, RTT, local/server tick, player id,
+  cumulative packets/bytes, derived per-second bandwidth/snapshot rates,
+  pending inputs, last reconciliation correction, remote player count.
+- **`Net::NetMetricsSampler`** — single-frame stateful low-pass filter
+  (EMA, α = 0.20) over the cumulative byte/snapshot counters, exposing
+  smooth per-second derivatives. Snapshot counter primed via
+  `noteSnapshotReceived` on each `popSnapshot`.
+- **`Hud::drawNetPanel`** — top-right ImGui overlay, non-interactive,
+  with glance-able colour coding:
+  - RTT green/amber/red at 0-100 / 100-200 / >200 ms
+  - Last correction green/amber/red at <2 cm / 2-50 cm / >50 cm
+  - Connection state colour-coded (connected = green, failed = red, etc.)
+- Toggle bound to **F2** (edge-triggered, independent of F1). The panel
+  is suppressed in offline mode (no `NetMetrics` to read).
+- `Application` aggregates metrics every frame from `NetworkClient`,
+  `ClientPrediction`, and `RemotePlayerRegistry`; passes the snapshot
+  to `Hud::render` via an optional pointer (null in offline).
+- Controls help updated to mention F2.
+
 ### Added — Phase 1.8 (Lag compensation for shots)
 
 - **`Net::LagCompensation`** + `Net::PlayerHistory` — per-player ring

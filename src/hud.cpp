@@ -7,6 +7,7 @@
 
 #include "game_world.h"
 #include "hud.h"
+#include "net/net_metrics.h"
 #include "player_controller.h"
 #include "weapon_system.h"
 #include "weapon_types.h"
@@ -88,9 +89,15 @@ void Hud::beginFrame() {
 }
 
 void Hud::render(const GameWorld& world, const WeaponSystem& weapons,
-                 const PlayerController& player, float deltaTime) {
-    if (!m_Initialised || !m_Visible) return;
-    drawStatsPanel(world, weapons, player, deltaTime);
+                 const PlayerController& player, float deltaTime,
+                 const Net::NetMetrics* netMetrics) {
+    if (!m_Initialised) return;
+    if (m_Visible) {
+        drawStatsPanel(world, weapons, player, deltaTime);
+    }
+    if (m_NetPanelVisible && netMetrics) {
+        drawNetPanel(*netMetrics);
+    }
     drawHitMarker(deltaTime);
 }
 
@@ -287,4 +294,75 @@ void Hud::drawStatsPanel(const GameWorld& world, const WeaponSystem& weapons,
         }
         ImGui::End();
     }
+}
+
+void Hud::drawNetPanel(const Net::NetMetrics& m) {
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    const ImVec2 panelSize(260.0f, 200.0f);
+
+    // Top-right corner, below the standard HUD's ammo/scoreboard zones.
+    ImGui::SetNextWindowPos(
+        ImVec2(vp->WorkPos.x + vp->WorkSize.x - panelSize.x - 16.0f, vp->WorkPos.y + 16.0f),
+        ImGuiCond_Always);
+    ImGui::SetNextWindowSize(panelSize, ImGuiCond_Always);
+    ImGui::SetNextWindowBgAlpha(0.65f);
+    ImGui::Begin("##netpanel", nullptr,
+                 ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
+                     ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoInputs);
+
+    // ---- Header + connection state -----------------------------------
+    const char* stateName = "?";
+    ImVec4 stateColour(1.0f, 1.0f, 1.0f, 1.0f);
+    switch (m.state) {
+    case 0:
+        stateName   = "DISCONNECTED";
+        stateColour = ImVec4(0.7f, 0.7f, 0.7f, 1.0f);
+        break;
+    case 1:
+        stateName   = "CONNECTING";
+        stateColour = ImVec4(1.0f, 0.85f, 0.3f, 1.0f);
+        break;
+    case 2:
+        stateName   = "CONNECTED";
+        stateColour = ImVec4(0.4f, 0.95f, 0.5f, 1.0f);
+        break;
+    case 3:
+        stateName   = "FAILED";
+        stateColour = ImVec4(0.95f, 0.4f, 0.4f, 1.0f);
+        break;
+    default:
+        break;
+    }
+    ImGui::TextColored(ImVec4(0.85f, 0.95f, 1.0f, 1.0f), "NETWORK");
+    ImGui::SameLine();
+    ImGui::TextColored(stateColour, "%s", stateName);
+    ImGui::Separator();
+
+    // ---- Latency + tick -----------------------------------------------
+    // Colour RTT to give a glanceable health indicator.
+    ImVec4 rttColour(0.4f, 0.95f, 0.5f, 1.0f);
+    if (m.rttMs > 100) rttColour = ImVec4(1.0f, 0.85f, 0.3f, 1.0f);
+    if (m.rttMs > 200) rttColour = ImVec4(0.95f, 0.4f, 0.4f, 1.0f);
+    ImGui::TextColored(rttColour, "RTT       %u ms", m.rttMs);
+
+    ImGui::Text("Tick      L%u / S%u", m.localTick, m.serverTick);
+    ImGui::Text("Player    id=%u", m.localId);
+
+    // ---- Bandwidth ---------------------------------------------------
+    ImGui::Text("Up        %.1f KB/s  (%.0f pkt)", m.bytesSentPerSec / 1024.0f,
+                static_cast<float>(m.packetsSent));
+    ImGui::Text("Down      %.1f KB/s  (%.0f pkt)", m.bytesRecvPerSec / 1024.0f,
+                static_cast<float>(m.packetsRecv));
+    ImGui::Text("Snaps     %.1f /s", m.snapshotsPerSec);
+
+    // ---- Prediction health ------------------------------------------
+    ImVec4 corrColour(0.5f, 0.95f, 0.5f, 1.0f);
+    if (m.lastCorrectionMeters > 0.05f) corrColour = ImVec4(1.0f, 0.85f, 0.3f, 1.0f);
+    if (m.lastCorrectionMeters > 0.50f) corrColour = ImVec4(0.95f, 0.4f, 0.4f, 1.0f);
+    ImGui::TextColored(corrColour, "LastCorr  %.3f m", m.lastCorrectionMeters);
+    ImGui::Text("Pending   %u in flight", m.pendingInputs);
+    ImGui::Text("Remotes   %u", m.remotePlayerCount);
+
+    ImGui::End();
 }

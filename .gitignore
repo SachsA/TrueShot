@@ -1,11 +1,15 @@
 # ----- Build artefacts -----
 build/
+network_module/build/
 out/
 cmake-build-*/
 CMakeCache.txt
 CMakeFiles/
 CMakeUserPresets.json
 compile_commands.json
+
+# vcpkg manifest mode installs deps in a sibling directory at configure time.
+vcpkg_installed/
 
 # Compiled object & link files
 *.d

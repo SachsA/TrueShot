@@ -1,5 +1,7 @@
 #pragma once
 
+#include "net/net_metrics.h"
+
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -82,6 +84,14 @@ private:
     std::unique_ptr<NetworkClient> m_Net;
     std::unique_ptr<Net::RemotePlayerRegistry> m_Remotes;
     std::unique_ptr<Net::ClientPrediction> m_Prediction;
+
+    // Network metrics aggregator — driven from the main loop, displayed
+    // by the HUD net panel (F2). Cheap default-constructible POD.
+    Net::NetMetrics m_NetMetrics{};
+    Net::NetMetricsSampler m_NetSampler;
+
+    // F2 edge-trigger for net panel toggle.
+    bool m_F2Prev = false;
 
     // Mouse state
     bool m_FirstMouse  = true;

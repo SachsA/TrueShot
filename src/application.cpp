@@ -10,6 +10,7 @@
 #include "game_world.h"
 #include "hud.h"
 #include "net/client_prediction.h"
+#include "net/net_metrics.h"
 #include "net/network_client.h"
 #include "net/remote_player.h"
 #include "physics_types.h"
@@ -158,6 +159,7 @@ void Application::printControls() const {
                  "  M          Toggle audio debug\n"
                  "MISC\n"
                  "  F1         Toggle HUD\n"
+                 "  F2         Toggle network panel (online only)\n"
                  "  ESC        Quit\n"
                  "==============================\n\n";
 }
@@ -198,6 +200,14 @@ void Application::processInput(float deltaTime) {
         m_Hud->toggleVisible();
     }
     m_F1Prev = f1Now;
+
+    // Network panel toggle (F2, edge-triggered). Independent of F1 so
+    // you can debug netcode with the gameplay HUD hidden, or vice versa.
+    const bool f2Now = glfwGetKey(m_Window, GLFW_KEY_F2) == GLFW_PRESS;
+    if (m_Hud && f2Now && !m_F2Prev) {
+        m_Hud->toggleNetPanel();
+    }
+    m_F2Prev = f2Now;
 
     // Audio volume + debug toggles (edge-triggered).
     if (!m_Audio) return;
@@ -345,6 +355,8 @@ int Application::run() {
             // prediction against the server's authoritative state.
             Net::Snapshot snap;
             while (m_Net->popSnapshot(snap)) {
+                m_NetSampler.noteSnapshotReceived();
+                m_NetMetrics.serverTick = snap.tick;
                 if (m_Remotes) {
                     m_Remotes->ingestSnapshot(snap, static_cast<double>(currentFrame),
                                               m_Net->localId());
@@ -363,6 +375,23 @@ int Application::run() {
                     }
                 }
             }
+
+            // Refresh the metrics snapshot the HUD will read this frame.
+            m_NetMetrics.state       = static_cast<uint8_t>(m_Net->state());
+            m_NetMetrics.rttMs       = m_Net->roundTripMs();
+            m_NetMetrics.localId     = m_Net->localId();
+            m_NetMetrics.localTick   = localTick;
+            m_NetMetrics.packetsSent = m_Net->packetsSent();
+            m_NetMetrics.packetsRecv = m_Net->packetsRecv();
+            if (m_Prediction) {
+                m_NetMetrics.pendingInputs = static_cast<uint32_t>(m_Prediction->pendingCount());
+                m_NetMetrics.lastCorrectionMeters = m_Prediction->lastCorrectionMeters();
+            }
+            if (m_Remotes) {
+                m_NetMetrics.remotePlayerCount = static_cast<uint32_t>(m_Remotes->players().size());
+            }
+            m_NetSampler.update(m_NetMetrics, m_Net->bytesSent(), m_Net->bytesRecv(),
+                                static_cast<double>(deltaTime));
         }
 
         printDebugInfo();
@@ -378,7 +407,8 @@ int Application::run() {
 
         // HUD is drawn after the 3D scene so it composites on top.
         if (m_Hud && m_World && m_Weapons && m_Player) {
-            m_Hud->render(*m_World, *m_Weapons, *m_Player, deltaTime);
+            const Net::NetMetrics* metricsPtr = m_Net ? &m_NetMetrics : nullptr;
+            m_Hud->render(*m_World, *m_Weapons, *m_Player, deltaTime, metricsPtr);
             m_Hud->endFrame();
         }
 

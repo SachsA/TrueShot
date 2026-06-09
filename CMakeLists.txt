@@ -51,6 +51,7 @@ add_executable(${PROJECT_NAME}
     src/network_client.cpp
     src/remote_player.cpp
     src/client_prediction.cpp
+    src/net_metrics.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE

@@ -229,10 +229,26 @@ But : deux joueurs sur le même LAN voient leurs mouvements et leurs tirs.
 
 ### 1.9 — Network metrics + HUD
 
-- [ ] Afficher RTT, packet loss, bandwidth in/out dans le HUD (`F2` ?)
-- [ ] Graphique du jitter tick par tick (style `cl_showperformance` Source)
-- [ ] Compteur de snapshots reçus / interpolation buffer health
-- [ ] Indicateur de désync (delta entre tick local prédit et tick serveur ack'd)
+- [x] **`Net::NetMetrics`** POD agrégeant tout ce que le HUD affiche (state,
+      RTT, ticks, packets, bytes, derived per-second, prediction health).
+- [x] **`Net::NetMetricsSampler`** — EMA low-pass filter (α=0.20) pour
+      bandwidth + snapshot rate, dérivés des compteurs cumulatifs de
+      `NetworkClient`.
+- [x] `Hud::drawNetPanel` — overlay top-right ImGui non-interactif avec
+      coloration glance-able (RTT vert/jaune/rouge à 100/200 ms, corr
+      vert/jaune/rouge à 5/50 cm).
+- [x] Toggle indépendant via **F2** (edge-triggered, comme F1 pour le HUD).
+      Le panneau ne s'affiche pas en offline.
+- [x] Métriques affichées : state, RTT, local/server tick, player id, bytes/s
+      up+down, packets cumulatifs, snapshots/s, last correction, pending
+      inputs, remote player count.
+- [x] `Application` agrège les métriques chaque frame depuis `NetworkClient`,
+      `ClientPrediction`, `RemotePlayerRegistry` ; sampler notifié à chaque
+      `popSnapshot`.
+- [ ] *(Phase 2)* Graphique scrollant du jitter tick par tick (style
+      `cl_showperformance` Source) — ImGui PlotLines avec ring buffer 256.
+- [ ] *(Phase 2)* Packet loss mesuré côté client (séquences manquantes dans
+      les Snapshots reçus).
 
 ### 1.10 — Test 1v1 LAN
 
@@ -840,7 +856,7 @@ But : 10 joueurs sur un serveur jouent un match complet avec round structure.
 - [ ] Branche `main` protégée GitHub : requirement = `required-checks` job
       green (déjà câblé dans build.yml)
 
-### 8.8 — Budget infrastructure
+### 8.9 — Budget infrastructure
 
 - [ ] Estimation coût mensuel (X joueurs × Y matches × Z $$)
 - [ ] Plan de scaling (10k DAU → 100k → 1M)
@@ -1707,17 +1723,33 @@ mais pas encore rentable.
 - [ ] Roles & responsabilités matrix (RACI)
 - [ ] NDA + contrat freelance/employé prêts à signer
 
-### Décisions produit à formaliser dans des ADR
+### Décisions produit formalisées dans des ADR
 
-> ADR = Architecture Decision Record. À écrire au moment où on tranche.
+> ADR = Architecture Decision Record. Les ADRs déjà écrits vivent dans
+> [docs/adr/](docs/adr/). Cette section liste ce qui est livré + ce qui
+> reste à formaliser quand on tranchera la décision.
 
-- [ ] ADR-001 : choix abstraction rendu (GL 4.1 vs Vulkan+MoltenVK vs bgfx)
-- [ ] ADR-002 : protocole réseau (UDP custom over ENet)
-- [ ] ADR-003 : tick rate (64 vs 128)
-- [ ] ADR-004 : langage de scripting mod (Lua confirmé)
-- [ ] ADR-005 : stack backend (PostgreSQL + Redis confirmé)
-- [ ] ADR-006 : authentification (Steam OpenID confirmé)
-- [ ] ADR-007 : approche anti-cheat (kernel custom propriétaire confirmé)
+**Déjà écrits (Phase 0 / Phase 1) :**
+
+- [x] [ADR-001 — Render API (GL 3.3 Core, interim)](docs/adr/0001-render-api.md)
+- [x] [ADR-002 — Netcode architecture (128 Hz, ENet, server-auth)](docs/adr/0002-netcode-architecture.md)
+- [x] [ADR-003 — Listen-server & input clamping](docs/adr/0003-listen-server-and-input-clamping.md)
+- [x] [ADR-004 — Snapshot interpolation (100 ms delay, freeze on starvation)](docs/adr/0004-snapshot-interpolation.md)
+- [x] [ADR-005 — Shared `NetSim` + client prediction](docs/adr/0005-client-prediction-and-shared-netsim.md)
+- [x] [ADR-006 — Lag compensation (200 ms cap, AABB rewind)](docs/adr/0006-lag-compensation.md)
+
+**À écrire quand on tranche** (numérotation séquentielle, pas de
+recyclage avec les numéros ci-dessus) :
+
+- [ ] ADR-007 — Choix abstraction rendu pour Phase 4 (GL 4.1 vs Vulkan+MoltenVK vs bgfx vs Sokol)
+- [ ] ADR-008 — Langage de scripting mod (Lua / Wren / WASM)
+- [ ] ADR-009 — Stack backend (PostgreSQL + Redis, ou autre)
+- [ ] ADR-010 — Authentification (Steam OpenID, ou compte propriétaire ?)
+- [ ] ADR-011 — Approche anti-cheat kernel (driver Windows propriétaire — détails Phase 9)
+- [ ] ADR-012 — Format de map et pipeline d'import (Phase 3)
+- [ ] ADR-013 — Système d'animation (skeletal vs morph + state machine, Phase 4)
+- [ ] ADR-014 — Voice chat encoding + transport (Opus 32 kbps sur ENet ? canal séparé ?)
+- [ ] ADR-015 — Économie et anti-fraude marketplace (Phase 10)
 
 ### Risques majeurs identifiés
 
