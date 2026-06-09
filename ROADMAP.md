@@ -187,23 +187,45 @@ But : deux joueurs sur le même LAN voient leurs mouvements et leurs tirs.
 
 ### 1.7 — Client prediction + server reconciliation
 
-- [ ] Buffer ring des inputs locaux (dernière seconde)
-- [ ] Application immédiate des inputs sur la position locale (prédiction)
-- [ ] À réception d'un Snapshot avec `ackSeq` : comparer position prédite/
-      autoritaire pour le local player
-- [ ] Replay des inputs non encore ack'd à partir de l'état autoritaire
-- [ ] Seuil de snap (snap si désync \> 50 cm, sinon lerp doux sur 100 ms)
-- [ ] Brancher les vrais inputs du `PlayerController` (moveForward/Right,
-      buttons) dans `InputState`
+- [x] **Shared `NetSim::stepSim`** — la formule de mouvement vit
+      dans `Network/NetSim.h` et est utilisée bit-pour-bit par client et
+      serveur. `Server::applyInput` délègue à `stepSim`.
+- [x] Buffer ring 256 inputs locaux (`ClientPrediction::predict`) — 2 s
+      d'unacknowledged à 128 Hz.
+- [x] Application immédiate des inputs sur la `SimState` locale (prédiction).
+- [x] À réception d'un Snapshot avec `ackSeq` : drop les inputs ack'd, snap
+      à l'état autoritaire, replay des inputs encore pending.
+- [x] Seuil de correction étagé : ignore \< 2 cm, lerp doux 25 % \< 50 cm,
+      snap \>= 50 cm.
+- [x] Vrais inputs (WASD / Space / Ctrl / Mouse1 / Mouse2 / R) lus depuis
+      GLFW à chaque tick et empaquetés dans `InputState`.
+- [x] Debug log netcode dans `printDebugInfo` (rtt, pending count, predicted
+      pos, lastCorrection).
+- [ ] *(Reporté Phase 1.7b ou 1.9)* Brancher la position prédite sur la
+      `FPSCamera` en mode Client. Pour l'instant `PlayerController` continue
+      à driver la caméra ; la prédiction tourne en parallèle et est
+      observable via le debug log.
 
 ### 1.8 — Lag compensation pour le tir
 
-- [ ] Historique des positions ennemies côté serveur (1 s glissante)
-- [ ] Au tir : rewind les ennemis à `now - clientPing - interpDelay`
-- [ ] Raycast contre les positions rewindées
-- [ ] Cap à 200 ms (au-delà, refuser le rewind — anti-laggers exploit)
-- [ ] Anti-cheat : valider que `clientPingMs` rapporté est cohérent avec le RTT
-      mesuré côté serveur
+- [x] **`Net::LagCompensation`** + `PlayerHistory` (ring 128 samples = 1 s à
+      128 Hz) — record automatique chaque tick après `applyInput`.
+- [x] `computeViewTime` formula : `T_now - RTT/2 - kClientInterpDelay`.
+- [x] Rewind interpolé entre deux samples enclosing du buffer
+      (`PlayerHistory::sampleAt`).
+- [x] Raycast slab AABB (`rayVsAabb`) contre les hitboxes rewindées
+      (`makeHitbox`, taille = cube de rendu placeholder 0.8 × 1.8 × 0.4).
+- [x] Cap à 200 ms (`kRewindCapSeconds = 0.200`) — au-delà, refuse
+      l'opération.
+- [x] `Server::handleFire` déclenché à chaque `InputState` portant
+      `InputButton::Fire`, log `[Server] LAG-COMP HIT shooter=X victim=Y`.
+- [x] `m_LagCompHits` exposé via `Server::lagCompHits()` pour le HUD
+      réseau (Phase 1.9).
+- [ ] *(Phase 2)* Validation cross-check de `clientPingMs` rapporté vs RTT
+      mesuré côté serveur — détecte un client qui ment sur son ping pour
+      étendre la fenêtre de rewind.
+- [ ] *(Phase 2)* Event packet `PlayerHit` broadcast à tous les clients
+      pour la kill feed + hit markers visuels.
 
 ### 1.9 — Network metrics + HUD
 

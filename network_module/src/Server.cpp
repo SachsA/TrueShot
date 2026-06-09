@@ -1,6 +1,7 @@
 #include <enet/enet.h>
 
 #include "Network/Bitstream.h"
+#include "Network/NetSim.h"
 #include "Network/PacketTypes.h"
 #include "Network/Server.h"
 
@@ -129,6 +130,7 @@ void Server::step(double frameDeltaSeconds) {
     constexpr double kStep = static_cast<double>(kFixedDt);
     while (m_Accumulator >= kStep) {
         m_Accumulator -= kStep;
+        m_ServerTimeSec += kStep;
         simulateTick();
         broadcastSnapshot();
     }
@@ -157,6 +159,7 @@ void Server::onDisconnect(void* peer) {
     const PlayerId id = it->second;
     m_Players.erase(id);
     m_Pending.erase(id);
+    m_LagComp.forgetPlayer(id);
     m_PeerToPlayer.erase(it);
     std::cout << "[Server] Disconnect id=" << id << " (" << m_Players.size() << " players left)\n";
 }
@@ -207,35 +210,81 @@ void Server::simulateTick() {
 
         for (const auto& in : queue) {
             applyInput(ps, in);
+
+            // Phase 1.8: if this input carried a Fire press, resolve it
+            // against the rewound world. We do this immediately after
+            // applying the input so the shooter's own pose is canonical
+            // when we read it for the ray origin.
+            if (in.buttons & InputButton::Fire) {
+                handleFire(id, in);
+            }
         }
         queue.clear();
+    }
+
+    // Record one history sample per player per tick, AFTER all inputs
+    // for this tick have been applied. This is what lag compensation
+    // rewinds against.
+    for (const auto& [id, ps] : m_Players) {
+        HistorySample h;
+        h.tick       = m_Tick;
+        h.tServer    = m_ServerTimeSec;
+        h.pos        = glm::vec3(ps.pos.x, ps.pos.y, ps.pos.z);
+        h.yaw        = ps.yaw;
+        h.pitch      = ps.pitch;
+        h.stateFlags = ps.stateFlags;
+        m_LagComp.recordSample(id, h);
     }
 }
 
 void Server::applyInput(PlayerState& ps, const InputState& in) {
-    // Clamp inputs hard. This is the seed of anti-cheat: the client
-    // never gets to push us past these bounds, no matter what it sends.
-    const float fwd = std::clamp(static_cast<float>(in.moveForward) / 127.0f, -1.0f, 1.0f);
-    const float rgt = std::clamp(static_cast<float>(in.moveRight) / 127.0f, -1.0f, 1.0f);
+    // The simulation step is **shared** with the client (Net::stepSim).
+    // Identical formula = identical output bits = no constant
+    // reconciliation snaps on the client. See docs/adr/0002 and the
+    // Phase 1.7 client prediction comment in application.cpp.
+    SimState s;
+    s.pos        = ps.pos;
+    s.yaw        = ps.yaw;
+    s.pitch      = ps.pitch;
+    s.stateFlags = ps.stateFlags;
 
-    // Compute world-space move from yaw. Player faces +X for yaw=0;
-    // forward = -Z when yaw=-90° (matches FPSCamera convention).
-    const float yawRad = in.yaw * 3.1415926535f / 180.0f;
-    const float cosY   = std::cos(yawRad);
-    const float sinY   = std::sin(yawRad);
+    stepSim(s, in);
 
-    ps.pos.x += (fwd * cosY + rgt * sinY) * kServerMoveSpeed * kFixedDt;
-    ps.pos.z += (fwd * sinY - rgt * cosY) * kServerMoveSpeed * kFixedDt;
-
-    ps.yaw        = std::clamp(in.yaw, -180.0f, 180.0f);
-    ps.pitch      = std::clamp(in.pitch, -89.0f, 89.0f);
-    ps.stateFlags = EntityFlag::Alive | EntityFlag::OnGround;
-    if (in.buttons & InputButton::Crouch) ps.stateFlags |= EntityFlag::Crouching;
-    if (in.buttons & InputButton::ADS) ps.stateFlags |= EntityFlag::Aiming;
-    if (in.buttons & InputButton::Fire) ps.stateFlags |= EntityFlag::Firing;
-    if (in.buttons & InputButton::Reload) ps.stateFlags |= EntityFlag::Reloading;
-
+    ps.pos          = s.pos;
+    ps.yaw          = s.yaw;
+    ps.pitch        = s.pitch;
+    ps.stateFlags   = s.stateFlags;
     ps.lastAckedSeq = std::max(ps.lastAckedSeq, in.seq);
+}
+
+void Server::handleFire(PlayerId shooterId, const InputState& in) {
+    const auto it = m_Players.find(shooterId);
+    if (it == m_Players.end()) return;
+    const PlayerState& shooter = it->second;
+
+    // Build the ray from the shooter's eye. The hitbox tops out at
+    // y = pos.y + 1.8 m; the "eye" sits near the top of the cube.
+    constexpr float kEyeHeight = 1.65f;
+    const glm::vec3 origin(shooter.pos.x, shooter.pos.y + kEyeHeight, shooter.pos.z);
+
+    // Direction from yaw/pitch (degrees). Same convention as FPSCamera:
+    // yaw=0 looks down +X, yaw=-90 looks down -Z.
+    const float yawRad   = in.yaw * 3.1415926535f / 180.0f;
+    const float pitchRad = in.pitch * 3.1415926535f / 180.0f;
+    const glm::vec3 dir(std::cos(pitchRad) * std::cos(yawRad), std::sin(pitchRad),
+                        std::cos(pitchRad) * std::sin(yawRad));
+
+    const auto hit = m_LagComp.raycast(shooterId, origin, dir, in.clientPingMs, m_ServerTimeSec);
+    if (hit) {
+        ++m_LagCompHits;
+        std::cout << "[Server] LAG-COMP HIT shooter=" << shooterId << " victim=" << hit->victim
+                  << " dist=" << hit->distance << "m"
+                  << " ping=" << in.clientPingMs << "ms\n";
+        // Phase 1.8 stops here — we only resolve the hit and log it.
+        // Damage application, kill feed, score, and an Event packet
+        // broadcasting the hit to all clients land in Phase 2 (match
+        // structure + HP system).
+    }
 }
 
 // ---------------------------------------------------------------------

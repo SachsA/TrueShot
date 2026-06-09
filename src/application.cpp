@@ -9,6 +9,7 @@
 #include "fps_camera.h"
 #include "game_world.h"
 #include "hud.h"
+#include "net/client_prediction.h"
 #include "net/network_client.h"
 #include "net/remote_player.h"
 #include "physics_types.h"
@@ -129,7 +130,8 @@ bool Application::init(const AppConfig& config) {
         } else {
             std::cout << "[App] Network mode = Client → " << config.serverHost << ':'
                       << config.serverPort << '\n';
-            m_Remotes = std::make_unique<Net::RemotePlayerRegistry>();
+            m_Remotes    = std::make_unique<Net::RemotePlayerRegistry>();
+            m_Prediction = std::make_unique<Net::ClientPrediction>();
         }
     }
 
@@ -248,6 +250,14 @@ void Application::printDebugInfo() {
     std::cout << "SCORE     " << m_World->score() << "  hits=" << m_World->hits() << "/"
               << m_World->shots() << "  acc=" << int(m_World->accuracy() * 100.0f) << '%'
               << "  kills=" << m_World->kills() << '\n';
+
+    if (m_Net && m_Prediction) {
+        const auto& s = m_Prediction->state();
+        std::cout << "NET       rtt=" << m_Net->roundTripMs() << "ms"
+                  << "  pending=" << m_Prediction->pendingCount() << "  predPos=(" << s.pos.x << ","
+                  << s.pos.y << "," << s.pos.z << ")"
+                  << "  lastCorr=" << m_Prediction->lastCorrectionMeters() << "m\n";
+    }
     std::cout << "======================\n\n";
 }
 
@@ -279,6 +289,11 @@ int Application::run() {
         // We send one ClientInput per simulation tick (128 Hz). The frame
         // rate is independent — we use an accumulator over the network
         // tick interval so a 200 FPS client sends 128 packets/s, not 200.
+        //
+        // Phase 1.7: on every tick we (1) sample the keyboard, (2) feed
+        // it to ClientPrediction (local sim + ring-buffer of pending
+        // inputs), (3) put it on the wire. On every Snapshot received we
+        // (4) reconcile the local prediction against the server's truth.
         if (m_Net) {
             m_Net->tick();
             netAccum += static_cast<double>(deltaTime);
@@ -288,25 +303,64 @@ int Application::run() {
                 ++localTick;
                 ++inputSeq;
                 if (m_Player && m_Camera) {
+                    // Sample raw keys for the network input. We do NOT
+                    // reuse PlayerController state because that runs a
+                    // richer (non-deterministic across machines) sim
+                    // that doesn't match the server's NetSim yet.
+                    const auto k = [this](int key) {
+                        return glfwGetKey(m_Window, key) == GLFW_PRESS ? 1 : 0;
+                    };
+                    const int fwd   = k(GLFW_KEY_W) - k(GLFW_KEY_S);
+                    const int rgt   = k(GLFW_KEY_D) - k(GLFW_KEY_A);
+
+                    uint8_t buttons = 0;
+                    if (k(GLFW_KEY_SPACE)) buttons |= Net::InputButton::Jump;
+                    if (k(GLFW_KEY_LEFT_CONTROL) || k(GLFW_KEY_C))
+                        buttons |= Net::InputButton::Crouch;
+                    if (glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+                        buttons |= Net::InputButton::Fire;
+                    if (glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+                        buttons |= Net::InputButton::ADS;
+                    if (k(GLFW_KEY_R)) buttons |= Net::InputButton::Reload;
+
                     Net::InputState in;
                     in.tick         = localTick;
                     in.seq          = inputSeq;
-                    in.moveForward  = 0; // wired up properly in Phase 1.7
-                    in.moveRight    = 0;
+                    in.moveForward  = static_cast<int8_t>(fwd * 127);
+                    in.moveRight    = static_cast<int8_t>(rgt * 127);
                     in.yaw          = m_Camera->getYaw();
                     in.pitch        = m_Camera->getPitch();
-                    in.buttons      = 0;
+                    in.buttons      = buttons;
                     in.clientPingMs = static_cast<uint16_t>(m_Net->roundTripMs());
+
+                    // Predict locally before sending — the renderer will
+                    // read m_Prediction->state() this frame.
+                    if (m_Prediction) m_Prediction->predict(in);
                     m_Net->sendInput(in);
                 }
             }
-            // Drain incoming snapshots into the RemotePlayer registry, which
-            // builds a 100 ms interpolated view of every other player.
+
+            // Drain incoming snapshots: feed remote players to the
+            // interpolation registry, and reconcile the local player's
+            // prediction against the server's authoritative state.
             Net::Snapshot snap;
             while (m_Net->popSnapshot(snap)) {
                 if (m_Remotes) {
                     m_Remotes->ingestSnapshot(snap, static_cast<double>(currentFrame),
                                               m_Net->localId());
+                }
+                if (m_Prediction) {
+                    const Net::PlayerId myId = m_Net->localId();
+                    for (const auto& e : snap.entities) {
+                        if (e.id != myId) continue;
+                        Net::SimState auth;
+                        auth.pos        = glm::vec3(e.pos.x, e.pos.y, e.pos.z);
+                        auth.yaw        = e.yaw;
+                        auth.pitch      = e.pitch;
+                        auth.stateFlags = e.stateFlags;
+                        m_Prediction->reconcile(snap.ackSeq, auth);
+                        break;
+                    }
                 }
             }
         }

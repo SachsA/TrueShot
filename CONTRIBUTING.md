@@ -164,6 +164,8 @@ Current ADRs:
 - [ADR-002 — Netcode architecture](docs/adr/0002-netcode-architecture.md)
 - [ADR-003 — Listen-server & input clamping](docs/adr/0003-listen-server-and-input-clamping.md)
 - [ADR-004 — Snapshot interpolation](docs/adr/0004-snapshot-interpolation.md)
+- [ADR-005 — Shared NetSim + client prediction](docs/adr/0005-client-prediction-and-shared-netsim.md)
+- [ADR-006 — Lag compensation](docs/adr/0006-lag-compensation.md)
 
 ## Continuous Integration
 

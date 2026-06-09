@@ -10,6 +10,59 @@ in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+### Added — Phase 1.8 (Lag compensation for shots)
+
+- **`Net::LagCompensation`** + `Net::PlayerHistory` — per-player ring
+  buffer (128 samples ≈ 1 s at 128 Hz) of position/yaw/pitch
+  snapshots, indexed by server wall time.
+- `Net::computeViewTime(tNow, clientPingMs)` formula: rewinds the
+  world to `T_now - RTT/2 - kClientInterpDelay (100 ms)`.
+- `PlayerHistory::sampleAt(tTarget)` linearly interpolates between the
+  two enclosing samples in the ring buffer.
+- `LagCompensation::raycast` returns the closest victim, walking every
+  other player's rewound hitbox.
+- Slab-based ray-vs-AABB hit test (`rayVsAabb`) against placeholder
+  hitboxes (0.8 × 1.8 × 0.4 — matches the remote-player render cube).
+- **Hard 200 ms rewind cap** (`kRewindCapSeconds`) — anti-cheat against
+  the "fake high ping → free extended rewind window" exploit.
+- `Server::handleFire` invoked on every `InputState` carrying
+  `InputButton::Fire`, immediately after `applyInput` so the shooter's
+  pose is canonical when we read the ray origin.
+- `Server::recordSample` runs once per simulation tick after all inputs
+  have been applied — every tick of every player is rewindable.
+- `Server::forgetPlayer` cleans up history on disconnect.
+- `m_LagCompHits` counter exposed via `Server::lagCompHits()` for the
+  Phase 1.9 network HUD.
+- Debug log line `[Server] LAG-COMP HIT shooter=X victim=Y dist=Zm
+  ping=Wms` so we can validate hits end-to-end without a kill feed yet.
+- `glm` added as a public dependency of the `trueshot_network`
+  library (was previously only available via the main TrueShot
+  target's link line — broke the standalone `trueshot_server` build).
+- ADR-006 — Lag compensation algorithm + thresholds.
+
+### Added — Phase 1.7 (Client prediction + server reconciliation)
+
+- **`Network/NetSim.h`** — shared authoritative simulation step
+  (`stepSim`) used bit-identically by client and server. Phase 1.7's
+  minimal sim is 5 m/s flat-ground movement with hard input clamping;
+  the full Source-style movement migrates here in Phase 2.
+- `Server::applyInput` now delegates to `Net::stepSim` — no more
+  duplicated formula between client and server.
+- **`ClientPrediction`** (`include/net/client_prediction.h`,
+  `src/client_prediction.cpp`) — owns:
+  - the local `SimState` rendered as "where we think we are right now",
+  - a 256-entry ring buffer of pending (sent-but-not-ack'd) inputs,
+  - `predict(input)` that steps the local sim and records the input,
+  - `reconcile(ackSeq, authoritative)` that drops ack'd inputs, snaps
+    to server truth, replays the still-pending inputs.
+- Staged correction policy: ignore < 2 cm, soft lerp (25 % per
+  reconciliation) for 2-50 cm drifts, hard snap >= 50 cm.
+- Real keyboard inputs (WASD, Space, Ctrl/C, Mouse1, Mouse2, R) now
+  populate `InputState.moveForward/moveRight/buttons` every tick instead
+  of zeros.
+- Debug log line `NET rtt=Xms pending=N predPos=(...) lastCorr=Xm` in
+  `Application::printDebugInfo` so we can observe prediction health.
+
 ### Added — Phase 1.6 (Remote player + interpolation)
 
 - `RemotePlayer` with a 64-sample ring buffer (~500 ms of history at 128 Hz).

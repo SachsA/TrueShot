@@ -6,6 +6,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(unofficial-enet CONFIG REQUIRED)
 
+# glm is used by NetSim.h (shared sim) and LagCompensation.cpp (rewind
+# geometry). Both ship as part of the network library so we declare the
+# dep here rather than relying on the main TrueShot target's link line.
+find_package(glm CONFIG REQUIRED)
+
 # ---------------------------------------------------------------- library
 # Support code + the production Server class go into the static library.
 # Server.cpp's main() is guarded by `#ifdef TRUESHOT_SERVER`, so when
@@ -16,6 +21,7 @@ add_library(trueshot_network STATIC
     src/ENetWrapper.cpp
     src/NetCommon.cpp
     src/Server.cpp
+    src/LagCompensation.cpp
 )
 
 target_include_directories(trueshot_network
@@ -23,6 +29,7 @@ target_include_directories(trueshot_network
 )
 target_link_libraries(trueshot_network
     PUBLIC unofficial::enet::enet
+           glm::glm
 )
 
 # ENet on Windows depends on the Winsock + Windows Multimedia APIs

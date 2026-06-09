@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Network/LagCompensation.h"
 #include "Network/NetCommon.h"
 
 #include <cstdint>
@@ -80,6 +81,7 @@ public:
     bool isRunning() const { return m_Host != nullptr; }
     uint64_t packetsSent() const { return m_PacketsSent; }
     uint64_t packetsRecv() const { return m_PacketsRecv; }
+    uint64_t lagCompHits() const { return m_LagCompHits; }
 
 private:
     // ENet event dispatchers — defined in the .cpp where the real types
@@ -95,6 +97,11 @@ private:
 
     // Apply one validated input to its player's state. Clamps inputs.
     void applyInput(PlayerState& ps, const InputState& in);
+
+    // Phase 1.8: when an input arrives with the Fire bit set, rewind the
+    // world to the shooter's view-time and resolve a raycast against
+    // every other player's rewound hitbox. Returns the victim, if any.
+    void handleFire(PlayerId shooterId, const InputState& in);
 
     bool m_EnetInitialized  = false;
     void* m_Host            = nullptr; // ENetHost*
@@ -118,6 +125,13 @@ private:
     // Metrics
     uint64_t m_PacketsSent = 0;
     uint64_t m_PacketsRecv = 0;
+
+    // Phase 1.8: per-player rewindable position history + hit registration.
+    LagCompensation m_LagComp;
+    double m_ServerTimeSec = 0.0; // monotonic server wall time in seconds
+
+    // For debug log: total hits the server has resolved since start.
+    uint64_t m_LagCompHits = 0;
 };
 
 } // namespace Net

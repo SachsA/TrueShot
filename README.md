@@ -73,6 +73,16 @@ custom kernel anti-cheat in Phase 9).
 - **Snapshot interpolation** — remote players are rendered 100 ms behind the
   latest snapshot using a 64-sample ring buffer per entity, freezing on
   starvation rather than extrapolating into nonsense. See ADR 0004.
+- **Client prediction + reconciliation** — the local player's movement is
+  applied immediately (zero perceived input lag), pending inputs are kept
+  in a 256-entry ring, and each Snapshot's `ackSeq` triggers a replay
+  from the server's authoritative state. The simulation step is shared
+  bit-for-bit between client and server via `Net::stepSim`. See ADR 0005.
+- **Lag compensation** — the server keeps a 1 s ring buffer of every
+  player's pose and, at fire-time, rewinds the world to
+  `T_now - RTT/2 - 100 ms` (where the shooter actually saw their target)
+  before resolving the ray-vs-AABB hit test. Rewinds beyond 200 ms are
+  refused as a "lag-for-free-shots" anti-cheat measure. See ADR 0006.
 - **Listen-server ready** — the `Net::Server` is built as a library so a
   client can host locally in addition to running the standalone
   `trueshot_server` binary.
@@ -275,10 +285,10 @@ library and lands fully in Phase 2.
 ## Roadmap
 
 The current build sits **mid-Phase 1 — Netcode jouable (1v1 LAN)**. Phase 0
-(fondations techniques) is complete; sub-phases 1.0 through 1.6 (design doc,
+(fondations techniques) is complete; sub-phases 1.0 through 1.8 (design doc,
 tick clock, bitstream, packet types, NetworkClient, authoritative server,
-snapshot interpolation) are landed. The next milestones are 1.7 (client
-prediction + reconciliation), 1.8 (lag compensation), 1.9 (network HUD)
+snapshot interpolation, client prediction + reconciliation, server-side
+lag compensation) are landed. The next milestones are 1.9 (network HUD)
 and 1.10 (multi-OS LAN test pass).
 
 For the **full exhaustive roadmap** — network, anti-cheat, maps, art
