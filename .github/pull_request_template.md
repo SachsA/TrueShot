@@ -33,6 +33,8 @@ Spell it out: "Built on macOS arm64 in Debug, ran the game, fired
 
 ## Checklist
 
+- [ ] Documentation contract satisfied (`CLAUDE.md` §2 — all affected
+      docs, configs, scripts, ignore files updated)
 - [ ] Builds clean under `cmake --preset strict` locally
 - [ ] `clang-format-18 --dry-run --Werror` passes (pinned `clang-format==18.1.8`)
 - [ ] Tested on **Windows + macOS** at minimum (Linux verified by CI)

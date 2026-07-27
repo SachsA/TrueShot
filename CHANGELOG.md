@@ -10,6 +10,58 @@ in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+### Added — Project governance
+
+- **`CLAUDE.md`** — the repo's working agreement, read at the start of
+  every session. Codifies:
+  - the hard project constraints (Windows/macOS/Linux mandatory, Steam-only
+    distribution, in-house kernel anti-cheat, 128 Hz server-authoritative
+    netcode, listen-server support) so they never get re-litigated;
+  - the **documentation contract**: after any code change, every affected
+    doc, build config, tooling config, CI workflow, run script and ignore
+    file must be audited and updated — plus the files to create when they
+    become relevant (`SECURITY.md`, `CODEOWNERS`, ops runbooks, ...);
+  - cross-file consistency rules (ADR numbering, phase numbering, pinned
+    versions, CLI flags, shared client/server constants);
+  - the commit-message format (Conventional Commits, with the scopes in
+    use);
+  - an 11-point definition of done;
+  - the technical conventions previously scattered across `CONTRIBUTING.md`
+    and code comments.
+- `CONTRIBUTING.md` and `.github/pull_request_template.md` now point at
+  the documentation contract as a merge gate.
+
+### Fixed — clang-tidy CI
+
+- `.clang-tidy`: disabled the purely-stylistic checks that fight the
+  project's single-line-guard style (`readability-braces-around-statements`,
+  `readability-else-after-return`, `readability-isolate-declaration`,
+  `readability-make-member-function-const`,
+  `readability-convert-member-functions-to-static`, `modernize-use-auto`,
+  `modernize-return-braced-init-list`, `cppcoreguidelines-avoid-c-arrays`),
+  each with a rationale comment. Substantive checks stay on.
+- **`player_controller.cpp`: `abs()` was resolving to the `<cstdlib>`
+  integer overload**, truncating the float strafe-angle delta before taking
+  the absolute value. The strafe-jump bonus curve has been subtly wrong
+  since Phase 0. Now `std::fabs`. Also `acos` → `std::acos`.
+- `weapon_system.cpp`: `rand()` → thread-local `std::mt19937` +
+  `uniform_real_distribution` (cert-msc50-cpp); `sin` → `std::sin` (no
+  float→double promotion); `static_cast<float>(i)` for the recoil-pattern
+  timing (narrowing); merged the identical `DRAWING`/`default` switch
+  branches.
+- `player_controller.cpp`: `m_GameTime` and `m_LastFootstepPos` moved into
+  the constructor's member-initializer list.
+- `network_client.cpp`: `PacketType type` now has a defined value before
+  the `readHeader()` early-return path; merged the identical
+  `Disconnect`/`default` switch branches.
+- `renderer.cpp`: `(void*)0` → `nullptr`, `(void*)(offset)` →
+  `reinterpret_cast<void*>(offset)`, and the three
+  `glDrawElements(..., 0)` calls → `nullptr`.
+- `hud.cpp`: `std::snprintf`'s return value explicitly discarded with a
+  comment (cert-err33-c).
+- Project-wide: `<< std::endl` → `<< "\n"` (endl forces a stream flush on
+  every log line).
+
 ### Added — Phase 1.10 (Test 1v1 LAN)
 
 - **GoogleTest suite** under `tests/` covering the netcode invariants

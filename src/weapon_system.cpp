@@ -23,7 +23,7 @@ WeaponSystem::WeaponSystem(FPSCamera* camera, PlayerController* player)
     equipWeapon("ak47");
 
     std::cout << "WeaponSystem initialized with " << m_WeaponConfigs.size() << " weapons"
-              << std::endl;
+              << "\n";
 }
 
 WeaponSystem::~WeaponSystem() = default;
@@ -100,7 +100,7 @@ void WeaponSystem::processInput(GLFWwindow* window, float deltaTime) {
 bool WeaponSystem::equipWeapon(const std::string& weaponName) {
     auto it = m_WeaponConfigs.find(weaponName);
     if (it == m_WeaponConfigs.end()) {
-        std::cerr << "Weapon not found: " << weaponName << std::endl;
+        std::cerr << "Weapon not found: " << weaponName << "\n";
         return false;
     }
 
@@ -119,7 +119,7 @@ bool WeaponSystem::equipWeapon(const std::string& weaponName) {
     }
 
     std::cout << "Equipped: " << m_CurrentWeapon->name << " (" << m_WeaponState.currentAmmo << "/"
-              << m_WeaponState.reserveAmmo << ")" << std::endl;
+              << m_WeaponState.reserveAmmo << ")" << "\n";
 
     return true;
 }
@@ -219,9 +219,14 @@ void WeaponSystem::fire() {
     addRecoil();
 
     // View punch (random kick); scaled in update loop with real dt.
+    // We use a thread-local Mersenne Twister — rand() has known low
+    // quality on some libc implementations and clang-tidy (cert-msc50-cpp)
+    // rightly flags it.
+    static thread_local std::mt19937 punchRng(std::random_device{}());
+    std::uniform_real_distribution<float> unit01(0.0f, 1.0f);
     const float punchStrength = m_CurrentWeapon->stats.recoilMagnitude * 0.5f;
-    m_ViewPunchVelocity.y += punchStrength * (0.8f + 0.4f * (rand() / float(RAND_MAX)));
-    m_ViewPunchVelocity.x += punchStrength * 0.3f * ((rand() / float(RAND_MAX)) - 0.5f);
+    m_ViewPunchVelocity.y += punchStrength * (0.8f + 0.4f * unit01(punchRng));
+    m_ViewPunchVelocity.x += punchStrength * 0.3f * (unit01(punchRng) - 0.5f);
 
     // Debug
     std::cout << "FIRE! " << m_CurrentWeapon->name << " | Ammo: " << m_WeaponState.currentAmmo
@@ -457,13 +462,13 @@ void WeaponSystem::startReload() {
 
     m_WeaponState.stateTimer = reloadTime;
 
-    std::cout << "Reloading " << m_CurrentWeapon->name << " (" << reloadTime << "s)" << std::endl;
+    std::cout << "Reloading " << m_CurrentWeapon->name << " (" << reloadTime << "s)" << "\n";
 }
 
 void WeaponSystem::cancelReload() {
     if (m_WeaponState.state == Weapons::WeaponState::RELOADING) {
         changeWeaponState(Weapons::WeaponState::IDLE);
-        std::cout << "Reload cancelled" << std::endl;
+        std::cout << "Reload cancelled" << "\n";
     }
 }
 
@@ -475,12 +480,12 @@ void WeaponSystem::startADS() {
     if (!m_CurrentWeapon || m_WeaponState.state != Weapons::WeaponState::IDLE) return;
 
     m_WeaponState.isAiming = true;
-    std::cout << "ADS started" << std::endl;
+    std::cout << "ADS started" << "\n";
 }
 
 void WeaponSystem::stopADS() {
     m_WeaponState.isAiming = false;
-    std::cout << "ADS stopped" << std::endl;
+    std::cout << "ADS stopped" << "\n";
 }
 
 bool WeaponSystem::isAiming() const {
@@ -510,16 +515,15 @@ void WeaponSystem::updateStateMachine(float deltaTime) {
                     m_WeaponState.chamberedRound = true;
 
                     std::cout << "Reload complete! " << m_WeaponState.currentAmmo << "/"
-                              << m_WeaponState.reserveAmmo << std::endl;
+                              << m_WeaponState.reserveAmmo << "\n";
                 }
                 changeWeaponState(Weapons::WeaponState::IDLE);
                 break;
 
             case Weapons::WeaponState::DRAWING:
-                changeWeaponState(Weapons::WeaponState::IDLE);
-                break;
-
             default:
+                // Both fall back to IDLE — drawing has no dedicated
+                // side-effect yet (Phase 4 will add draw animation).
                 changeWeaponState(Weapons::WeaponState::IDLE);
                 break;
             }
@@ -592,17 +596,17 @@ void WeaponSystem::printDebugInfo() const {
     m_DebugTimer += 1.0f / 60.0f; // Assume 60fps
 
     if (m_DebugTimer >= 2.0f && m_CurrentWeapon) {
-        std::cout << "=== WEAPON DEBUG ===" << std::endl;
-        std::cout << "Weapon: " << m_CurrentWeapon->name << std::endl;
+        std::cout << "=== WEAPON DEBUG ===" << "\n";
+        std::cout << "Weapon: " << m_CurrentWeapon->name << "\n";
         std::cout << "Ammo: " << m_WeaponState.currentAmmo << "/" << m_WeaponState.reserveAmmo
-                  << std::endl;
-        std::cout << "State: " << (int)m_WeaponState.state << std::endl;
-        std::cout << "Spread: " << calculateCurrentSpread() << "°" << std::endl;
+                  << "\n";
+        std::cout << "State: " << (int)m_WeaponState.state << "\n";
+        std::cout << "Spread: " << calculateCurrentSpread() << "°" << "\n";
         std::cout << "Recoil: (" << m_WeaponState.currentRecoil.x << ", "
-                  << m_WeaponState.currentRecoil.y << ")" << std::endl;
-        std::cout << "ADS: " << (m_WeaponState.adsProgress * 100.0f) << "%" << std::endl;
-        std::cout << "Shots Fired: " << m_WeaponState.shotsFired << std::endl;
-        std::cout << "===================" << std::endl;
+                  << m_WeaponState.currentRecoil.y << ")" << "\n";
+        std::cout << "ADS: " << (m_WeaponState.adsProgress * 100.0f) << "%" << "\n";
+        std::cout << "Shots Fired: " << m_WeaponState.shotsFired << "\n";
+        std::cout << "===================" << "\n";
 
         m_DebugTimer = 0.0f;
     }
@@ -852,9 +856,10 @@ WeaponFactory::generateControlledPattern(float verticalStrength, float horizonta
         float vertical = verticalStrength * (1.0f - progress * 0.3f);
 
         // Horizontal component (alternating with decay)
-        float horizontal = horizontalVariation * sin(progress * 6.28f) * (1.0f - progress * 0.5f);
+        float horizontal =
+            horizontalVariation * std::sin(progress * 6.28f) * (1.0f - progress * 0.5f);
 
-        pattern.push_back({glm::vec2(horizontal, vertical), i * 0.1f, 8.0f});
+        pattern.push_back({glm::vec2(horizontal, vertical), static_cast<float>(i) * 0.1f, 8.0f});
     }
 
     return pattern;

@@ -47,9 +47,13 @@ constexpr float kCrosshairVertices[]   = {
     0.00f, -0.02f, 0.0f, 1.0f, 1.0f, 1.0f, 0.00f, 0.02f, 0.0f, 1.0f, 1.0f, 1.0f};
 
 void setupColouredVertexLayout() {
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    // OpenGL wants an intptr-encoded offset here — the classic
+    // vertex-attrib-pointer idiom. `reinterpret_cast` silences the
+    // clang-tidy warnings that we're going int → void*.
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                          reinterpret_cast<void*>(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 }
 
@@ -171,7 +175,7 @@ void Renderer::render(const FPSCamera& camera, const GameWorld& world, const Wea
 void Renderer::drawFloor(const glm::mat4& /*view*/, const glm::mat4& /*proj*/) {
     m_Shader->setMat4("model", glm::mat4(1.0f));
     glBindVertexArray(m_FloorVAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 }
 
@@ -187,7 +191,7 @@ void Renderer::drawTargets(const GameWorld& world, const glm::mat4& /*view*/,
         model           = glm::scale(model, glm::vec3(t.scale));
 
         m_Shader->setMat4("model", model);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     }
     glBindVertexArray(0);
 }
@@ -211,7 +215,7 @@ void Renderer::drawRemotePlayers(const Net::RemotePlayerRegistry& remotes,
         model           = glm::scale(model, glm::vec3(0.8f, 1.8f, 0.4f));
 
         m_Shader->setMat4("model", model);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     }
     glBindVertexArray(0);
 }

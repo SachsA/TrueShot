@@ -203,7 +203,7 @@ void NetworkClient::onPacket(const uint8_t* data, size_t len) {
     m_BytesRecv += len;
 
     BitReader br(data, len);
-    PacketType type;
+    PacketType type = PacketType::Disconnect;
     if (!readHeader(br, type)) {
         // Bad protocol or short packet — drop silently. Future phases
         // can add a metric for it (m_BadPackets++).
@@ -218,12 +218,12 @@ void NetworkClient::onPacket(const uint8_t* data, size_t len) {
         handleHandshakeAck(br.p, br.remaining);
         break;
     case PacketType::Disconnect:
-        // The peer hung up — ENet will fire EVENT_TYPE_DISCONNECT on the
-        // next service() loop, so just no-op here.
-        break;
     default:
-        // Unknown packet type — ignore. Will be useful when we add
-        // optional packet types without breaking old clients.
+        // The peer hung up (Disconnect) or sent something we don't
+        // understand yet (default). Both are no-ops here — for
+        // Disconnect, ENet will fire EVENT_TYPE_DISCONNECT on the next
+        // service() loop; for unknowns, we ignore rather than crash so
+        // we can add optional packet types without breaking old clients.
         break;
     }
 }

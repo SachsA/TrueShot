@@ -2,6 +2,14 @@
 #
 # Pragmatic ruleset: catches real bugs and modernisation opportunities
 # without drowning us in stylistic noise. Tighten when codebase matures.
+#
+# What we EXPLICITLY don't lint (see rationale in each block below):
+#   * Purely stylistic checks that fight the project's 1-line-guard style
+#     (`if (x) return;` is idiomatic here, `if (x) { return; }` is verbose).
+#   * Checks that produce false positives on OpenGL / ImGui / ENet public APIs
+#     (which require C-style void* casts and unmarked-return functions).
+#   * Modernization checks that would touch every declaration for no
+#     benefit (`use-auto`, `return-braced-init-list`).
 ---
 Checks: >
   bugprone-*,
@@ -14,6 +22,7 @@ Checks: >
   readability-*,
   -bugprone-easily-swappable-parameters,
   -bugprone-narrowing-conversions,
+  -cppcoreguidelines-avoid-c-arrays,
   -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-avoid-non-const-global-variables,
   -cppcoreguidelines-non-private-member-variables-in-classes,
@@ -24,14 +33,21 @@ Checks: >
   -cppcoreguidelines-pro-type-union-access,
   -cppcoreguidelines-pro-type-vararg,
   -cppcoreguidelines-special-member-functions,
-  -modernize-use-trailing-return-type,
   -modernize-avoid-c-arrays,
+  -modernize-return-braced-init-list,
+  -modernize-use-auto,
   -modernize-use-nodiscard,
+  -modernize-use-trailing-return-type,
+  -readability-braces-around-statements,
+  -readability-convert-member-functions-to-static,
+  -readability-else-after-return,
   -readability-identifier-length,
+  -readability-implicit-bool-conversion,
+  -readability-isolate-declaration,
   -readability-magic-numbers,
+  -readability-make-member-function-const,
   -readability-named-parameter,
-  -readability-uppercase-literal-suffix,
-  -readability-implicit-bool-conversion
+  -readability-uppercase-literal-suffix
 
 WarningsAsErrors: ""    # Promote to "*" once the codebase is clean.
 HeaderFilterRegex: '^(include|src)/.*\.(h|hpp|cpp)$'

@@ -4,6 +4,12 @@ TrueShot is a proprietary project — see [LICENSE](LICENSE) — but contributor
 who have been granted access can use this guide to set up their environment
 and submit changes.
 
+> **Read [`CLAUDE.md`](CLAUDE.md) first.** It holds the project's hard
+> constraints (mandatory platforms, Steam-only distribution, in-house
+> kernel anti-cheat, 128 Hz server-authoritative netcode) and the
+> documentation contract every change must satisfy. This file covers the
+> mechanics; `CLAUDE.md` covers the rules.
+
 ## Table of contents
 
 1. [Toolchain setup](#toolchain-setup)
@@ -247,6 +253,9 @@ needed" reminder where relevant.
 
 Before opening a PR, please confirm:
 
+- [ ] The documentation contract in [`CLAUDE.md`](CLAUDE.md) §2 is
+      satisfied — every affected doc, config, script and ignore file is
+      updated, not just the code.
 - [ ] Builds clean under `cmake --preset strict` (no warnings) on at
       least your dev OS — CI will run the other two.
 - [ ] `clang-format --dry-run --Werror --style=file` passes on the

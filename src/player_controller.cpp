@@ -6,11 +6,11 @@
 #include <cstdlib>
 #include <iostream>
 
-PlayerController::PlayerController(FPSCamera* camera) : m_Camera(camera) {
+PlayerController::PlayerController(FPSCamera* camera)
+    : m_Camera(camera), m_GameTime(0.0f),
+      m_LastFootstepPos(glm::vec3(0.0f, Physics::PLAYER_HEIGHT, 3.0f)) {
     m_State.position = glm::vec3(0.0f, Physics::PLAYER_HEIGHT, 3.0f);
     m_Camera->setPosition(m_State.position);
-    m_GameTime        = 0.0f;
-    m_LastFootstepPos = m_State.position;
 }
 
 void PlayerController::update(float deltaTime) {
@@ -195,12 +195,14 @@ void PlayerController::optimizeAirMovement(const glm::vec3& wishDir, float delta
     }
 
     glm::vec3 velDir = glm::normalize(horizontalVel);
-    float angle      = glm::degrees(acos(glm::clamp(glm::dot(wishDir, velDir), -1.0f, 1.0f)));
+    float angle      = glm::degrees(std::acos(glm::clamp(glm::dot(wishDir, velDir), -1.0f, 1.0f)));
 
     // Optimal strafe jumping: 30-45 degrees
     if (angle >= 20.0f && angle <= 60.0f) {
-        // Bonus acceleration pour bon angle
-        float angleFactor    = 1.0f - abs(angle - Physics::OPTIMAL_STRAFE_ANGLE) / 30.0f;
+        // Bonus acceleration pour bon angle. Use std::fabs — plain abs()
+        // is the integer overload from <cstdlib> and would truncate the
+        // float argument (real bug caught by clang-tidy).
+        float angleFactor    = 1.0f - std::fabs(angle - Physics::OPTIMAL_STRAFE_ANGLE) / 30.0f;
         angleFactor          = std::max(0.5f, angleFactor);
 
         float effectiveAccel = Physics::AIR_ACCELERATION * (1.0f + angleFactor * 0.5f);
@@ -227,7 +229,7 @@ void PlayerController::handleBunnyHop() {
         m_State.consecutiveHops++;
 
         std::cout << "Bhop #" << m_State.consecutiveHops << " | Speed: " << m_State.speed
-                  << " | Efficiency: " << (m_State.strafeEfficiency * 100.0f) << "%" << std::endl;
+                  << " | Efficiency: " << (m_State.strafeEfficiency * 100.0f) << "%" << "\n";
     } else if (m_State.airTime < 0.1f) {
         // Pre-speed: jump buffering
         m_State.wishJump = true; // Keep trying
@@ -420,7 +422,6 @@ void PlayerController::handleWallCollision(const glm::vec3& wallNormal) {
         m_State.velocity = reflection * Physics::WALL_BOUNCE_FACTOR;
 
         std::cout << "Wall bounce! Speed: " << speed << " → "
-                  << glm::length(glm::vec3(m_State.velocity.x, 0.0f, m_State.velocity.z))
-                  << std::endl;
+                  << glm::length(glm::vec3(m_State.velocity.x, 0.0f, m_State.velocity.z)) << "\n";
     }
 }

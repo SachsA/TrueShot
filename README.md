@@ -138,6 +138,7 @@ TrueShot/
 ├─ RunTrueShot.sh           # macOS / Linux build & run
 ├─ RunTrueShot.bat          # Windows build & run
 ├─ CHANGELOG.md
+├─ CLAUDE.md                # working agreement (constraints, doc contract)
 ├─ CONTRIBUTING.md
 ├─ LICENSE
 └─ README.md

@@ -251,7 +251,10 @@ void Hud::drawStatsPanel(const GameWorld& world, const WeaponSystem& weapons,
         ImGui::TextColored(ImVec4(0.85f, 0.95f, 1.0f, 1.0f), "%s", w->name.c_str());
 
         char ammoText[64];
-        std::snprintf(ammoText, sizeof(ammoText), "%d / %d", ws.currentAmmo, ws.reserveAmmo);
+        // snprintf's return value tells us if we truncated. We accept
+        // truncation silently here — this is a HUD label that can't
+        // realistically overflow 64 bytes with reasonable ammo counts.
+        (void)std::snprintf(ammoText, sizeof(ammoText), "%d / %d", ws.currentAmmo, ws.reserveAmmo);
 
         // Push a colour onto the progress bar that reflects ammo level.
         ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImColor(ammoColor(fraction)).Value);
