@@ -135,8 +135,10 @@ TrueShot/
 ├─ CMakeLists.txt
 ├─ CMakePresets.json
 ├─ vcpkg.json               # manifest mode deps
-├─ RunTrueShot.sh           # macOS / Linux build & run
-├─ RunTrueShot.bat          # Windows build & run
+├─ scripts/                 # developer entry points (run from anywhere)
+│   ├─ run.sh / run.bat     # build & run, forwards args to the binary
+│   └─ clean.sh / clean.bat # clean: build / --deps / --all
+├─ .gitattributes           # line endings: LF in repo, CRLF for .bat
 ├─ CHANGELOG.md
 ├─ CLAUDE.md                # working agreement (constraints, doc contract)
 ├─ CONTRIBUTING.md
@@ -180,11 +182,18 @@ cd TrueShot
 
 ```bash
 # macOS / Linux
-./RunTrueShot.sh
+./scripts/run.sh
+./scripts/run.sh --server 192.168.1.42   # args are forwarded to the binary
+./scripts/run.sh --no-run                # configure + build only
 
 # Windows
-RunTrueShot.bat
+scripts\run.bat
+scripts\run.bat --server 192.168.1.42
 ```
+
+Both accept `--help`, and both work from any directory — they resolve the
+repo root from their own path. Override `BUILD_TYPE`, `BUILD_DIR` or
+`VCPKG_ROOT` in the environment to change what they do.
 
 ### CMake presets (recommended)
 
@@ -235,6 +244,29 @@ A typical 1v1 LAN session uses one machine running `trueshot_server` and two
 machines running `TrueShot --server <ip>`. Listen-server mode (one client
 hosts and plays at the same time) is wired into the same `Net::Server`
 library and lands fully in Phase 2.
+
+### Cleaning
+
+Three levels, cheapest first. Both scripts take the same flags and refuse
+to run outside the repo root.
+
+```bash
+# macOS / Linux                     # Windows
+./scripts/clean.sh                  scripts\clean.bat
+./scripts/clean.sh --deps           scripts\clean.bat --deps
+./scripts/clean.sh --all            scripts\clean.bat --all
+./scripts/clean.sh --dry-run        scripts\clean.bat --dry-run
+```
+
+| Level | Removes | Rebuild cost |
+|---|---|---|
+| *(default)* | `build/`, `out/`, `dist/`, `cmake-build-*/`, `CMakeCache.txt`, `CMakeFiles/`, `compile_commands.json` | Seconds — deps are kept |
+| `--deps` | ...plus `vcpkg_installed/` and the in-tree `vcpkg/` clone | Minutes — vcpkg re-installs the manifest |
+| `--all` | ...plus the global vcpkg cache (`~/.cache/vcpkg`, `%LOCALAPPDATA%\vcpkg`) and `$VCPKG_ROOT`'s scratch dirs | 10+ min — everything recompiles from source |
+
+`--dry-run` lists what would go without deleting anything; `--yes` skips
+the confirmation that `--all` asks for. Only paths covered by
+`.gitignore` are ever touched, so `git status` stays clean.
 
 ## Controls
 

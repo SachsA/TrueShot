@@ -1,0 +1,62 @@
+# Line-ending normalisation for a repo developed on Windows + macOS + Linux
+# simultaneously. Without this, whoever has `core.autocrlf` set differently
+# produces spurious whole-file diffs.
+#
+# Rule: store everything as LF in the repository, and let git convert on
+# checkout only where the platform genuinely requires it (.bat).
+
+# Default: let git decide what's text, normalise to LF in the repo.
+* text=auto eol=lf
+
+# ----- Scripts -----
+# Batch files must have CRLF on disk on Windows — cmd.exe mis-parses
+# multi-line constructs (labels, parenthesised blocks) with bare LF.
+*.bat            text eol=crlf
+*.cmd            text eol=crlf
+*.ps1            text eol=crlf
+
+# Shell scripts must stay LF even when checked out on Windows (WSL, git
+# bash and Cygwin all choke on CR in a shebang line).
+*.sh             text eol=lf
+
+# ----- Source & config -----
+*.c              text eol=lf
+*.cc             text eol=lf
+*.cpp            text eol=lf
+*.h              text eol=lf
+*.hpp            text eol=lf
+*.inl            text eol=lf
+*.vert           text eol=lf
+*.frag           text eol=lf
+*.glsl           text eol=lf
+*.cmake          text eol=lf
+CMakeLists.txt   text eol=lf
+*.json           text eol=lf
+*.yml            text eol=lf
+*.yaml           text eol=lf
+*.md             text eol=lf
+.clang-format    text eol=lf
+.clang-tidy      text eol=lf
+.editorconfig    text eol=lf
+.ecrc            text eol=lf
+.gitattributes   text eol=lf
+.gitignore       text eol=lf
+
+# ----- Binary: never touch, never diff -----
+*.png            binary
+*.jpg            binary
+*.jpeg           binary
+*.gif            binary
+*.ico            binary
+*.ttf            binary
+*.otf            binary
+*.wav            binary
+*.ogg            binary
+*.mp3            binary
+*.fbx            binary
+*.gltf           binary
+*.glb            binary
+*.dds            binary
+*.pdf            binary
+*.zip            binary
+*.7z             binary

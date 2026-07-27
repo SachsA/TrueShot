@@ -1,19 +1,26 @@
 # ----- Build artefacts -----
+# Everything here is removed by CleanTrueShot.sh / CleanTrueShot.bat.
 build/
 network_module/build/
 out/
 cmake-build-*/
+dist/
 CMakeCache.txt
 CMakeFiles/
 CMakeUserPresets.json
 compile_commands.json
 
-# vcpkg manifest mode installs deps in a sibling directory at configure time.
+# vcpkg manifest mode installs deps in a sibling directory at configure
+# time; CI also bootstraps its own vcpkg clone into the repo root.
 vcpkg_installed/
+vcpkg/
 
 # Compiled object & link files
 *.d
 *.o
+# NOTE: *.obj is also the Wavefront 3D model extension. If Phase 3 ever
+# ships Wavefront meshes, narrow this to build dirs or force-add them
+# with `git add -f`. We currently export models as .fbx / .gltf / .glb.
 *.obj
 *.slo
 *.lo

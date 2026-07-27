@@ -10,6 +10,54 @@ in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+### Changed — Scripts moved into `scripts/`
+
+- `RunTrueShot.sh` → **`scripts/run.sh`**, `RunTrueShot.bat` →
+  **`scripts/run.bat`** (via `git mv`, history preserved). The repo root
+  was accumulating entry points and Phase 8 (deploy) and Phase 16 (Steam
+  packaging) will add more.
+- Both `run` scripts now resolve the repo root from their own path, so
+  `cmake -S .` is correct regardless of the working directory.
+- `run.sh` / `run.bat` gained `--help`, `--no-run` (configure + build
+  without launching) and **argument pass-through** — `./scripts/run.sh
+  --server 192.168.1.42` forwards straight to the binary, which matters
+  now that the client has a real CLI surface.
+- `run.bat` now probes both the multi-config
+  (`build\bin\<Config>\TrueShot.exe`) and single-config
+  (`build\bin\TrueShot.exe`) output paths instead of relying on
+  `errorlevel` from a failed launch.
+
+### Added — Clean scripts
+
+- **`scripts/clean.sh`** / **`scripts/clean.bat`** — cross-platform clean
+  with three levels:
+  - *(default)* build artefacts: `build/`, `network_module/build/`,
+    `out/`, `dist/`, `cmake-build-*/`, `CMakeCache.txt`, `CMakeFiles/`,
+    `CMakeUserPresets.json`, `compile_commands.json`;
+  - `--deps` — also `vcpkg_installed/` and the in-tree `vcpkg/` clone;
+  - `--all` / `--nuke` — also the global vcpkg cache
+    (`~/.cache/vcpkg`, `%LOCALAPPDATA%\vcpkg`) and `$VCPKG_ROOT`'s
+    `buildtrees`/`packages`/`downloads` (never the clone itself).
+- Both scripts support `--dry-run` (preview), `--yes` (skip the `--all`
+  confirmation) and `--help`; both refuse to run unless
+  `CMakeLists.txt` + `vcpkg.json` are present, so they can't be
+  pointed at the wrong directory.
+- Only `.gitignore`d paths are ever removed — `git status` stays clean
+  after any level.
+- `.gitignore`: added `dist/` (CI artefact staging) and `vcpkg/` (the
+  clone CI bootstraps into the repo root), both previously untracked
+  but not ignored. Also flagged the `*.obj` collision between compiled
+  objects and Wavefront meshes for whoever hits it in Phase 3.
+- **`.gitattributes`** — line-ending normalisation, which the repo needed
+  as soon as it had scripts for all three platforms. Everything is stored
+  LF; `.bat`/`.cmd`/`.ps1` are converted to CRLF on checkout (cmd.exe
+  mis-parses parenthesised blocks with bare LF), `.sh` stays LF even on
+  Windows (git bash and WSL choke on CR in a shebang). Binary asset
+  extensions are marked so git never tries to diff or convert them.
+  This also resolves the standing mismatch where `.editorconfig`
+  declared `crlf` for `.bat` while both existing `.bat` files were
+  stored LF.
+
 ### Added — Project governance
 
 - **`CLAUDE.md`** — the repo's working agreement, read at the start of

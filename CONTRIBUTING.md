@@ -112,6 +112,20 @@ ctest --test-dir build/tests --output-on-failure
 # 6. Commit & open a PR against main
 ```
 
+If a build starts behaving strangely — stale CMake cache, a dependency
+that half-installed, a preset that won't reconfigure — clean and retry
+before debugging further:
+
+```bash
+./scripts/clean.sh            # build artefacts only (fast)
+./scripts/clean.sh --deps     # also drop vcpkg_installed/ and vcpkg/
+./scripts/clean.sh --all      # also drop the global vcpkg cache
+```
+
+`scripts\clean.bat` is the Windows equivalent with identical flags. Add
+`--dry-run` to preview. The scripts only remove `.gitignore`d paths, so
+they can never eat your work, and they work from any directory.
+
 ## Coding style
 
 - **Language:** C++17, no compiler extensions.

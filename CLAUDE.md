@@ -74,8 +74,12 @@ could possibly be affected. Not just the obvious files — everything.
 
 **Runtime / scripts**
 
-- `RunTrueShot.sh` / `RunTrueShot.bat` — new CLI flags, new env vars,
+- `scripts/run.sh` / `scripts/run.bat` — new CLI flags, new env vars,
   new build steps
+- `scripts/clean.sh` / `scripts/clean.bat` — every newly generated
+  directory must be added to the clean target list, in both scripts
+- Any new script goes in `scripts/`, never at the repo root, and gets
+  `--help` plus a repo-root guard like its siblings
 - `shaders/` — if the renderer's expectations change
 
 **Repo hygiene**
@@ -174,7 +178,8 @@ or a recap of the implementation.
 7. A new ADR exists if the change was architectural
 8. `CONTRIBUTING.md` mentions any new convention
 9. `.gitignore` covers new build artefacts
-10. `RunTrueShot.sh` / `.bat` still work with the new CLI surface
+10. `scripts/run.*` and `scripts/clean.*` still work with the new CLI
+    surface and the new generated directories
 11. Commit message written and handed to Alex
 
 ---
