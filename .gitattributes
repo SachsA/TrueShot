@@ -41,6 +41,7 @@ CMakeLists.txt   text eol=lf
 .ecrc            text eol=lf
 .gitattributes   text eol=lf
 .gitignore       text eol=lf
+.gitmessage      text eol=lf
 
 # ----- Binary: never touch, never diff -----
 *.png            binary

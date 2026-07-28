@@ -9,7 +9,6 @@
     "^vcpkg_installed/",
     "^\\.git/",
     "\\.DS_Store$",
-    "^docs/.*\\.md$",
     "\\.bat$"
   ]
 }

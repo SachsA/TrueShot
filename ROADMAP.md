@@ -1754,9 +1754,11 @@ mais pas encore rentable.
 
 ### Décisions produit formalisées dans des ADR
 
-> ADR = Architecture Decision Record. Les ADRs déjà écrits vivent dans
-> [docs/adr/](docs/adr/). Cette section liste ce qui est livré + ce qui
-> reste à formaliser quand on tranchera la décision.
+> ADR = Architecture Decision Record. L'index canonique (statut, phase,
+> résumé) est dans [docs/README.md](docs/README.md) ; le template est
+> [docs/adr/0000-adr-template.md](docs/adr/0000-adr-template.md). Cette
+> section-ci sert uniquement de **suivi roadmap** : ce qui est livré, et
+> ce qui reste à formaliser quand on tranchera la décision.
 
 **Déjà écrits (Phase 0 / Phase 1) :**
 
@@ -1766,19 +1768,20 @@ mais pas encore rentable.
 - [x] [ADR-004 — Snapshot interpolation (100 ms delay, freeze on starvation)](docs/adr/0004-snapshot-interpolation.md)
 - [x] [ADR-005 — Shared `NetSim` + client prediction](docs/adr/0005-client-prediction-and-shared-netsim.md)
 - [x] [ADR-006 — Lag compensation (200 ms cap, AABB rewind)](docs/adr/0006-lag-compensation.md)
+- [x] [ADR-007 — Source layout (sous-dossiers par subsystem, `snake_case`)](docs/adr/0007-source-layout.md)
 
 **À écrire quand on tranche** (numérotation séquentielle, pas de
 recyclage avec les numéros ci-dessus) :
 
-- [ ] ADR-007 — Choix abstraction rendu pour Phase 4 (GL 4.1 vs Vulkan+MoltenVK vs bgfx vs Sokol)
-- [ ] ADR-008 — Langage de scripting mod (Lua / Wren / WASM)
-- [ ] ADR-009 — Stack backend (PostgreSQL + Redis, ou autre)
-- [ ] ADR-010 — Authentification (Steam OpenID, ou compte propriétaire ?)
-- [ ] ADR-011 — Approche anti-cheat kernel (driver Windows propriétaire — détails Phase 9)
-- [ ] ADR-012 — Format de map et pipeline d'import (Phase 3)
-- [ ] ADR-013 — Système d'animation (skeletal vs morph + state machine, Phase 4)
-- [ ] ADR-014 — Voice chat encoding + transport (Opus 32 kbps sur ENet ? canal séparé ?)
-- [ ] ADR-015 — Économie et anti-fraude marketplace (Phase 10)
+- [ ] ADR-008 — Choix abstraction rendu pour Phase 4 (GL 4.1 vs Vulkan+MoltenVK vs bgfx vs Sokol)
+- [ ] ADR-009 — Langage de scripting mod (Lua / Wren / WASM)
+- [ ] ADR-010 — Stack backend (PostgreSQL + Redis, ou autre)
+- [ ] ADR-011 — Authentification (Steam OpenID, ou compte propriétaire ?)
+- [ ] ADR-012 — Approche anti-cheat kernel (driver Windows propriétaire — détails Phase 9)
+- [ ] ADR-013 — Format de map et pipeline d'import (Phase 3)
+- [ ] ADR-014 — Système d'animation (skeletal vs morph + state machine, Phase 4)
+- [ ] ADR-015 — Voice chat encoding + transport (Opus 32 kbps sur ENet ? canal séparé ?)
+- [ ] ADR-016 — Économie et anti-fraude marketplace (Phase 10)
 
 ### Risques majeurs identifiés
 

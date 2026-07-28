@@ -26,9 +26,11 @@
 6. [Controls](#controls)
 7. [Architecture overview](#architecture-overview)
 8. [Roadmap](#roadmap)
-9. [Contributing](#contributing)
-10. [Socials](#socials)
-11. [License](#license)
+9. [Documentation](#documentation)
+10. [Contributing](#contributing)
+11. [Security](#security)
+12. [Socials](#socials)
+13. [License](#license)
 
 ---
 
@@ -152,16 +154,23 @@ TrueShot/
 │   ├─ run.sh / run.bat         # build & run, forwards args to the binary
 │   └─ clean.sh / clean.bat     # clean: build / --deps / --all
 ├─ docs/
-│   ├─ adr/                     # architecture decision records
-│   └─ test/                    # manual test plans
-├─ .github/workflows/           # multi-OS CI (build + lint + clang-tidy)
+│   ├─ README.md               # documentation index — start here
+│   ├─ adr/                    # architecture decision records (+ template)
+│   └─ test/                   # manual test plans
+├─ .github/
+│   ├─ workflows/              # multi-OS CI (build + lint + clang-tidy)
+│   ├─ dependabot.yml          # weekly grouped Action bumps
+│   ├─ ISSUE_TEMPLATE/
+│   └─ pull_request_template.md
 ├─ CMakeLists.txt
 ├─ CMakePresets.json
 ├─ vcpkg.json                   # manifest mode deps
 ├─ .gitattributes               # line endings: LF in repo, CRLF for .bat
+├─ .gitmessage                  # commit-message template (see CONTRIBUTING)
 ├─ CHANGELOG.md
 ├─ CLAUDE.md                    # working agreement (constraints, doc contract)
 ├─ CONTRIBUTING.md
+├─ SECURITY.md                  # how to report a vulnerability
 ├─ LICENSE
 └─ README.md
 ```
@@ -370,13 +379,34 @@ direction, audio production, backend, e-sport, legal, marketing — see
 [**ROADMAP.md**](ROADMAP.md). Twenty phases, ~400 atomic tasks, with
 execution mode (solo / freelance / team) and budget estimates for each.
 
-Recent changes are tracked in [**CHANGELOG.md**](CHANGELOG.md). Design
-decisions live under [**docs/adr/**](docs/adr/).
+Recent changes are tracked in [**CHANGELOG.md**](CHANGELOG.md).
+
+## Documentation
+
+[**docs/README.md**](docs/README.md) is the index for everything written
+down about TrueShot — the seven Architecture Decision Records with their
+status and a one-line summary each, the manual test plans, and the gaps
+that aren't written yet.
+
+| | |
+|---|---|
+| Why the architecture is what it is | [docs/README.md](docs/README.md) → ADRs |
+| What's planned, phase by phase | [ROADMAP.md](ROADMAP.md) |
+| How to set up and contribute | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Hard project constraints + doc contract | [CLAUDE.md](CLAUDE.md) |
+| How to report a security issue | [SECURITY.md](SECURITY.md) |
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, the coding
 style and the pull-request workflow.
+
+## Security
+
+Found a way to make the server accept something a legitimate client
+couldn't send? That's the report we want most. **Don't open a public
+issue** — see [SECURITY.md](SECURITY.md) for the private channel and
+what's in scope.
 
 ## Socials
 

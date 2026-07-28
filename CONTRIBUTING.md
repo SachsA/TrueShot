@@ -14,9 +14,14 @@ and submit changes.
 
 1. [Toolchain setup](#toolchain-setup)
 2. [Development workflow](#development-workflow)
-3. [Coding style](#coding-style)
-4. [Architecture rules](#architecture-rules)
-5. [Pull-request checklist](#pull-request-checklist)
+3. [Commit messages](#commit-messages)
+4. [Coding style](#coding-style)
+5. [Architecture rules](#architecture-rules)
+6. [Continuous Integration](#continuous-integration)
+7. [Pull-request checklist](#pull-request-checklist)
+
+Looking for the *why* behind an architectural choice, or the list of ADRs?
+That's [`docs/README.md`](docs/README.md).
 
 ---
 
@@ -87,6 +92,15 @@ Linux.
 
 ## Development workflow
 
+One-time setup per clone, so `git commit` opens with the commit-message
+format already spelled out:
+
+```bash
+git config commit.template .gitmessage
+```
+
+Then, per change:
+
 ```bash
 # 1. Branch off main
 git checkout -b feature/<short-name>
@@ -125,6 +139,36 @@ before debugging further:
 `scripts\clean.bat` is the Windows equivalent with identical flags. Add
 `--dry-run` to preview. The scripts only remove `.gitignore`d paths, so
 they can never eat your work, and they work from any directory.
+
+## Commit messages
+
+Conventional Commits, kept deliberately short. The canonical rules live in
+[`CLAUDE.md`](CLAUDE.md) §3; [`.gitmessage`](.gitmessage) is the same rules
+as a template your editor shows you.
+
+```text
+<type>(<scope>): <subject, imperative, under 72 chars>
+
+- <bullet, only if it adds something the subject doesn't>
+- <3 bullets max>
+```
+
+| | |
+|---|---|
+| **Types** | `feat` `fix` `docs` `chore` `refactor` `test` `build` `perf` `ci` `style` |
+| **Scopes** | `net` `hud` `render` `physics` `weapons` `audio` `cmake` `ci` `lint` `docs` `tests` |
+
+Two rules that matter more than the format:
+
+- **Don't re-list the files you touched.** The diff already did that.
+- **If it needs a paragraph, it needs an ADR.** Write the ADR, then cite
+  it in one line: `See ADR-006.`
+
+```text
+fix(net): clamp rewind window to 200 ms
+
+- Anti-cheat: fake high ping was buying a wider rewind. See ADR-006.
+```
 
 ## Coding style
 
@@ -212,15 +256,14 @@ Major architectural choices are recorded as ADRs under
 subsystem it covers; add a new ADR when you make a decision that future-
 you (or someone else) would benefit from understanding the *why* behind.
 
-Current ADRs:
+**The indexed list of ADRs — number, title, status, phase and a one-line
+summary — lives in [`docs/README.md`](docs/README.md).** It is deliberately
+kept in *one* place so it can't drift out of sync; don't copy it here.
 
-- [ADR-001 — Render API](docs/adr/0001-render-api.md)
-- [ADR-002 — Netcode architecture](docs/adr/0002-netcode-architecture.md)
-- [ADR-003 — Listen-server & input clamping](docs/adr/0003-listen-server-and-input-clamping.md)
-- [ADR-004 — Snapshot interpolation](docs/adr/0004-snapshot-interpolation.md)
-- [ADR-005 — Shared NetSim + client prediction](docs/adr/0005-client-prediction-and-shared-netsim.md)
-- [ADR-006 — Lag compensation](docs/adr/0006-lag-compensation.md)
-- [ADR-007 — Source layout](docs/adr/0007-source-layout.md)
+To write one: copy
+[`docs/adr/0000-adr-template.md`](docs/adr/0000-adr-template.md), take the
+next free number, and add a row to the table in `docs/README.md`. Numbers
+are never recycled, even when an ADR is superseded.
 
 ## Continuous Integration
 
@@ -234,6 +277,18 @@ Every push to `main` and every PR triggers two workflows on GitHub Actions:
 
 **A PR is mergeable only when both `build` and `lint` are green.** This is
 enforced by branch protection on `main` (set up in GitHub repo settings).
+
+### Why `*.bat` is excluded from the EditorConfig check
+
+[`.ecrc`](.ecrc) is JSON and can't hold a comment, so the reason lives
+here: `.gitattributes` marks `*.bat` as `eol=crlf`, meaning the file is
+stored LF in the repository and converted to CRLF on checkout. The
+working-tree line ending therefore depends on how the file got there, and
+editorconfig-checker can't tell the difference between "correctly
+converted" and "wrong". Git is the authority on this, not the linter —
+verify with `git check-attr eol -- scripts/clean.bat` if in doubt.
+
+Everything else, including all of `docs/`, **is** checked.
 
 ### Reproducing CI locally
 
@@ -274,6 +329,15 @@ cmake --preset default
 When a new vcpkg release ships (every ~3 months), bump the
 `builtin-baseline` SHA in `vcpkg.json` to the latest commit on
 [microsoft/vcpkg main](https://github.com/microsoft/vcpkg/commits/master).
+Dependabot can't do this — vcpkg manifests aren't a supported ecosystem —
+so it's a manual, calendar-driven chore.
+
+**GitHub Actions versions bump themselves.**
+[`.github/dependabot.yml`](.github/dependabot.yml) opens one grouped PR
+every Monday morning covering every Action across all three workflows. The
+6-job build matrix is the test: green means merge it. This exists because
+a dozen hand-pinned `@vN` tags are exactly the kind of thing that rots
+unnoticed for a year.
 
 ### Updating CI when the project grows
 

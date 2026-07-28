@@ -1,0 +1,32 @@
+# <type>(<scope>): <subject, imperative, under 72 chars, no trailing period>
+#
+# - <body bullet: only if it says something the subject doesn't>
+# - <3 bullets max, one line each. No body at all is often correct.>
+#
+# ----------------------------------------------------------------------
+# Enable this template once per clone:
+#
+#     git config commit.template .gitmessage
+#
+# ----------------------------------------------------------------------
+# type   feat  fix  docs  chore  refactor  test  build  perf  ci  style
+#
+# scope  net  hud  render  physics  weapons  audio  cmake  ci  lint
+#        docs  tests
+#
+# Rules (see CLAUDE.md section 3):
+#   - Subject under 72 chars, imperative mood: "add", not "added".
+#   - Body: 3 bullets max. No prose paragraphs.
+#   - Don't re-list the files you touched — the diff already did.
+#   - If it needs a long explanation, that explanation is an ADR.
+#     Write the ADR and cite it: "See ADR-006."
+#
+# Good:
+#   fix(net): clamp rewind window to 200 ms
+#
+#   - Anti-cheat: fake high ping was buying a wider rewind. See ADR-006.
+#
+# Bad:
+#   Updated a bunch of netcode files and also fixed the docs and the CI
+#   because the rewind was wrong and I noticed some other things too
+# ----------------------------------------------------------------------

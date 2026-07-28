@@ -79,7 +79,8 @@ The three terms:
 | `−kClientInterpDelay` | The shooter's local renderer was already 100 ms behind the latest snapshot for remote players. |
 
 `kClientInterpDelaySeconds` is duplicated as a `constexpr` in
-`LagCompensation.cpp` rather than `#include`d from the client header,
+`netcode/src/lag_compensation.cpp` rather than `#include`d from the client
+header,
 because the server module must not depend on the game-side include
 tree. The two constants **must** stay in sync; a static assertion
 across the boundary is added in Phase 1.10 when we wire up the test

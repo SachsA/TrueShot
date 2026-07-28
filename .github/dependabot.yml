@@ -1,0 +1,30 @@
+# Dependabot — keeps pinned versions from rotting silently.
+#
+# Scope note: only GitHub Actions are managed here. C++ dependencies come
+# from the vcpkg manifest (`vcpkg.json`) via a pinned builtin-baseline,
+# which Dependabot does not support. Bump those by hand — see
+# CONTRIBUTING.md, "Dependencies".
+---
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    # One PR for all Action bumps instead of a dozen. The CI matrix is the
+    # test: if the grouped PR is green on all 6 jobs, the bumps are safe.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+      include: scope
+    labels:
+      - dependencies
+      - ci

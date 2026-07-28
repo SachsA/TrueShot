@@ -34,15 +34,21 @@ could possibly be affected. Not just the obvious files — everything.
 **Documentation**
 
 - `README.md` — features list, current-phase status sentence, run modes,
-  controls table, architecture diagram, links
+  controls table, architecture diagram, project tree, links
 - `ROADMAP.md` — tick `[x]` completed items, document deferred items with
   the phase they moved to, keep phase/sub-phase numbering collision-free
 - `CHANGELOG.md` — new entry at the top of `[Unreleased]`, descending order
-- `CONTRIBUTING.md` — dev workflow steps, coding style, architecture rules,
-  ADR list, PR checklist
-- `docs/adr/*.md` — write a new ADR for any architectural decision; keep
-  numbering sequential and never recycle numbers
+- `CONTRIBUTING.md` — dev workflow steps, commit-message rules, coding
+  style, architecture rules, CI notes, PR checklist
+- `docs/README.md` — **the canonical docs index.** Every new ADR gets a row
+  in its table; every new file under `docs/` gets listed. The ADR list
+  lives *here only* — never duplicate it into `CONTRIBUTING.md`
+- `docs/adr/*.md` — write a new ADR for any architectural decision, copying
+  `docs/adr/0000-adr-template.md`; keep numbering sequential and never
+  recycle numbers
 - `docs/test/*.md` — test plans when testing surface changes
+- `SECURITY.md` — scope/out-of-scope when the threat surface changes, and
+  the "design notes for reviewers" claims when a defence moves
 - `.github/pull_request_template.md` — checklist when new gates appear
 - `.github/ISSUE_TEMPLATE/*` — when templates go stale
 - `LICENSE` — if the licensing model ever changes
@@ -71,6 +77,8 @@ could possibly be affected. Not just the obvious files — everything.
   artefact packaging
 - `.github/workflows/lint.yml`
 - `.github/workflows/clang-tidy.yml`
+- `.github/dependabot.yml` — new ecosystems when new dependency managers
+  appear (Actions are covered; vcpkg is unsupported and stays manual)
 - Any workflow that *should* exist but doesn't yet
 
 **Runtime / scripts**
@@ -87,6 +95,8 @@ could possibly be affected. Not just the obvious files — everything.
 
 - `.gitignore` — every newly generated directory or file extension
 - `.gitattributes` — line-ending handling for cross-OS scripts
+- `.gitmessage` — if the commit convention in §3 ever changes, this template
+  and `CONTRIBUTING.md`'s "Commit messages" section must both follow
 - Directory layout conventions (`include/` headers, `src/` impl, etc.)
 
 ### Cross-file consistency — this is where things silently rot
@@ -109,12 +119,21 @@ could possibly be affected. Not just the obvious files — everything.
 
 Don't wait to be asked:
 
-- `SECURITY.md` — when the repo opens to outside contributors
 - `AUTHORS.md` / `MAINTAINERS.md` — when Alex brings people on
-- `.github/dependabot.yml` — to auto-bump Actions
-- `.github/CODEOWNERS` — when there's a team
+- `.github/CODEOWNERS` — when there's a team (pointless while solo: GitHub
+  won't request review from the PR author)
+- `CODE_OF_CONDUCT.md` — when the repo takes outside contributions
+- `.vscode/extensions.json` + `launch.json` — recommended extensions
+  (clangd, CMake Tools) and debug configs for `TrueShot` +
+  `trueshot_server`
 - `docs/ops/*.md` — runbooks, from Phase 8 (dedicated servers) onward
+- `docs/anticheat/*.md` — design notes, Phase 9
 - `docs/test/*.md` — a new test plan per major phase
+- `.github/workflows/release.yml` — Phase 16, Steam depot packaging
+
+Already created (don't recreate, just maintain): `SECURITY.md`,
+`.github/dependabot.yml`, `docs/README.md`,
+`docs/adr/0000-adr-template.md`, `.gitmessage`.
 
 **And anything else that logically follows from the change.** This list is
 a floor, not a ceiling. If a change touches something not listed here,

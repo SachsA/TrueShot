@@ -29,7 +29,13 @@ indent_size = 2
 [*.bat]
 end_of_line = crlf
 
+# Git commit-message template: extensionless, so it falls under [*].
+# Listed explicitly so it's obvious it isn't an oversight.
+[.gitmessage]
+indent_size = 2
+
 # Generated / vendored — don't touch.
-[{build,network_module/build,vcpkg_installed}/**]
+# Keep this list in sync with .gitignore and the Exclude list in .ecrc.
+[{build,netcode/build,vcpkg,vcpkg_installed}/**]
 trim_trailing_whitespace = false
 insert_final_newline     = false

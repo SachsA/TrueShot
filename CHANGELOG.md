@@ -6,9 +6,61 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once a first tagged release ships (`v0.1.0`, expected end of Phase 1).
 
 Phase numbering matches [ROADMAP.md](ROADMAP.md). Decisions are detailed
-in [docs/adr/](docs/adr/).
+in the ADRs indexed in [docs/README.md](docs/README.md).
 
 ## [Unreleased]
+
+### Added — Repository documentation & hygiene
+
+Filling the gaps a mature repo is expected to have, before Phase 2 starts
+adding surface area.
+
+- **[`docs/README.md`](docs/README.md)** — the canonical documentation
+  index. ADR table with number, title, status, phase and a one-line
+  summary; test-plan table; an explicit "not written yet" section so the
+  gaps are visible instead of forgotten. The ADR list previously lived
+  duplicated in `CONTRIBUTING.md`; that copy is gone, so it can only rot
+  in one place now.
+- **[`docs/adr/0000-adr-template.md`](docs/adr/0000-adr-template.md)** —
+  copy-paste ADR skeleton matching the structure of the existing seven,
+  with the status vocabulary and the never-recycle-a-number rule.
+- **[`SECURITY.md`](SECURITY.md)** — vulnerability reporting policy, with
+  a threat model stated in game terms (a speedhack *is* a security bug).
+  Scope, out-of-scope, and the four defensive claims a reviewer should try
+  to break: the clamp in `stepSim`, the 200 ms rewind cap, explicit
+  little-endian wire encoding, and `netcode/`'s dependency isolation.
+- **[`.github/dependabot.yml`](.github/dependabot.yml)** — one grouped PR
+  every Monday for GitHub Actions versions. Twelve hand-pinned `@vN` tags
+  across three workflows were rotting with nothing watching them.
+- **[`.gitmessage`](.gitmessage)** — commit-message template encoding the
+  Conventional Commits rules from `CLAUDE.md` §3. Enable per clone with
+  `git config commit.template .gitmessage`.
+- `CONTRIBUTING.md` gained a **Commit messages** section and a note that
+  vcpkg baseline bumps stay manual because Dependabot can't see them.
+
+### Fixed — Cross-file consistency rot
+
+Found by an audit sweep, not by CI. All three are the exact failure modes
+`CLAUDE.md` §2 warns about.
+
+- **ADR number collision.** `ROADMAP.md` listed `ADR-007` as still to be
+  written (render abstraction for Phase 4) while ADR-007 had already
+  shipped as the source-layout decision. The "to write" list is renumbered
+  008–016, and ADR-007 is now ticked in the delivered list. That section
+  is also relabelled as roadmap *tracking* and points at
+  `docs/README.md` as the canonical index.
+- **`.editorconfig` referenced `network_module/build`**, a path that
+  stopped existing when the module was renamed to `netcode/`. `.ecrc` had
+  been updated at the time; `.editorconfig` was missed. Also now covers
+  `vcpkg/`, and carries a note to keep the list in sync with `.gitignore`
+  and `.ecrc`.
+- **`.ecrc` excluded `^docs/.*\.md$`** — the project's own documentation
+  was invisible to the EditorConfig check. All ten files pass without the
+  exclusion, so it's gone. `*.bat` stays excluded, and *why* is now
+  documented in `CONTRIBUTING.md` since JSON can't carry a comment.
+- `docs/adr/0006-lag-compensation.md` referred to `LagCompensation.cpp`
+  (pre-rename path) → `netcode/src/lag_compensation.cpp`.
+- `.gitattributes` now pins `.gitmessage` to LF explicitly.
 
 ### Changed — Source layout (ADR-007)
 
