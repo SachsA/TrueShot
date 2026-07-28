@@ -6,6 +6,14 @@
 - **Supersedes:** none
 - **Superseded by:** none
 
+> **Path note (added later).** File and directory names in this ADR are
+> the ones that existed when the decision was taken. The layout was
+> reorganised afterwards by
+> [ADR-007](0007-source-layout.md) — `network_module/` became `netcode/`,
+> the `Network/` include prefix became `netcode/`, and headers moved to
+> `snake_case`. The decisions recorded below are unchanged; only paths
+> differ.
+
 ## Context
 
 TrueShot is a competitive 5v5 FPS. The netcode is the foundation that

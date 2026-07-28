@@ -171,7 +171,7 @@ But : deux joueurs sur le même LAN voient leurs mouvements et leurs tirs.
 - [x] **Hard input clamp côté serveur** (foundation anti-cheat) : moveForward/
       moveRight ∈ [-1, 1], yaw ∈ ±180°, pitch ∈ ±89°
 - [x] Broadcast Snapshot par peer avec `ackSeq` personnalisé
-- [x] Binaire `trueshot_server` standalone (`network_module/src/main_server.cpp`)
+- [x] Binaire `trueshot_server` standalone (`netcode/src/main_server.cpp`)
 - [x] Library `Net::Server` réutilisable pour le mode listen-server (Phase 2)
 - [x] Cross-platform Windows linker (`ws2_32`, `winmm`)
 
@@ -188,7 +188,7 @@ But : deux joueurs sur le même LAN voient leurs mouvements et leurs tirs.
 ### 1.7 — Client prediction + server reconciliation
 
 - [x] **Shared `NetSim::stepSim`** — la formule de mouvement vit
-      dans `Network/NetSim.h` et est utilisée bit-pour-bit par client et
+      dans `netcode/net_sim.h` et est utilisée bit-pour-bit par client et
       serveur. `Server::applyInput` délègue à `stepSim`.
 - [x] Buffer ring 256 inputs locaux (`ClientPrediction::predict`) — 2 s
       d'unacknowledged à 128 Hz.

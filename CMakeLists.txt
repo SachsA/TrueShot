@@ -6,7 +6,7 @@ project(TrueShot
 )
 
 # ---------------------------------------------------------------- options
-option(TRUESHOT_BUILD_NETWORK     "Build the network module (server/client)" ON)
+option(TRUESHOT_BUILD_NETCODE     "Build the netcode library + dedicated server" ON)
 option(TRUESHOT_BUILD_TESTS       "Build the unit tests (requires gtest)"    OFF)
 option(TRUESHOT_WARNINGS_AS_ERRORS "Treat compiler warnings as errors"        OFF)
 
@@ -36,28 +36,38 @@ find_package(unofficial-enet  CONFIG REQUIRED)
 find_package(imgui            CONFIG REQUIRED)
 
 # ---------------------------------------------------------------- target
+# Sources are grouped by subsystem, mirroring include/. Keep each block
+# alphabetical so additions don't churn the diff. `main.cpp` stays at the
+# root of src/ because it's the entry point, not a subsystem.
 add_executable(${PROJECT_NAME}
     src/main.cpp
-    src/application.cpp
-    src/renderer.cpp
-    src/game_world.cpp
-    src/target.cpp
-    src/player_controller.cpp
-    src/fps_camera.cpp
-    src/shader.cpp
-    src/weapon_system.cpp
-    src/audio_system.cpp
-    src/hud.cpp
-    src/tick_clock.cpp
-    src/network_client.cpp
-    src/remote_player.cpp
-    src/client_prediction.cpp
-    src/net_metrics.cpp
+
+    src/core/application.cpp
+
+    src/render/renderer.cpp
+    src/render/shader.cpp
+
+    src/game/fps_camera.cpp
+    src/game/game_world.cpp
+    src/game/player_controller.cpp
+    src/game/target.cpp
+
+    src/weapons/weapon_system.cpp
+
+    src/audio/audio_system.cpp
+
+    src/ui/hud.cpp
+
+    src/net/client_prediction.cpp
+    src/net/net_metrics.cpp
+    src/net/network_client.cpp
+    src/net/remote_player.cpp
+    src/net/tick_clock.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/network_module/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/netcode/include
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -116,15 +126,15 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 )
 
 # ---------------------------------------------------------------- network
-if(TRUESHOT_BUILD_NETWORK)
-    add_subdirectory(network_module)
+if(TRUESHOT_BUILD_NETCODE)
+    add_subdirectory(netcode)
 endif()
 
 # ---------------------------------------------------------------- tests
-# Unit tests live under tests/ and rely on trueshot_network being built
+# Unit tests live under tests/ and rely on trueshot_netcode being built
 # (they exercise Server-side library directly). Opt-in via
 # -DTRUESHOT_BUILD_TESTS=ON. The CI build job enables this.
-if(TRUESHOT_BUILD_TESTS AND TRUESHOT_BUILD_NETWORK)
+if(TRUESHOT_BUILD_TESTS AND TRUESHOT_BUILD_NETCODE)
     enable_testing()
     add_subdirectory(tests)
 endif()
@@ -134,7 +144,7 @@ message(STATUS "")
 message(STATUS "TrueShot ${PROJECT_VERSION} configured:")
 message(STATUS "  Build type     : ${CMAKE_BUILD_TYPE}")
 message(STATUS "  Compiler       : ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
-message(STATUS "  Network module : ${TRUESHOT_BUILD_NETWORK}")
+message(STATUS "  Netcode lib    : ${TRUESHOT_BUILD_NETCODE}")
 message(STATUS "  Unit tests     : ${TRUESHOT_BUILD_TESTS}")
 message(STATUS "  Werror         : ${TRUESHOT_WARNINGS_AS_ERRORS}")
 message(STATUS "")

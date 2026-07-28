@@ -38,7 +38,7 @@ jobs:
           set -e
           # All tracked C++ headers/sources, excluding 3rd party and build dirs.
           mapfile -t FILES < <(git ls-files '*.cpp' '*.h' '*.hpp' \
-            | grep -Ev '^(build/|network_module/build/|third_party/)' || true)
+            | grep -Ev '^(build/|netcode/build/|third_party/)' || true)
           if [ ${#FILES[@]} -eq 0 ]; then
             echo "No C++ files to check."
             exit 0
@@ -99,7 +99,7 @@ jobs:
         with:
           globs: |
             **/*.md
-            !network_module/build/**
+            !netcode/build/**
             !build/**
 
   # -----------------------------------------------------------------

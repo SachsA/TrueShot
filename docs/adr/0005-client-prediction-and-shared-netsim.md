@@ -9,6 +9,14 @@
   [ADR-003 — Listen-server & input clamping](0003-listen-server-and-input-clamping.md),
   [ADR-004 — Snapshot interpolation](0004-snapshot-interpolation.md)
 
+> **Path note (added later).** File and directory names in this ADR are
+> the ones that existed when the decision was taken. The layout was
+> reorganised afterwards by
+> [ADR-007](0007-source-layout.md) — `network_module/` became `netcode/`,
+> the `Network/` include prefix became `netcode/`, and headers moved to
+> `snake_case`. The decisions recorded below are unchanged; only paths
+> differ.
+
 ## Context
 
 Phase 1.6 wired snapshot interpolation for remote players. The local

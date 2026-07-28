@@ -70,7 +70,7 @@ jobs:
       - name: Run clang-tidy on project sources
         run: |
           mapfile -t FILES < <(git ls-files 'src/*.cpp' \
-            | grep -Ev '^(build/|network_module/build/|third_party/)' || true)
+            | grep -Ev '^(build/|netcode/build/|third_party/)' || true)
           if [ ${#FILES[@]} -eq 0 ]; then
             echo "No sources to check."
             exit 0

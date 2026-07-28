@@ -49,9 +49,10 @@ could possibly be affected. Not just the obvious files — everything.
 
 **Build config**
 
-- `CMakeLists.txt` (root) — new `.cpp` files, new options, new defines,
-  new link libraries, the configure-summary `message(STATUS ...)` block
-- `network_module/CMakeLists.txt` — same, for the net library/executables
+- `CMakeLists.txt` (root) — new `.cpp` files (in the right subsystem
+  block, alphabetical), new options, new defines, new link libraries,
+  the configure-summary `message(STATUS ...)` block
+- `netcode/CMakeLists.txt` — same, for the shared library + server
 - `tests/CMakeLists.txt` — new test files
 - `CMakePresets.json` — new or changed presets
 - `vcpkg.json` — new dependencies, baseline bumps, version-string
@@ -189,6 +190,15 @@ or a recap of the implementation.
 - **C++17**, no compiler extensions
 - **Naming**: `PascalCase` types, `camelCase` functions/variables,
   `m_PascalCase` members, `k` prefix for file-scope constants
+- **Files and directories**: `snake_case`, no exceptions
+- **Layout** (ADR-007): headers in `include/<subsystem>/`, sources
+  mirrored in `src/<subsystem>/`. Subsystems: `core`, `render`, `game`,
+  `weapons`, `audio`, `ui`, `net`. Every project include is
+  subsystem-prefixed — `#include "game/player_controller.h"`.
+- **`include/net/` is client-only; `netcode/` is shared with the
+  dedicated server.** `netcode/` must never gain a client-side
+  dependency (no GLFW / ImGui / renderer), or `trueshot_server` stops
+  building headless. Dependency is one-directional.
 - **Headers**: `#pragma once`, forward declarations over heavy includes
 - **Include order** (enforced by `.clang-format`): `glad` → `GLFW` →
   third-party → project → stdlib

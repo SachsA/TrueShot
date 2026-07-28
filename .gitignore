@@ -1,7 +1,7 @@
 # ----- Build artefacts -----
-# Everything here is removed by CleanTrueShot.sh / CleanTrueShot.bat.
+# Everything here is removed by scripts/clean.sh / scripts/clean.bat.
 build/
-network_module/build/
+netcode/build/
 out/
 cmake-build-*/
 dist/

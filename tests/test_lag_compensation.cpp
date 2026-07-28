@@ -2,7 +2,7 @@
 // peeker's-advantage compensation; if the formula drifts, every hit
 // registers slightly wrong on every player at non-zero ping.
 
-#include "Network/LagCompensation.h"
+#include "netcode/lag_compensation.h"
 
 #include <gtest/gtest.h>
 

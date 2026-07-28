@@ -1,8 +1,8 @@
 // ClientPrediction tests — the ring buffer + reconciliation logic
 // that gives the local player zero-perceived input lag.
 
-#include "Network/NetSim.h"
 #include "net/client_prediction.h"
+#include "netcode/net_sim.h"
 
 #include <gtest/gtest.h>
 

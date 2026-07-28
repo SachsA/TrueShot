@@ -2,7 +2,7 @@
 // compensation. The interpolation math must be tight; if it isn't, hit
 // registration silently mis-aligns.
 
-#include "Network/LagCompensation.h"
+#include "netcode/lag_compensation.h"
 
 #include <gtest/gtest.h>
 

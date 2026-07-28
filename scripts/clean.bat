@@ -75,7 +75,7 @@ set "REPO_ROOT=%CD%"
 set "N=0"
 
 call :add "build"
-call :add "network_module\build"
+call :add "netcode\build"
 call :add "out"
 call :add "dist"
 call :add "CMakeCache.txt"

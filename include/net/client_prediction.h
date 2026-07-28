@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Network/NetCommon.h"
-#include "Network/NetSim.h"
+#include "netcode/net_common.h"
+#include "netcode/net_sim.h"
 
 #include <array>
 #include <cstddef>

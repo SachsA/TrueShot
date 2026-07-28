@@ -10,6 +10,40 @@ in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+### Changed — Source layout (ADR-007)
+
+Structural housekeeping done between Phase 1 and Phase 2, while the tree
+was still small enough for it to be cheap. All moves via `git mv`, so
+`git log --follow` still works per file.
+
+- **`include/` and `src/` grouped by subsystem** — `core`, `render`,
+  `game`, `weapons`, `audio`, `ui`, `net`. `src/main.cpp` stays at the
+  root of `src/` as the entry point. Every project include is now
+  subsystem-prefixed (`#include "game/player_controller.h"`).
+- **`network_module/` → `netcode/`**, `Network/` include prefix →
+  `netcode/`, and every `PascalCase.h` → `snake_case.h`
+  (`Bitstream.h` → `bitstream.h`, `LagCompensation.h` →
+  `lag_compensation.h`, ...). The repo now has exactly one file-naming
+  convention. CMake followed: target `trueshot_network` →
+  `trueshot_netcode`, option `TRUESHOT_BUILD_NETWORK` →
+  `TRUESHOT_BUILD_NETCODE`.
+- Documented the **`include/net/` vs `netcode/`** boundary explicitly:
+  the former is client-only, the latter is linked by the client *and*
+  `trueshot_server` and must stay free of client-side dependencies.
+  Dependency is one-directional.
+- Root `CMakeLists.txt` source list regrouped by subsystem with blank
+  lines between blocks, so adding a file touches one block instead of
+  churning the whole list.
+
+### Removed — Dead ENet prototype
+
+- `network_module/src/Client.cpp`, `ENetWrapper.h` and
+  `ENetWrapper.cpp` deleted, along with the `trueshot_client` CMake
+  target. They formed a closed loop — `Client.cpp` was `ENetWrapper`'s
+  only consumer and vice versa — and had been superseded by
+  `NetworkClient` back in Phase 1.4. Six CI matrix jobs stop building
+  an unused binary.
+
 ### Changed — Scripts moved into `scripts/`
 
 - `RunTrueShot.sh` → **`scripts/run.sh`**, `RunTrueShot.bat` →

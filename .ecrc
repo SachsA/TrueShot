@@ -4,7 +4,7 @@
   },
   "Exclude": [
     "^build/",
-    "^network_module/build/",
+    "^netcode/build/",
     "^vcpkg/",
     "^vcpkg_installed/",
     "^\\.git/",

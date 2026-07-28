@@ -3,7 +3,7 @@
 // silently between machines with different endianness or floating-
 // point quirks.
 
-#include "Network/Bitstream.h"
+#include "netcode/bitstream.h"
 
 #include <gtest/gtest.h>
 

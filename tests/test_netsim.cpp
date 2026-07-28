@@ -2,7 +2,7 @@
 // runs identically on client and server. Any drift here breaks
 // reconciliation, so we keep the invariant tight via tests.
 
-#include "Network/NetSim.h"
+#include "netcode/net_sim.h"
 
 #include <gtest/gtest.h>
 

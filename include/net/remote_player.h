@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Network/NetCommon.h"
+#include "netcode/net_common.h"
 
 #include <array>
 #include <cstdint>

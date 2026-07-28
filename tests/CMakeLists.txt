@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 # Unit tests for the netcode invariants — Phase 1.10.
 # Built only when TRUESHOT_BUILD_TESTS is ON (default in the strict preset
-# and in CI). Linked against trueshot_network so it can exercise the
+# and in CI). Linked against trueshot_netcode so it can exercise the
 # Server-side library directly without needing a live socket.
 
 find_package(GTest CONFIG REQUIRED)
@@ -17,7 +17,7 @@ add_executable(trueshot_tests
 
 target_link_libraries(trueshot_tests
     PRIVATE
-        trueshot_network
+        trueshot_netcode
         GTest::gtest
         GTest::gtest_main
 )
@@ -25,7 +25,7 @@ target_link_libraries(trueshot_tests
 target_include_directories(trueshot_tests
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/network_module/include
+        ${CMAKE_SOURCE_DIR}/netcode/include
 )
 
 # We also need the client-side `net/client_prediction.cpp` and
@@ -34,8 +34,8 @@ target_include_directories(trueshot_tests
 # extract a separate library yet.
 target_sources(trueshot_tests
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/client_prediction.cpp
-        ${CMAKE_SOURCE_DIR}/src/remote_player.cpp
+        ${CMAKE_SOURCE_DIR}/src/net/client_prediction.cpp
+        ${CMAKE_SOURCE_DIR}/src/net/remote_player.cpp
 )
 
 # GoogleTest helper that registers each TEST as a ctest entry.

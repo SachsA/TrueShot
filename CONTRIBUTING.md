@@ -134,6 +134,12 @@ they can never eat your work, and they work from any directory.
 - **Naming:** `PascalCase` for types, `camelCase` for functions/variables,
   `m_PascalCase` for member fields, `k` prefix for file-scope constants
   (e.g. `kCubeVertices`).
+- **File and directory names:** `snake_case`, everywhere, no exceptions.
+  `lag_compensation.h`, not `LagCompensation.h`.
+- **Includes:** always subsystem-prefixed —
+  `#include "game/player_controller.h"`, never
+  `#include "player_controller.h"`. See
+  [ADR-007](docs/adr/0007-source-layout.md).
 - **Const-correctness:** required. Mark accessors `const`.
 - **Smart pointers:** `std::unique_ptr` for ownership, raw pointers for
   non-owning references.
@@ -145,6 +151,27 @@ they can never eat your work, and they work from any directory.
   by pointer/reference where needed.
 
 ## Architecture rules
+
+### Where code goes
+
+Headers live in `include/<subsystem>/`, implementations mirror them in
+`src/<subsystem>/`. Current subsystems: `core`, `render`, `game`,
+`weapons`, `audio`, `ui`, `net`. A new subsystem is a new folder in
+both trees plus a block in the root `CMakeLists.txt` — keep the blocks
+alphabetical.
+
+**`include/net/` vs `netcode/` — don't mix them up:**
+
+| | Contents | May depend on |
+|---|---|---|
+| `include/net/` + `src/net/` | Client-only: prediction, interpolation, ENet client socket, HUD metrics | anything client-side |
+| `netcode/` | Shared protocol + authoritative server, linked by the client *and* `trueshot_server` | **nothing client-side** — no GLFW, no ImGui, no renderer |
+
+The dependency is one-directional: `include/net/` may include
+`netcode/`, never the reverse. Breaking that makes `trueshot_server`
+unbuildable on a headless box.
+
+### Ownership and timing
 
 - `Application` is the only place that owns subsystems.
 - Per-subsystem dependencies go through setters (`setAudioSystem`,
@@ -193,6 +220,7 @@ Current ADRs:
 - [ADR-004 — Snapshot interpolation](docs/adr/0004-snapshot-interpolation.md)
 - [ADR-005 — Shared NetSim + client prediction](docs/adr/0005-client-prediction-and-shared-netsim.md)
 - [ADR-006 — Lag compensation](docs/adr/0006-lag-compensation.md)
+- [ADR-007 — Source layout](docs/adr/0007-source-layout.md)
 
 ## Continuous Integration
 

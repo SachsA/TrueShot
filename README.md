@@ -99,52 +99,78 @@ custom kernel anti-cheat in Phase 9).
 
 ## Project structure
 
+Headers live in `include/<subsystem>/`, implementations mirror them in
+`src/<subsystem>/`, and every project include is subsystem-prefixed
+(`#include "game/player_controller.h"`). See
+[ADR-007](docs/adr/0007-source-layout.md) for why.
+
 ```text
 TrueShot/
-├─ include/                 # public headers (one .h per subsystem)
-│   ├─ application.h        # top-level lifecycle (init / run / shutdown)
-│   ├─ renderer.h           # OpenGL renderer
-│   ├─ game_world.h         # targets, score, hit registration
-│   ├─ target.h             # AABB target + ray intersection
-│   ├─ fps_camera.h         # yaw/pitch camera
-│   ├─ player_controller.h  # CS-style movement
-│   ├─ physics_types.h      # tuneable physics constants
-│   ├─ weapon_system.h      # weapons, recoil, ADS, hit detection
-│   ├─ weapon_types.h
-│   ├─ audio_system.h       # 3D audio, footsteps, reverb
-│   ├─ audio_types.h
-│   ├─ hud.h                # ImGui-based in-game overlay
-│   ├─ shader.h
-│   └─ net/
-│       ├─ tick_clock.h     # fixed 128 Hz accumulator
-│       ├─ network_client.h # ENet client socket + metrics
-│       └─ remote_player.h  # snapshot interpolation registry
-├─ src/                     # client implementations
-├─ shaders/                 # GLSL (basic.vert / basic.frag)
-├─ network_module/          # shared Net library + trueshot_server
-│   ├─ include/Network/
-│   │   ├─ Bitstream.h      # LE primitives, Q16.16, Q15 angles, varint
-│   │   ├─ NetCommon.h      # protocol constants + POD types
-│   │   ├─ PacketTypes.h    # PacketType enum + serialize/deserialize
-│   │   └─ Server.h         # Net::Server (listen + standalone)
+├─ include/                     # public headers, grouped by subsystem
+│   ├─ core/
+│   │   └─ application.h        # top-level lifecycle (init / run / shutdown)
+│   ├─ render/
+│   │   ├─ renderer.h           # OpenGL 3.3 renderer
+│   │   └─ shader.h
+│   ├─ game/
+│   │   ├─ game_world.h         # targets, score, hit registration
+│   │   ├─ target.h             # AABB target + ray intersection
+│   │   ├─ fps_camera.h         # yaw/pitch camera
+│   │   ├─ player_controller.h  # CS-style movement
+│   │   └─ physics_types.h      # tuneable physics constants
+│   ├─ weapons/
+│   │   ├─ weapon_system.h      # weapons, recoil, ADS, hit detection
+│   │   └─ weapon_types.h
+│   ├─ audio/
+│   │   ├─ audio_system.h       # 3D audio, footsteps, reverb
+│   │   └─ audio_types.h
+│   ├─ ui/
+│   │   └─ hud.h                # ImGui-based in-game overlay
+│   └─ net/                     # CLIENT-side networking
+│       ├─ tick_clock.h         # fixed 128 Hz accumulator
+│       ├─ network_client.h     # ENet client socket + metrics
+│       ├─ remote_player.h      # snapshot interpolation registry
+│       ├─ client_prediction.h  # local prediction + reconciliation
+│       └─ net_metrics.h        # F2 panel data + EMA sampler
+├─ src/                         # mirrors include/, plus main.cpp at the root
+├─ netcode/                     # SHARED protocol + authoritative server
+│   ├─ include/netcode/
+│   │   ├─ bitstream.h          # LE primitives, Q16.16, Q15 angles, varint
+│   │   ├─ net_common.h         # protocol constants + POD types
+│   │   ├─ packet_types.h       # PacketType enum + serialize/deserialize
+│   │   ├─ net_sim.h            # stepSim — identical on client & server
+│   │   ├─ lag_compensation.h   # rewind buffer + hit registration
+│   │   └─ server.h             # Net::Server (standalone + listen)
 │   └─ src/
-│       ├─ Server.cpp
-│       └─ main_server.cpp  # trueshot_server entry point
-├─ docs/adr/                # architecture decision records
-├─ .github/workflows/       # multi-OS CI (build + lint + clang-tidy)
+│       ├─ server.cpp
+│       ├─ lag_compensation.cpp
+│       ├─ net_common.cpp
+│       └─ main_server.cpp      # trueshot_server entry point
+├─ tests/                       # GoogleTest suite (ctest)
+├─ shaders/                     # GLSL (basic.vert / basic.frag)
+├─ scripts/                     # dev entry points (run from anywhere)
+│   ├─ run.sh / run.bat         # build & run, forwards args to the binary
+│   └─ clean.sh / clean.bat     # clean: build / --deps / --all
+├─ docs/
+│   ├─ adr/                     # architecture decision records
+│   └─ test/                    # manual test plans
+├─ .github/workflows/           # multi-OS CI (build + lint + clang-tidy)
 ├─ CMakeLists.txt
 ├─ CMakePresets.json
-├─ vcpkg.json               # manifest mode deps
-├─ scripts/                 # developer entry points (run from anywhere)
-│   ├─ run.sh / run.bat     # build & run, forwards args to the binary
-│   └─ clean.sh / clean.bat # clean: build / --deps / --all
-├─ .gitattributes           # line endings: LF in repo, CRLF for .bat
+├─ vcpkg.json                   # manifest mode deps
+├─ .gitattributes               # line endings: LF in repo, CRLF for .bat
 ├─ CHANGELOG.md
-├─ CLAUDE.md                # working agreement (constraints, doc contract)
+├─ CLAUDE.md                    # working agreement (constraints, doc contract)
 ├─ CONTRIBUTING.md
 ├─ LICENSE
 └─ README.md
 ```
+
+**`include/net/` vs `netcode/`** — the distinction matters: `include/net/`
+is client-only code (prediction, interpolation, the socket, the HUD
+metrics), while `netcode/` is the library that the client *and* the
+dedicated server both link, so its contents must stay free of any
+client-side dependency.
 
 ## Getting started
 

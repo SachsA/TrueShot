@@ -68,7 +68,7 @@ TARGETS=()
 # --- Level 1: build artefacts (always) -------------------------------
 TARGETS+=(
     "build"                     # every CMake preset lands under here
-    "network_module/build"      # nested sub-project builds
+    "netcode/build"             # nested sub-project builds
     "out"                       # Visual Studio / VS Code CMake default
     "dist"                      # CI artefact staging
     "CMakeCache.txt"
