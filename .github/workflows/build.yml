@@ -51,7 +51,7 @@ jobs:
     steps:
       # ---------------------------------------------------------------
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 1
 
@@ -62,7 +62,7 @@ jobs:
       # That way a vcpkg.json bump triggers a fresh install, but everything
       # else (incl. workflow changes) reuses the cache.
       - name: Cache vcpkg installed packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ${{ github.workspace }}/vcpkg/installed
@@ -90,7 +90,7 @@ jobs:
       - name: Install Ninja
         # v6 is broken upstream (invalid zip download). Pinning v5 which
         # is stable. Still runs on Node 20 — warning is informational.
-        uses: seanmiddleditch/gha-setup-ninja@v5
+        uses: seanmiddleditch/gha-setup-ninja@v6
 
       # ---------------------------------------------------------------
       # MSVC env so cl.exe / link.exe are visible to Ninja.
@@ -174,7 +174,7 @@ jobs:
       # and intermittent 5xx/504 errors during dep install would otherwise
       # fail the whole job. Up to 5 attempts with growing back-off.
       - name: Configure
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         env:
           # Force vcpkg's own retry logic to kick in harder before we
           # bail out of the attempt.
@@ -249,7 +249,7 @@ jobs:
 
       - name: Upload artifact
         if: matrix.build_type == 'Release'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: TrueShot-${{ runner.os }}-${{ github.sha }}
           path: dist/

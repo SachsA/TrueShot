@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # We use the pip-distributed clang-format wheel because:
       #  * it pins to an exact patch version (so CI and local dev never drift),
@@ -54,12 +54,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # Download the Go binary directly from the release CDN with retry
       # — more reliable than the GitHub Action which fails on 504s.
       - name: Install editorconfig-checker
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 5
@@ -94,8 +94,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v5
-      - uses: DavidAnson/markdownlint-cli2-action@v18
+      - uses: actions/checkout@v7
+      - uses: DavidAnson/markdownlint-cli2-action@v24
         with:
           globs: |
             **/*.md
@@ -110,7 +110,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Install yamllint
         run: pip install yamllint
       - name: Run yamllint
