@@ -11,22 +11,22 @@ touching anything.
 These were decided by Alex and are not up for renegotiation unless he
 explicitly reopens them.
 
-| Constraint | Decision |
-|---|---|
-| **Platforms** | **Windows + macOS + Linux are MANDATORY at every single step.** Every feature must build and run on all three before it counts as done. Consoles (PS5/Xbox/Switch) are explicitly out of scope — "absolument pas dans les clous". |
-| **Distribution** | **Steam only.** No Epic, no standalone launcher, no other store. Steam Deck (Linux) must be Verified at launch. |
-| **Anti-cheat** | **Custom kernel-based AC, built in-house** with devs Alex knows. NOT EAC, NOT BattlEye, NOT any licensed solution. "Je veux le notre, kernel based, le meilleur AC de l'histoire, même si ça prend 3 ans." |
-| **Tick rate** | **128 Hz** fixed. Pro standard (CS2 / FACEIT / Valorant). |
-| **Authority** | **Server-authoritative from Phase 1.** The client predicts, the server decides. Every value read from a packet gets clamped. |
-| **Hosting** | **Listen-server** supported alongside the standalone dedicated server. One shared simulation, two hosting models. |
-| **Quality bar** | Alex wants "du parfait et giga fiable". When offered a minimal vs. complete approach, default to **complete**. |
+| Constraint       | Decision                                                                                                                                                                                                                          |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Platforms**    | **Windows + macOS + Linux are MANDATORY at every single step.** Every feature must build and run on all three before it counts as done. Consoles (PS5/Xbox/Switch) are explicitly out of scope — "absolument pas dans les clous". |
+| **Distribution** | **Steam only.** No Epic, no standalone launcher, no other store. Steam Deck (Linux) must be Verified at launch.                                                                                                                   |
+| **Anti-cheat**   | **Custom kernel-based AC, built in-house** with devs Alex knows. NOT EAC, NOT BattlEye, NOT any licensed solution. "Je veux le notre, kernel based, le meilleur AC de l'histoire, même si ça prend 3 ans."                        |
+| **Tick rate**    | **128 Hz** fixed. Pro standard (CS2 / FACEIT / Valorant).                                                                                                                                                                         |
+| **Authority**    | **Server-authoritative from Phase 1.** The client predicts, the server decides. Every value read from a packet gets clamped.                                                                                                      |
+| **Hosting**      | **Listen-server** supported alongside the standalone dedicated server. One shared simulation, two hosting models.                                                                                                                 |
+| **Quality bar**  | Alex wants "du parfait et giga fiable". When offered a minimal vs. complete approach, default to **complete**.                                                                                                                    |
 
 ---
 
 ## 2. THE DOC CONTRACT — non-negotiable, applies to every change
 
 **Alex should never have to ask "did you update the docs?" again.**
-After *any* code change, proactively audit and update **everything** that
+After _any_ code change, proactively audit and update **everything** that
 could possibly be affected. Not just the obvious files — everything.
 
 ### Always check these
@@ -42,7 +42,7 @@ could possibly be affected. Not just the obvious files — everything.
   style, architecture rules, CI notes, PR checklist
 - `docs/README.md` — **the canonical docs index.** Every new ADR gets a row
   in its table; every new file under `docs/` gets listed. The ADR list
-  lives *here only* — never duplicate it into `CONTRIBUTING.md`
+  lives _here only_ — never duplicate it into `CONTRIBUTING.md`
 - `docs/adr/*.md` — write a new ADR for any architectural decision, copying
   `docs/adr/0000-adr-template.md`; keep numbering sequential and never
   recycle numbers
@@ -79,7 +79,7 @@ could possibly be affected. Not just the obvious files — everything.
 - `.github/workflows/clang-tidy.yml`
 - `.github/dependabot.yml` — new ecosystems when new dependency managers
   appear (Actions are covered; vcpkg is unsupported and stays manual)
-- Any workflow that *should* exist but doesn't yet
+- Any workflow that _should_ exist but doesn't yet
 
 **Runtime / scripts**
 

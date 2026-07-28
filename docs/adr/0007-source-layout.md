@@ -66,14 +66,14 @@ the file count grows.
 `network_module/` became `netcode/`, the `Network/` include prefix
 became `netcode/`, and every `PascalCase.h` became `snake_case.h`:
 
-| Before | After |
-|---|---|
-| `network_module/include/Network/Bitstream.h` | `netcode/include/netcode/bitstream.h` |
-| `network_module/include/Network/NetCommon.h` | `netcode/include/netcode/net_common.h` |
-| `network_module/include/Network/PacketTypes.h` | `netcode/include/netcode/packet_types.h` |
-| `network_module/include/Network/NetSim.h` | `netcode/include/netcode/net_sim.h` |
+| Before                                             | After                                        |
+| -------------------------------------------------- | -------------------------------------------- |
+| `network_module/include/Network/Bitstream.h`       | `netcode/include/netcode/bitstream.h`        |
+| `network_module/include/Network/NetCommon.h`       | `netcode/include/netcode/net_common.h`       |
+| `network_module/include/Network/PacketTypes.h`     | `netcode/include/netcode/packet_types.h`     |
+| `network_module/include/Network/NetSim.h`          | `netcode/include/netcode/net_sim.h`          |
 | `network_module/include/Network/LagCompensation.h` | `netcode/include/netcode/lag_compensation.h` |
-| `network_module/include/Network/Server.h` | `netcode/include/netcode/server.h` |
+| `network_module/include/Network/Server.h`          | `netcode/include/netcode/server.h`           |
 
 Types and functions keep their `PascalCase` / `camelCase` — only file
 and directory names changed. The CMake target followed:
@@ -88,7 +88,7 @@ clearly next to `include/net/` without being confusable with it.
 
 - **`include/net/`** — client-only. Prediction, interpolation, the ENet
   client socket, HUD metrics. Free to depend on anything client-side.
-- **`netcode/`** — linked by the client *and* the dedicated server.
+- **`netcode/`** — linked by the client _and_ the dedicated server.
   Must never gain a client-side dependency (no GLFW, no ImGui, no
   renderer). This is what makes `trueshot_server` buildable without a
   windowing system, and what will make listen-server mode work in

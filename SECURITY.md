@@ -20,8 +20,8 @@ report is a free copy of the exploit for everyone reading the repo.
 
 Use one of these instead, in order of preference:
 
-1. **GitHub private vulnerability reporting** — the *Report a
-   vulnerability* button under the repository's **Security** tab. Private,
+1. **GitHub private vulnerability reporting** — the _Report a
+   vulnerability_ button under the repository's **Security** tab. Private,
    threaded, and it keeps the report attached to the repo.
 2. **Email** — <alexandre.sachs@outlook.fr>, subject prefixed
    `[TrueShot security]`.
@@ -66,7 +66,7 @@ report goes unanswered for 90 days, consider yourself free to disclose.
   a way around that is a bug.
 - **Information disclosure to a peer** — anything leaking state a player
   shouldn't have (positions behind walls, other players' inputs). Note
-  that Phase 1 broadcasts full snapshots to every peer *by design* —
+  that Phase 1 broadcasts full snapshots to every peer _by design_ —
   server-side visibility culling is Phase 4 work, tracked in
   [`ROADMAP.md`](ROADMAP.md). Reporting it is welcome but it's a known
   limitation, not a new finding.

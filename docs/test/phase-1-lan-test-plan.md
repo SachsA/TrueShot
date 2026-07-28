@@ -56,14 +56,14 @@ panel on both clients and confirm the numbers stay healthy.
 
 ### Scenarios
 
-| ID  | Loss  | Delay  | Jitter | Expected behaviour |
-|-----|-------|--------|--------|--------------------|
-| S1  | 0%    | 0 ms   | 0 ms   | Baseline. RTT ≈ LAN ping. `lastCorr` < 2 cm. |
-| S2  | 5%    | 0 ms   | 0 ms   | Dropped Snapshots invisible (interp covers). `pending` stable. |
-| S3  | 0%    | 50 ms  | 20 ms  | RTT shows ≈ 100 ms (round-trip = 2× one-way). Movement still feels fine. |
-| S4  | 5%    | 50 ms  | 20 ms  | "Realistic shaky Wi-Fi". `lastCorr` < 20 cm transient. |
-| S5  | 10%   | 100 ms | 50 ms  | "Bad coffee shop". Visible interp; reconciliation still recovers. |
-| S6  | 20%   | 0 ms   | 0 ms   | Stress test. Expect dropped shots, but no crash, no permanent desync. |
+| ID  | Loss | Delay  | Jitter | Expected behaviour                                                       |
+| --- | ---- | ------ | ------ | ------------------------------------------------------------------------ |
+| S1  | 0%   | 0 ms   | 0 ms   | Baseline. RTT ≈ LAN ping. `lastCorr` < 2 cm.                             |
+| S2  | 5%   | 0 ms   | 0 ms   | Dropped Snapshots invisible (interp covers). `pending` stable.           |
+| S3  | 0%   | 50 ms  | 20 ms  | RTT shows ≈ 100 ms (round-trip = 2× one-way). Movement still feels fine. |
+| S4  | 5%   | 50 ms  | 20 ms  | "Realistic shaky Wi-Fi". `lastCorr` < 20 cm transient.                   |
+| S5  | 10%  | 100 ms | 50 ms  | "Bad coffee shop". Visible interp; reconciliation still recovers.        |
+| S6  | 20%  | 0 ms   | 0 ms   | Stress test. Expect dropped shots, but no crash, no permanent desync.    |
 
 ### OS pairs
 

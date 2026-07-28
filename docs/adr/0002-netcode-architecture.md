@@ -214,13 +214,13 @@ The handshake refuses mismatched protocols cleanly.
 
 ### Risks & mitigation
 
-| Risk | Mitigation |
-|---|---|
-| Packet loss in burst → reconciliation snaps | Interpolation delay 100 ms covers 1–2 dropped packets transparently. |
-| Player ping > 200 ms exploits lag comp | Cap rewind at 200 ms. Above, the rewind uses the most stale acceptable state, hurting the laggy player. |
-| Future tick-rate change (64 ↔ 128) | Single constant in `physics_types.h`, all timers in seconds. No hard-coded constants in the packet schema. |
-| Listen-server cheating in dev | Acknowledged: until anti-cheat (Phase 9) ships, the host has theoretical power. Acceptable for closed playtests with NDA. |
-| Endianness mismatches (Windows ↔ Mac/Linux) | Bitstream serialises explicitly little-endian. No `memcpy` of structs. |
+| Risk                                        | Mitigation                                                                                                                |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Packet loss in burst → reconciliation snaps | Interpolation delay 100 ms covers 1–2 dropped packets transparently.                                                      |
+| Player ping > 200 ms exploits lag comp      | Cap rewind at 200 ms. Above, the rewind uses the most stale acceptable state, hurting the laggy player.                   |
+| Future tick-rate change (64 ↔ 128)          | Single constant in `physics_types.h`, all timers in seconds. No hard-coded constants in the packet schema.                |
+| Listen-server cheating in dev               | Acknowledged: until anti-cheat (Phase 9) ships, the host has theoretical power. Acceptable for closed playtests with NDA. |
+| Endianness mismatches (Windows ↔ Mac/Linux) | Bitstream serialises explicitly little-endian. No `memcpy` of structs.                                                    |
 
 ### Not in scope for Phase 1
 

@@ -25,7 +25,7 @@ adding surface area.
   copy-paste ADR skeleton matching the structure of the existing seven,
   with the status vocabulary and the never-recycle-a-number rule.
 - **[`SECURITY.md`](SECURITY.md)** — vulnerability reporting policy, with
-  a threat model stated in game terms (a speedhack *is* a security bug).
+  a threat model stated in game terms (a speedhack _is_ a security bug).
   Scope, out-of-scope, and the four defensive claims a reviewer should try
   to break: the clamp in `stepSim`, the 200 ms rewind cap, explicit
   little-endian wire encoding, and `netcode/`'s dependency isolation.
@@ -47,7 +47,7 @@ Found by an audit sweep, not by CI. All three are the exact failure modes
   written (render abstraction for Phase 4) while ADR-007 had already
   shipped as the source-layout decision. The "to write" list is renumbered
   008–016, and ADR-007 is now ticked in the delivered list. That section
-  is also relabelled as roadmap *tracking* and points at
+  is also relabelled as roadmap _tracking_ and points at
   `docs/README.md` as the canonical index.
 - **`.editorconfig` referenced `network_module/build`**, a path that
   stopped existing when the module was renamed to `netcode/`. `.ecrc` had
@@ -56,7 +56,7 @@ Found by an audit sweep, not by CI. All three are the exact failure modes
   and `.ecrc`.
 - **`.ecrc` excluded `^docs/.*\.md$`** — the project's own documentation
   was invisible to the EditorConfig check. All ten files pass without the
-  exclusion, so it's gone. `*.bat` stays excluded, and *why* is now
+  exclusion, so it's gone. `*.bat` stays excluded, and _why_ is now
   documented in `CONTRIBUTING.md` since JSON can't carry a comment.
 - `docs/adr/0006-lag-compensation.md` referred to `LagCompensation.cpp`
   (pre-rename path) → `netcode/src/lag_compensation.cpp`.
@@ -80,7 +80,7 @@ was still small enough for it to be cheap. All moves via `git mv`, so
   `trueshot_netcode`, option `TRUESHOT_BUILD_NETWORK` →
   `TRUESHOT_BUILD_NETCODE`.
 - Documented the **`include/net/` vs `netcode/`** boundary explicitly:
-  the former is client-only, the latter is linked by the client *and*
+  the former is client-only, the latter is linked by the client _and_
   `trueshot_server` and must stay free of client-side dependencies.
   Dependency is one-directional.
 - Root `CMakeLists.txt` source list regrouped by subsystem with blank
@@ -106,7 +106,7 @@ was still small enough for it to be cheap. All moves via `git mv`, so
   `cmake -S .` is correct regardless of the working directory.
 - `run.sh` / `run.bat` gained `--help`, `--no-run` (configure + build
   without launching) and **argument pass-through** — `./scripts/run.sh
-  --server 192.168.1.42` forwards straight to the binary, which matters
+--server 192.168.1.42` forwards straight to the binary, which matters
   now that the client has a real CLI surface.
 - `run.bat` now probes both the multi-config
   (`build\bin\<Config>\TrueShot.exe`) and single-config
@@ -117,7 +117,7 @@ was still small enough for it to be cheap. All moves via `git mv`, so
 
 - **`scripts/clean.sh`** / **`scripts/clean.bat`** — cross-platform clean
   with three levels:
-  - *(default)* build artefacts: `build/`, `network_module/build/`,
+  - _(default)_ build artefacts: `build/`, `network_module/build/`,
     `out/`, `dist/`, `cmake-build-*/`, `CMakeCache.txt`, `CMakeFiles/`,
     `CMakeUserPresets.json`, `compile_commands.json`;
   - `--deps` — also `vcpkg_installed/` and the in-tree `vcpkg/` clone;
@@ -218,7 +218,7 @@ was still small enough for it to be cheap. All moves via `git mv`, so
 - **Server-side network simulator** for reproducing bad conditions on
   demand, without OS firewalls or `tc`/`clumsy`:
   - `Net::Server::NetSimSettings { lossProbability, baseDelayMs,
-    jitterMs }` + `setNetSimSettings` API.
+jitterMs }` + `setNetSimSettings` API.
   - `Server::sendTo` drops packets with probability `P` and/or
     enqueues them with a release timestamp.
   - `Server::step` drains the deferred queue using `std::stable_partition`
@@ -281,7 +281,7 @@ was still small enough for it to be cheap. All moves via `git mv`, so
 - `m_LagCompHits` counter exposed via `Server::lagCompHits()` for the
   Phase 1.9 network HUD.
 - Debug log line `[Server] LAG-COMP HIT shooter=X victim=Y dist=Zm
-  ping=Wms` so we can validate hits end-to-end without a kill feed yet.
+ping=Wms` so we can validate hits end-to-end without a kill feed yet.
 - `glm` added as a public dependency of the `trueshot_network`
   library (was previously only available via the main TrueShot
   target's link line — broke the standalone `trueshot_server` build).

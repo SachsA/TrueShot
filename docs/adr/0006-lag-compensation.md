@@ -72,11 +72,11 @@ double computeViewTime(double tServerNow, uint16_t clientPingMs) {
 
 The three terms:
 
-| Term | What it accounts for |
-|---|---|
-| `tServerNow` | The instant the server receives the Fire input. |
-| `−halfRtt` | One-way latency: when the input *was actually pressed* on the client, the server's clock was earlier by RTT/2. |
-| `−kClientInterpDelay` | The shooter's local renderer was already 100 ms behind the latest snapshot for remote players. |
+| Term                  | What it accounts for                                                                                           |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `tServerNow`          | The instant the server receives the Fire input.                                                                |
+| `−halfRtt`            | One-way latency: when the input _was actually pressed_ on the client, the server's clock was earlier by RTT/2. |
+| `−kClientInterpDelay` | The shooter's local renderer was already 100 ms behind the latest snapshot for remote players.                 |
 
 `kClientInterpDelaySeconds` is duplicated as a `constexpr` in
 `netcode/src/lag_compensation.cpp` rather than `#include`d from the client
@@ -173,7 +173,7 @@ logic refactor needed.
 - Single AABB hitbox in Phase 1.8 means there are no headshots yet.
   Acceptable — headshots are a Phase 4 (with real models) concern,
   and the Phase 1 LAN tests don't exercise them.
-- We record one sample per player per tick *unconditionally*. At
+- We record one sample per player per tick _unconditionally_. At
   128 Hz × 32 players that's 4 KB/s of state in RAM — trivial. But it
   means standing-still players still get recorded, which is wasted
   for "did the shot hit?" but useful for "where was the player

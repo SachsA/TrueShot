@@ -77,7 +77,7 @@ lives nowhere in the server.
 Phase 1.5 (ADR-003) clamped inputs in `Server::applyInput`. Now that
 clients call `stepSim` too, the clamp must apply on both sides — both
 to keep prediction identical to the server, and so a misbehaving local
-client can't even *think* it moved at 100 m/s. The clamp moved into
+client can't even _think_ it moved at 100 m/s. The clamp moved into
 `stepSim` itself; nothing outside the function ever sees an
 unclamped move vector. This preserves the anti-cheat posture from
 ADR-003 with no extra code.

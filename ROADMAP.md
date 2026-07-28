@@ -28,26 +28,26 @@ prévue via **Steam** uniquement pour démarrer. Concrètement :
 
 Chaque section est étiquetée avec un mode d'exécution :
 
-| Étiquette | Signification |
-|---|---|
-| 🟢 **Ensemble** | Toi + moi en pair-programming. C'est le mode par défaut. |
-| 🟡 **Ensemble + assets externes** | On code la mécanique, on achète/acquiert les assets (sound libs, modèles 3D, polices) |
-| 🟠 **Ensemble + freelance ponctuel** | On dirige, un freelance livre une partie (artiste, sound designer, traducteur) |
+| Étiquette                                | Signification                                                                                                                                                                               |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🟢 **Ensemble**                          | Toi + moi en pair-programming. C'est le mode par défaut.                                                                                                                                    |
+| 🟡 **Ensemble + assets externes**        | On code la mécanique, on achète/acquiert les assets (sound libs, modèles 3D, polices)                                                                                                       |
+| 🟠 **Ensemble + freelance ponctuel**     | On dirige, un freelance livre une partie (artiste, sound designer, traducteur)                                                                                                              |
 | 🔴 **Ensemble + équipe / devs externes** | Tu recrutes / embauches / t'associes ; je reste en support technique mais des humains spécialistes sont indispensables (anti-cheat sécurité kernel, juridique, comptable, marketing payant) |
-| ⚫ **Pas avant équipe + budget sérieux** | À reporter à après une levée de fonds, un publisher, ou une preuve de traction commerciale |
+| ⚫ **Pas avant équipe + budget sérieux** | À reporter à après une levée de fonds, un publisher, ou une preuve de traction commerciale                                                                                                  |
 
 ### Service externes assumés dès le départ
 
-| Service | Quand | Pourquoi |
-|---|---|---|
-| **Steam (Steamworks)** | Phase 7+ | distribution, comptes, friends, marketplace, workshop, achievements |
-| **Twitch** | Phase 14+ | broadcasting, embed, drops |
-| **GitHub Actions** | Maintenant | CI/CD multi-OS gratuit pour repos open-source ; payant si privé (faisable) |
-| **Discord** | Maintenant | communauté, playtests |
-| **Avocat numérique** | Phase 16+ (lancement) | CGU/EULA/Privacy, RGPD, marque, contrats freelance |
-| **Comptable** | **dès la création de l'entité (Phase 18)** | TVA OSS UE, factures freelance, crédit impôt jeu vidéo (CIJV) si France, immatriculation, déclarations sociales — **jamais en solo, c'est trop risqué** |
-| **Banque pro** | dès l'entité | obligatoire pour SAS/SARL |
-| **Assurance RC pro + cyber** | dès le premier playtest payant ou gratuit | data breach, bug game-breaking, plainte joueur |
+| Service                      | Quand                                      | Pourquoi                                                                                                                                                |
+| ---------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Steam (Steamworks)**       | Phase 7+                                   | distribution, comptes, friends, marketplace, workshop, achievements                                                                                     |
+| **Twitch**                   | Phase 14+                                  | broadcasting, embed, drops                                                                                                                              |
+| **GitHub Actions**           | Maintenant                                 | CI/CD multi-OS gratuit pour repos open-source ; payant si privé (faisable)                                                                              |
+| **Discord**                  | Maintenant                                 | communauté, playtests                                                                                                                                   |
+| **Avocat numérique**         | Phase 16+ (lancement)                      | CGU/EULA/Privacy, RGPD, marque, contrats freelance                                                                                                      |
+| **Comptable**                | **dès la création de l'entité (Phase 18)** | TVA OSS UE, factures freelance, crédit impôt jeu vidéo (CIJV) si France, immatriculation, déclarations sociales — **jamais en solo, c'est trop risqué** |
+| **Banque pro**               | dès l'entité                               | obligatoire pour SAS/SARL                                                                                                                               |
+| **Assurance RC pro + cyber** | dès le premier playtest payant ou gratuit  | data breach, bug game-breaking, plainte joueur                                                                                                          |
 
 ---
 
@@ -201,7 +201,7 @@ But : deux joueurs sur le même LAN voient leurs mouvements et leurs tirs.
       GLFW à chaque tick et empaquetés dans `InputState`.
 - [x] Debug log netcode dans `printDebugInfo` (rtt, pending count, predicted
       pos, lastCorrection).
-- [ ] *(Reporté Phase 1.7b ou 1.9)* Brancher la position prédite sur la
+- [ ] _(Reporté Phase 1.7b ou 1.9)_ Brancher la position prédite sur la
       `FPSCamera` en mode Client. Pour l'instant `PlayerController` continue
       à driver la caméra ; la prédiction tourne en parallèle et est
       observable via le debug log.
@@ -221,10 +221,10 @@ But : deux joueurs sur le même LAN voient leurs mouvements et leurs tirs.
       `InputButton::Fire`, log `[Server] LAG-COMP HIT shooter=X victim=Y`.
 - [x] `m_LagCompHits` exposé via `Server::lagCompHits()` pour le HUD
       réseau (Phase 1.9).
-- [ ] *(Phase 2)* Validation cross-check de `clientPingMs` rapporté vs RTT
+- [ ] _(Phase 2)_ Validation cross-check de `clientPingMs` rapporté vs RTT
       mesuré côté serveur — détecte un client qui ment sur son ping pour
       étendre la fenêtre de rewind.
-- [ ] *(Phase 2)* Event packet `PlayerHit` broadcast à tous les clients
+- [ ] _(Phase 2)_ Event packet `PlayerHit` broadcast à tous les clients
       pour la kill feed + hit markers visuels.
 
 ### 1.9 — Network metrics + HUD
@@ -245,9 +245,9 @@ But : deux joueurs sur le même LAN voient leurs mouvements et leurs tirs.
 - [x] `Application` agrège les métriques chaque frame depuis `NetworkClient`,
       `ClientPrediction`, `RemotePlayerRegistry` ; sampler notifié à chaque
       `popSnapshot`.
-- [ ] *(Phase 2)* Graphique scrollant du jitter tick par tick (style
+- [ ] _(Phase 2)_ Graphique scrollant du jitter tick par tick (style
       `cl_showperformance` Source) — ImGui PlotLines avec ring buffer 256.
-- [ ] *(Phase 2)* Packet loss mesuré côté client (séquences manquantes dans
+- [ ] _(Phase 2)_ Packet loss mesuré côté client (séquences manquantes dans
       les Snapshots reçus).
 
 ### 1.10 — Test 1v1 LAN
@@ -273,7 +273,7 @@ But : deux joueurs sur le même LAN voient leurs mouvements et leurs tirs.
 
 - [x] `Server::NetSimSettings { lossProbability, baseDelayMs, jitterMs }`.
 - [x] `trueshot_server --simulate-loss <P> --simulate-delay <ms>
-      --simulate-jitter <ms>`.
+    --simulate-jitter <ms>`.
 - [x] Drop probabiliste dans `sendTo` ; file différée drainée dans `step`
       avec timestamps de release.
 - [x] Backwards-compat positional first arg = port.
@@ -283,10 +283,10 @@ But : deux joueurs sur le même LAN voient leurs mouvements et leurs tirs.
 - [x] Test plan documenté dans
       [docs/test/phase-1-lan-test-plan.md](docs/test/phase-1-lan-test-plan.md)
       (6 scénarios × 3 paires d'OS, 10 min chacun, acceptance criteria).
-- [ ] *(À exécuter par Alex sur ses machines)* Windows ↔ macOS S1+S3+S5
-- [ ] *(À exécuter par Alex sur ses machines)* Windows ↔ Linux S1+S3+S5
-- [ ] *(À exécuter par Alex sur ses machines)* macOS ↔ Linux S1+S3+S5
-- [ ] *(À exécuter par Alex)* Listen-server localhost S1
+- [ ] _(À exécuter par Alex sur ses machines)_ Windows ↔ macOS S1+S3+S5
+- [ ] _(À exécuter par Alex sur ses machines)_ Windows ↔ Linux S1+S3+S5
+- [ ] _(À exécuter par Alex sur ses machines)_ macOS ↔ Linux S1+S3+S5
+- [ ] _(À exécuter par Alex)_ Listen-server localhost S1
 
 ### 1.11 — Delta compression (à reporter)
 
@@ -1609,17 +1609,17 @@ But : 10 joueurs sur un serveur jouent un match complet avec round structure.
 > Horizons en **temps partiel** (toi à côté d'autres engagements). Diviser
 > par ~2 si tu passes full-time, multiplier par 2 si très partiel.
 
-| Horizon | Phases | Mode dominant | Objectif livrable |
-|---|---|---|---|
-| **0 → 6 mois** | 1 (réseau 1v1 LAN) | 🟢 ensemble | Deux fenêtres se voient et se tirent dessus |
-| **6 → 12 mois** | 2 (5v5 LAN), 3 (blockouts), 6 (UI fonctionnelle), 13 (bots tuto) | 🟢 ensemble | Match 5v5 vs bots jouable end-to-end |
-| **12 → 18 mois** | 5 (audio), assets achetés 4 (graphismes premier passage), CI/CD multi-OS, premier playtest fermé | 🟡 + assets achetés | Vidéo gameplay propre à montrer |
-| **18 → 30 mois** | 7 (backend), 8 (infra Steam), 11 (social via Steam), 15 (QA) | 🟢 ensemble | Closed beta Discord |
-| **24 → 48 mois** | 9 (anti-cheat kernel) en parallèle de tout le reste | 🔴 devs sécu à recruter | AC v1 utilisable sur Win |
-| **30 → 42 mois** | 10 (économie Steam), 14 (spectator broadcast), polish Phase 4 avec freelances | 🟠 freelances + 🟢 dev | Open beta Steam (Phase 16 setup) |
-| **36 → 48 mois** | 16 (publication Steam), 18 (légal/entité), 19 (marketing partiel) | 🔴 avocat + comptable + marketing payant | **Launch Steam Win+Mac+Linux** |
-| **48+ mois** | 12 (mods), 17 (live ops continu), 14 (tournois e-sport), continuation 9 (AC) | 🔴 équipe complète | Croissance, e-sport, saisons |
-| **Très lointain / bonus** | 20.2 (consoles) | ⚫ équipe console | Si succès PC avéré |
+| Horizon                   | Phases                                                                                           | Mode dominant                            | Objectif livrable                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------- | ------------------------------------------- |
+| **0 → 6 mois**            | 1 (réseau 1v1 LAN)                                                                               | 🟢 ensemble                              | Deux fenêtres se voient et se tirent dessus |
+| **6 → 12 mois**           | 2 (5v5 LAN), 3 (blockouts), 6 (UI fonctionnelle), 13 (bots tuto)                                 | 🟢 ensemble                              | Match 5v5 vs bots jouable end-to-end        |
+| **12 → 18 mois**          | 5 (audio), assets achetés 4 (graphismes premier passage), CI/CD multi-OS, premier playtest fermé | 🟡 + assets achetés                      | Vidéo gameplay propre à montrer             |
+| **18 → 30 mois**          | 7 (backend), 8 (infra Steam), 11 (social via Steam), 15 (QA)                                     | 🟢 ensemble                              | Closed beta Discord                         |
+| **24 → 48 mois**          | 9 (anti-cheat kernel) en parallèle de tout le reste                                              | 🔴 devs sécu à recruter                  | AC v1 utilisable sur Win                    |
+| **30 → 42 mois**          | 10 (économie Steam), 14 (spectator broadcast), polish Phase 4 avec freelances                    | 🟠 freelances + 🟢 dev                   | Open beta Steam (Phase 16 setup)            |
+| **36 → 48 mois**          | 16 (publication Steam), 18 (légal/entité), 19 (marketing partiel)                                | 🔴 avocat + comptable + marketing payant | **Launch Steam Win+Mac+Linux**              |
+| **48+ mois**              | 12 (mods), 17 (live ops continu), 14 (tournois e-sport), continuation 9 (AC)                     | 🔴 équipe complète                       | Croissance, e-sport, saisons                |
+| **Très lointain / bonus** | 20.2 (consoles)                                                                                  | ⚫ équipe console                        | Si succès PC avéré                          |
 
 **Critères clés pour avancer d'un palier :**
 
@@ -1640,42 +1640,42 @@ But : 10 joueurs sur un serveur jouent un match complet avec round structure.
 
 ### Horizon 0-12 mois (solo + IA)
 
-| Rôle | Qui | Coût/mois |
-|---|---|---|
-| Direction + dev gameplay + dev réseau | **Toi** | 0 € (ou ton salaire perdu) |
-| Pair-programmer / mentor technique | **Moi** | 0 € |
-| Comptable (déclaratif minimal) | freelance ponctuel | 100-300 € |
-| **Total opérationnel** | | **~200 €/mois** |
+| Rôle                                  | Qui                | Coût/mois                  |
+| ------------------------------------- | ------------------ | -------------------------- |
+| Direction + dev gameplay + dev réseau | **Toi**            | 0 € (ou ton salaire perdu) |
+| Pair-programmer / mentor technique    | **Moi**            | 0 €                        |
+| Comptable (déclaratif minimal)        | freelance ponctuel | 100-300 €                  |
+| **Total opérationnel**                |                    | **~200 €/mois**            |
 
 ### Horizon 12-24 mois (premiers freelances)
 
-| Rôle | Qui | Coût/mois |
-|---|---|---|
-| Toi + moi | inchangé | 0 € |
-| 1 artiste 3D freelance (weapons, characters, premier passage) | mission 3-6 mois | 3-8 k€/mois en mission |
-| 1 sound designer freelance (intégration sound libs) | mission 1-2 mois | 3-6 k€/mois en mission |
-| Comptable + avocat (création entité) | one-shot + récurrent | 300-1000 €/mois |
-| Hébergement infra (test) | OVH/Hetzner | 50-200 €/mois |
-| **Budget assets** (modèles, sons achetés) | one-shot | 5-15 k€ total |
+| Rôle                                                          | Qui                  | Coût/mois              |
+| ------------------------------------------------------------- | -------------------- | ---------------------- |
+| Toi + moi                                                     | inchangé             | 0 €                    |
+| 1 artiste 3D freelance (weapons, characters, premier passage) | mission 3-6 mois     | 3-8 k€/mois en mission |
+| 1 sound designer freelance (intégration sound libs)           | mission 1-2 mois     | 3-6 k€/mois en mission |
+| Comptable + avocat (création entité)                          | one-shot + récurrent | 300-1000 €/mois        |
+| Hébergement infra (test)                                      | OVH/Hetzner          | 50-200 €/mois          |
+| **Budget assets** (modèles, sons achetés)                     | one-shot             | 5-15 k€ total          |
 
 ### Horizon 24-48 mois (équipe core en place)
 
-| Rôle | Headcount cible | Coût annuel total brut |
-|---|---|---|
-| Dev gameplay/engine (toi + 1-2 devs) | 2-3 | 100-200 k€ |
-| **Dev anti-cheat kernel (spécialistes Windows sécu)** | **2-3** | **150-300 k€** |
-| Dev backend / DevOps | 1-2 | 60-150 k€ |
-| Artiste 3D (interne) | 1-2 | 60-120 k€ |
-| Level designer | 1 | 40-70 k€ |
-| Sound designer | 1 | 40-70 k€ |
-| UI/UX designer | 1 | 40-70 k€ |
-| Game designer (économie, balance) | 1 | 40-70 k€ |
-| QA tester | 1-2 | 50-100 k€ |
-| Community manager | 1 | 35-60 k€ |
-| Marketing (interne ou agence) | 0-1 | 0-80 k€ |
-| Comptable / avocat (récurrent) | external | 15-30 k€ |
-| Infra Steam launch (montée en charge) | external | 30-200 k€ |
-| **Total équipe core post-launch** | **~12-18** | **~700 k€ - 1,5 M€/an** |
+| Rôle                                                  | Headcount cible | Coût annuel total brut  |
+| ----------------------------------------------------- | --------------- | ----------------------- |
+| Dev gameplay/engine (toi + 1-2 devs)                  | 2-3             | 100-200 k€              |
+| **Dev anti-cheat kernel (spécialistes Windows sécu)** | **2-3**         | **150-300 k€**          |
+| Dev backend / DevOps                                  | 1-2             | 60-150 k€               |
+| Artiste 3D (interne)                                  | 1-2             | 60-120 k€               |
+| Level designer                                        | 1               | 40-70 k€                |
+| Sound designer                                        | 1               | 40-70 k€                |
+| UI/UX designer                                        | 1               | 40-70 k€                |
+| Game designer (économie, balance)                     | 1               | 40-70 k€                |
+| QA tester                                             | 1-2             | 50-100 k€               |
+| Community manager                                     | 1               | 35-60 k€                |
+| Marketing (interne ou agence)                         | 0-1             | 0-80 k€                 |
+| Comptable / avocat (récurrent)                        | external        | 15-30 k€                |
+| Infra Steam launch (montée en charge)                 | external        | 30-200 k€               |
+| **Total équipe core post-launch**                     | **~12-18**      | **~700 k€ - 1,5 M€/an** |
 
 ### Horizon 48+ mois (e-sport scale-up)
 
@@ -1785,17 +1785,17 @@ recyclage avec les numéros ci-dessus) :
 
 ### Risques majeurs identifiés
 
-| Risque | Probabilité | Impact | Mitigation |
-|---|---|---|---|
-| Toi épuisé / burn-out en solo | Haute | Critique | Cadence durable, pauses, accepter que ça prenne 4 ans |
-| Anti-cheat pas prêt au launch | Haute | Critique | Démarrer recrutement spécialistes sécu dès Phase 7 |
-| Concurrent (CS2, Valorant) sort une feature qui copie | Moyenne | Moyen | Différencier sur l'AC maison + community-first |
-| Levée de fonds ratée si nécessaire | Moyenne | Critique | Plan B = continuer en bootstrap plus longtemps |
-| Bug majeur en production | Haute | Élevé | QA + canary releases + rollback rapide |
-| Procès marque (un autre jeu s'appelle TrueShot) | Faible | Élevé | Vérifier INPI/EUIPO/USPTO **maintenant** |
-| Joueur mineur dépense $$$ sans accord parental | Moyenne | Moyen | Spending limits + parental controls Steam |
-| Data breach | Faible | Critique | Architecture zero-trust, audits sécurité réguliers |
-| Anti-cheat false positive (bannit un innocent influenceur) | Moyenne | Élevé | Process d'appel, communication transparente |
+| Risque                                                     | Probabilité | Impact   | Mitigation                                            |
+| ---------------------------------------------------------- | ----------- | -------- | ----------------------------------------------------- |
+| Toi épuisé / burn-out en solo                              | Haute       | Critique | Cadence durable, pauses, accepter que ça prenne 4 ans |
+| Anti-cheat pas prêt au launch                              | Haute       | Critique | Démarrer recrutement spécialistes sécu dès Phase 7    |
+| Concurrent (CS2, Valorant) sort une feature qui copie      | Moyenne     | Moyen    | Différencier sur l'AC maison + community-first        |
+| Levée de fonds ratée si nécessaire                         | Moyenne     | Critique | Plan B = continuer en bootstrap plus longtemps        |
+| Bug majeur en production                                   | Haute       | Élevé    | QA + canary releases + rollback rapide                |
+| Procès marque (un autre jeu s'appelle TrueShot)            | Faible      | Élevé    | Vérifier INPI/EUIPO/USPTO **maintenant**              |
+| Joueur mineur dépense $$$ sans accord parental             | Moyenne     | Moyen    | Spending limits + parental controls Steam             |
+| Data breach                                                | Faible      | Critique | Architecture zero-trust, audits sécurité réguliers    |
+| Anti-cheat false positive (bannit un innocent influenceur) | Moyenne     | Élevé    | Process d'appel, communication transparente           |
 
 ---
 

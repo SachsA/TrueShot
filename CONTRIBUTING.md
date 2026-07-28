@@ -20,7 +20,7 @@ and submit changes.
 6. [Continuous Integration](#continuous-integration)
 7. [Pull-request checklist](#pull-request-checklist)
 
-Looking for the *why* behind an architectural choice, or the list of ADRs?
+Looking for the _why_ behind an architectural choice, or the list of ADRs?
 That's [`docs/README.md`](docs/README.md).
 
 ---
@@ -43,13 +43,13 @@ Install dependencies once:
 ### Windows toolchain setup
 
 1. **Visual Studio** — install [VS](https://visualstudio.microsoft.com/) with
-   the *Desktop development with C++* workload. Restart your PC after
+   the _Desktop development with C++_ workload. Restart your PC after
    installing.
 2. **MinGW** (optional, for Make-based builds) — follow the
    [VS Code MinGW guide](https://code.visualstudio.com/docs/cpp/config-mingw)
    end to end, including the PATH steps. Restart all terminals afterwards.
 3. **CMake** — install from [cmake.org](https://cmake.org/download/) (Windows
-   x64 Installer) and tick *Add CMake to the system PATH*.
+   x64 Installer) and tick _Add CMake to the system PATH_.
 4. **vcpkg** — clone, bootstrap, then add the folder to your PATH:
 
    ```powershell
@@ -153,9 +153,9 @@ as a template your editor shows you.
 - <3 bullets max>
 ```
 
-| | |
-|---|---|
-| **Types** | `feat` `fix` `docs` `chore` `refactor` `test` `build` `perf` `ci` `style` |
+|            |                                                                                     |
+| ---------- | ----------------------------------------------------------------------------------- |
+| **Types**  | `feat` `fix` `docs` `chore` `refactor` `test` `build` `perf` `ci` `style`           |
 | **Scopes** | `net` `hud` `render` `physics` `weapons` `audio` `cmake` `ci` `lint` `docs` `tests` |
 
 Two rules that matter more than the format:
@@ -206,10 +206,10 @@ alphabetical.
 
 **`include/net/` vs `netcode/` — don't mix them up:**
 
-| | Contents | May depend on |
-|---|---|---|
-| `include/net/` + `src/net/` | Client-only: prediction, interpolation, ENet client socket, HUD metrics | anything client-side |
-| `netcode/` | Shared protocol + authoritative server, linked by the client *and* `trueshot_server` | **nothing client-side** — no GLFW, no ImGui, no renderer |
+|                             | Contents                                                                             | May depend on                                            |
+| --------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| `include/net/` + `src/net/` | Client-only: prediction, interpolation, ENet client socket, HUD metrics              | anything client-side                                     |
+| `netcode/`                  | Shared protocol + authoritative server, linked by the client _and_ `trueshot_server` | **nothing client-side** — no GLFW, no ImGui, no renderer |
 
 The dependency is one-directional: `include/net/` may include
 `netcode/`, never the reverse. Breaking that makes `trueshot_server`
@@ -254,11 +254,11 @@ unbuildable on a headless box.
 Major architectural choices are recorded as ADRs under
 [`docs/adr/`](docs/adr/). Read the relevant ADR before touching the
 subsystem it covers; add a new ADR when you make a decision that future-
-you (or someone else) would benefit from understanding the *why* behind.
+you (or someone else) would benefit from understanding the _why_ behind.
 
 **The indexed list of ADRs — number, title, status, phase and a one-line
 summary — lives in [`docs/README.md`](docs/README.md).** It is deliberately
-kept in *one* place so it can't drift out of sync; don't copy it here.
+kept in _one_ place so it can't drift out of sync; don't copy it here.
 
 To write one: copy
 [`docs/adr/0000-adr-template.md`](docs/adr/0000-adr-template.md), take the
@@ -269,11 +269,11 @@ are never recycled, even when an ADR is superseded.
 
 Every push to `main` and every PR triggers two workflows on GitHub Actions:
 
-| Workflow | What it does | Where to look |
-|---|---|---|
-| `build` | Compiles the project on **Linux + macOS + Windows**, both in `Debug` and `Release`, with `-Werror` on. Uploads `Release` artifacts for download. | `.github/workflows/build.yml` |
-| `lint` | clang-format check, EditorConfig conformance, markdownlint, yamllint. Fast (~1 min). | `.github/workflows/lint.yml` |
-| `clang-tidy` | Deep static analysis (runs weekly on Monday + on-demand). | `.github/workflows/clang-tidy.yml` |
+| Workflow     | What it does                                                                                                                                     | Where to look                      |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
+| `build`      | Compiles the project on **Linux + macOS + Windows**, both in `Debug` and `Release`, with `-Werror` on. Uploads `Release` artifacts for download. | `.github/workflows/build.yml`      |
+| `lint`       | clang-format check, EditorConfig conformance, markdownlint, yamllint. Fast (~1 min).                                                             | `.github/workflows/lint.yml`       |
+| `clang-tidy` | Deep static analysis (runs weekly on Monday + on-demand).                                                                                        | `.github/workflows/clang-tidy.yml` |
 
 **A PR is mergeable only when both `build` and `lint` are green.** This is
 enforced by branch protection on `main` (set up in GitHub repo settings).

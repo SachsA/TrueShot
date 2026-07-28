@@ -1,6 +1,7 @@
 # ADR-000 — Template (copy me, don't edit me)
 
 <!-- markdownlint-disable-next-line MD028 -->
+
 > **How to use this file.** Copy it to `NNNN-short-kebab-title.md` with the
 > next free number, delete this blockquote and every HTML comment, then add
 > a row to the table in [`docs/README.md`](../README.md). Never recycle a
@@ -19,8 +20,8 @@ What forced this decision? State the constraint, not the solution.
 
 Good context is specific and falsifiable: numbers, platform limits, a bug
 that actually happened, a requirement from
-[`CLAUDE.md`](../../CLAUDE.md) §1. If a reader can't tell *why the obvious
-thing doesn't work*, the context isn't done.
+[`CLAUDE.md`](../../CLAUDE.md) §1. If a reader can't tell _why the obvious
+thing doesn't work_, the context isn't done.
 
 Keep the project's hard constraints in view — Windows + macOS + Linux at
 every step, Steam-only distribution, 128 Hz, server-authoritative, custom

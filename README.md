@@ -177,7 +177,7 @@ TrueShot/
 
 **`include/net/` vs `netcode/`** — the distinction matters: `include/net/`
 is client-only code (prediction, interpolation, the socket, the HUD
-metrics), while `netcode/` is the library that the client *and* the
+metrics), while `netcode/` is the library that the client _and_ the
 dedicated server both link, so its contents must stay free of any
 client-side dependency.
 
@@ -185,11 +185,11 @@ client-side dependency.
 
 ### Prerequisites
 
-| Tool | Minimum version | Notes |
-|---|---|---|
-| C++ compiler | C++17 | MSVC 19.30+, Clang 12+, GCC 10+ |
-| [CMake](https://cmake.org/) | 3.16 | 3.21+ recommended for presets |
-| [vcpkg](https://github.com/microsoft/vcpkg) | latest | installs the native deps |
+| Tool                                        | Minimum version | Notes                           |
+| ------------------------------------------- | --------------- | ------------------------------- |
+| C++ compiler                                | C++17           | MSVC 19.30+, Clang 12+, GCC 10+ |
+| [CMake](https://cmake.org/)                 | 3.16            | 3.21+ recommended for presets   |
+| [vcpkg](https://github.com/microsoft/vcpkg) | latest          | installs the native deps        |
 
 The Windows-specific Visual Studio / MinGW setup steps are in
 [CONTRIBUTING.md](CONTRIBUTING.md#windows-toolchain-setup).
@@ -293,11 +293,11 @@ to run outside the repo root.
 ./scripts/clean.sh --dry-run        scripts\clean.bat --dry-run
 ```
 
-| Level | Removes | Rebuild cost |
-|---|---|---|
-| *(default)* | `build/`, `out/`, `dist/`, `cmake-build-*/`, `CMakeCache.txt`, `CMakeFiles/`, `compile_commands.json` | Seconds — deps are kept |
-| `--deps` | ...plus `vcpkg_installed/` and the in-tree `vcpkg/` clone | Minutes — vcpkg re-installs the manifest |
-| `--all` | ...plus the global vcpkg cache (`~/.cache/vcpkg`, `%LOCALAPPDATA%\vcpkg`) and `$VCPKG_ROOT`'s scratch dirs | 10+ min — everything recompiles from source |
+| Level       | Removes                                                                                                    | Rebuild cost                                |
+| ----------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| _(default)_ | `build/`, `out/`, `dist/`, `cmake-build-*/`, `CMakeCache.txt`, `CMakeFiles/`, `compile_commands.json`      | Seconds — deps are kept                     |
+| `--deps`    | ...plus `vcpkg_installed/` and the in-tree `vcpkg/` clone                                                  | Minutes — vcpkg re-installs the manifest    |
+| `--all`     | ...plus the global vcpkg cache (`~/.cache/vcpkg`, `%LOCALAPPDATA%\vcpkg`) and `$VCPKG_ROOT`'s scratch dirs | 10+ min — everything recompiles from source |
 
 `--dry-run` lists what would go without deleting anything; `--yes` skips
 the confirmation that `--all` asks for. Only paths covered by
@@ -305,21 +305,21 @@ the confirmation that `--all` asks for. Only paths covered by
 
 ## Controls
 
-| Action | Key |
-|---|---|
-| Move | `W` `A` `S` `D` |
-| Jump / bunny-hop | `Space` |
-| Crouch | `Ctrl` / `C` |
-| Look | Mouse |
-| Fire | `Mouse 1` |
-| Aim down sights | `Mouse 2` |
-| Reload | `R` |
-| Switch weapon | `1` Glock · `2` Deagle · `3` AK-47 · `4` M4A4 · `5` AWP |
-| Master volume | `+` / `-` |
-| Toggle audio debug | `M` |
-| Toggle HUD | `F1` |
-| Toggle network panel (online) | `F2` |
-| Quit | `Esc` |
+| Action                        | Key                                                     |
+| ----------------------------- | ------------------------------------------------------- |
+| Move                          | `W` `A` `S` `D`                                         |
+| Jump / bunny-hop              | `Space`                                                 |
+| Crouch                        | `Ctrl` / `C`                                            |
+| Look                          | Mouse                                                   |
+| Fire                          | `Mouse 1`                                               |
+| Aim down sights               | `Mouse 2`                                               |
+| Reload                        | `R`                                                     |
+| Switch weapon                 | `1` Glock · `2` Deagle · `3` AK-47 · `4` M4A4 · `5` AWP |
+| Master volume                 | `+` / `-`                                               |
+| Toggle audio debug            | `M`                                                     |
+| Toggle HUD                    | `F1`                                                    |
+| Toggle network panel (online) | `F2`                                                    |
+| Quit                          | `Esc`                                                   |
 
 ## Architecture overview
 
@@ -388,13 +388,13 @@ down about TrueShot — the seven Architecture Decision Records with their
 status and a one-line summary each, the manual test plans, and the gaps
 that aren't written yet.
 
-| | |
-|---|---|
-| Why the architecture is what it is | [docs/README.md](docs/README.md) → ADRs |
-| What's planned, phase by phase | [ROADMAP.md](ROADMAP.md) |
-| How to set up and contribute | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| Hard project constraints + doc contract | [CLAUDE.md](CLAUDE.md) |
-| How to report a security issue | [SECURITY.md](SECURITY.md) |
+|                                         |                                         |
+| --------------------------------------- | --------------------------------------- |
+| Why the architecture is what it is      | [docs/README.md](docs/README.md) → ADRs |
+| What's planned, phase by phase          | [ROADMAP.md](ROADMAP.md)                |
+| How to set up and contribute            | [CONTRIBUTING.md](CONTRIBUTING.md)      |
+| Hard project constraints + doc contract | [CLAUDE.md](CLAUDE.md)                  |
+| How to report a security issue          | [SECURITY.md](SECURITY.md)              |
 
 ## Contributing
 

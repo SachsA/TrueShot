@@ -18,7 +18,7 @@ now needs to **render** those entities. Three obvious approaches:
 2. **Render with prediction (dead reckoning).** The client extrapolates
    forward from the latest snapshot using a velocity estimate. Smooth
    when correct, catastrophic on quick aim changes (the predicted
-   trajectory points at where the player *was* heading, not where they
+   trajectory points at where the player _was_ heading, not where they
    actually went). Source/Quake III famously refused this approach.
 3. **Render in the past, interpolating between two known good
    snapshots.** Costs ~100 ms of perceived "lag" on remote players,
@@ -41,10 +41,10 @@ single lost packet is invisible; two consecutive losses are still
 recoverable as long as one snapshot lands within the window. The
 trade-off:
 
-| Delay | Robustness | Felt latency |
-|---|---|---|
-| 50 ms  | Survives ~6 dropped packets | Snappier remote movement |
-| 100 ms | Survives ~12 dropped packets | Industry standard |
+| Delay  | Robustness                   | Felt latency                         |
+| ------ | ---------------------------- | ------------------------------------ |
+| 50 ms  | Survives ~6 dropped packets  | Snappier remote movement             |
+| 100 ms | Survives ~12 dropped packets | Industry standard                    |
 | 200 ms | Survives ~25 dropped packets | Sluggish, peeker's advantage worsens |
 
 100 ms is the canonical FPS choice. Phase 1.10's LAN test pass will
@@ -147,7 +147,7 @@ the network layer.
   position. This is the "peeker's advantage" — the player rounding a
   corner sees the defender ~100 ms before the defender sees them.
   Lag compensation in Phase 1.8 compensates for this on the **tir**
-  side (the shooter rewinds the world to where the defender *was* on
+  side (the shooter rewinds the world to where the defender _was_ on
   the shooter's screen at fire time).
 
 ### Neutral
