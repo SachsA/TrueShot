@@ -4,16 +4,16 @@ Everything written down about TrueShot lives here or is linked from here.
 This page is the canonical index — **if you add a document under `docs/`,
 add it to this page too.**
 
-| Looking for…                                   | Go to                                        |
-| ---------------------------------------------- | -------------------------------------------- |
-| What the project is, how to build and run it   | [`README.md`](../README.md)                  |
-| What's planned, phase by phase                 | [`ROADMAP.md`](../ROADMAP.md)                |
-| What changed and when                          | [`CHANGELOG.md`](../CHANGELOG.md)            |
-| How to work on the codebase                    | [`CONTRIBUTING.md`](../CONTRIBUTING.md)      |
-| How to report a security issue                 | [`SECURITY.md`](../SECURITY.md)              |
-| The working agreement for AI-assisted sessions | [`CLAUDE.md`](../CLAUDE.md)                  |
-| **Why** the architecture is the way it is      | [ADRs](#architecture-decision-records) below |
-| How to test a phase before signing it off      | [Test plans](#test-plans) below              |
+| Looking for…                                   | Go to                                                                            |
+| ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| What the project is, how to build and run it   | [`README.md`](../README.md)                                                      |
+| What's planned, phase by phase                 | [`ROADMAP.md`](../ROADMAP.md)                                                    |
+| What changed and when                          | [`CHANGELOG.md`](../CHANGELOG.md)                                                |
+| How to work on the codebase                    | [`CONTRIBUTING.md`](../CONTRIBUTING.md)                                          |
+| How to report a security issue                 | [`SECURITY.md`](../SECURITY.md)                                                  |
+| The working agreement for AI-assisted sessions | [`CLAUDE.md`](../CLAUDE.md) (canonical; [`AGENTS.md`](../AGENTS.md) points here) |
+| **Why** the architecture is the way it is      | [ADRs](#architecture-decision-records) below                                     |
+| How to test a phase before signing it off      | [Test plans](#test-plans) below                                                  |
 
 ---
 
@@ -64,8 +64,8 @@ even if an ADR is later superseded.
 Test plans cover what CI **cannot** check — anything needing real
 hardware, multiple physical machines, or human judgement about game feel.
 
-| Plan                                                     | Covers                                                                                         | Status                                                                   |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Plan                                                     | Covers                                                                                           | Status                                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
 | [Phase 1 — LAN test pass](test/phase-1-lan-test-plan.md) | 1v1 across Windows ↔ macOS ↔ Linux, plus listen-server on localhost. 6 scenarios × 3 OS pairs. | In progress — see [`ROADMAP.md`](../ROADMAP.md) §1.10 for the checkboxes |
 
 One plan per major phase. Add the row above when you add the file.

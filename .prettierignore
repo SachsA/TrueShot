@@ -1,0 +1,25 @@
+# Prettier formats Markdown only in this repo — C++ belongs to
+# clang-format, YAML to yamllint, and neither should be touched here.
+# See CONTRIBUTING.md, "Markdown formatting".
+
+# Generated / vendored
+build/
+netcode/build/
+vcpkg/
+vcpkg_installed/
+
+# Not Markdown — owned by other formatters
+*.c
+*.cc
+*.cpp
+*.h
+*.hpp
+*.inl
+*.vert
+*.frag
+*.glsl
+*.yml
+*.yaml
+*.json
+*.cmake
+CMakeLists.txt

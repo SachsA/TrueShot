@@ -103,6 +103,23 @@ jobs:
             !build/**
 
   # -----------------------------------------------------------------
+  # Prettier — Markdown formatting only (see .prettierignore).
+  # markdownlint checks *rules*; prettier checks *layout*. Without this
+  # gate, running prettier locally re-churns every .md file and produces
+  # 200-line diffs that hide the real change.
+  # Version pinned for the same reason clang-format is: a minor bump
+  # can reflow tables and turn the whole repo red.
+  # -----------------------------------------------------------------
+  prettier:
+    name: prettier (markdown)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run prettier --check
+        run: npx --yes prettier@3.3.3 --check "**/*.md"
+
+  # -----------------------------------------------------------------
   # YAML lint — catch typos in workflow files themselves.
   # -----------------------------------------------------------------
   yamllint:

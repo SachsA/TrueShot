@@ -4,6 +4,10 @@ This file is read automatically at the start of every session. It is the
 standing contract for how work happens on TrueShot. Read it fully before
 touching anything.
 
+**This is the single source of truth.** [`AGENTS.md`](AGENTS.md) exists
+only so agents that look for that filename find their way here — it is a
+pointer, never a copy. Any change to the contract happens _here_.
+
 ---
 
 ## 1. Project constraints (NEVER violate, NEVER ask again)
@@ -97,6 +101,10 @@ could possibly be affected. Not just the obvious files — everything.
 - `.gitattributes` — line-ending handling for cross-OS scripts
 - `.gitmessage` — if the commit convention in §3 ever changes, this template
   and `CONTRIBUTING.md`'s "Commit messages" section must both follow
+- `AGENTS.md` — stays a **pointer** to this file. Never let an agent
+  expand it back into a copy of the contract
+- `.prettierrc.json` / `.prettierignore` — Markdown layout. Run
+  `npx prettier@3.3.3 --write "**/*.md"` after editing docs; CI enforces it
 - Directory layout conventions (`include/` headers, `src/` impl, etc.)
 
 ### Cross-file consistency — this is where things silently rot

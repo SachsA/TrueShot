@@ -272,8 +272,8 @@ But : deux joueurs sur le même LAN voient leurs mouvements et leurs tirs.
 **Network simulator (server-side, CLI) :**
 
 - [x] `Server::NetSimSettings { lossProbability, baseDelayMs, jitterMs }`.
-- [x] `trueshot_server --simulate-loss <P> --simulate-delay <ms>
-    --simulate-jitter <ms>`.
+- [x] Flags `--simulate-loss <P>`, `--simulate-delay <ms>`,
+      `--simulate-jitter <ms>` sur `trueshot_server`.
 - [x] Drop probabiliste dans `sendTo` ; file différée drainée dans `step`
       avec timestamps de release.
 - [x] Backwards-compat positional first arg = port.

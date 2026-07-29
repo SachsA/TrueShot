@@ -272,11 +272,32 @@ Every push to `main` and every PR triggers two workflows on GitHub Actions:
 | Workflow     | What it does                                                                                                                                     | Where to look                      |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
 | `build`      | Compiles the project on **Linux + macOS + Windows**, both in `Debug` and `Release`, with `-Werror` on. Uploads `Release` artifacts for download. | `.github/workflows/build.yml`      |
-| `lint`       | clang-format check, EditorConfig conformance, markdownlint, yamllint. Fast (~1 min).                                                             | `.github/workflows/lint.yml`       |
+| `lint`       | clang-format, EditorConfig, markdownlint, prettier, yamllint. Fast (~1 min).                                                                     | `.github/workflows/lint.yml`       |
 | `clang-tidy` | Deep static analysis (runs weekly on Monday + on-demand).                                                                                        | `.github/workflows/clang-tidy.yml` |
 
 **A PR is mergeable only when both `build` and `lint` are green.** This is
 enforced by branch protection on `main` (set up in GitHub repo settings).
+
+### Markdown formatting
+
+Two tools, two jobs, both gates in `lint`:
+
+| Tool             | Checks                                                       | Config                                |
+| ---------------- | ------------------------------------------------------------ | ------------------------------------- |
+| **markdownlint** | Rules — heading levels, fence style, duplicate headings      | `.markdownlint.json`                  |
+| **prettier**     | Layout — table alignment, list markers, emphasis, whitespace | `.prettierrc.json`, `.prettierignore` |
+
+After editing any `.md`, run:
+
+```bash
+npx prettier@3.3.3 --write "**/*.md"
+```
+
+The version is pinned on purpose: a prettier minor bump can reflow every
+table in the repo, and an unpinned `npx prettier` in CI would turn the
+whole thing red on someone else's schedule. Prettier is scoped to Markdown
+only — C++ belongs to clang-format, YAML to yamllint. `.prettierignore`
+enforces that boundary.
 
 ### Why `*.bat` is excluded from the EditorConfig check
 

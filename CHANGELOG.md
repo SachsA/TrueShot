@@ -10,6 +10,29 @@ in the ADRs indexed in [docs/README.md](docs/README.md).
 
 ## [Unreleased]
 
+### Added — Markdown formatting is now enforced
+
+- **`.prettierrc.json` + `.prettierignore` + a `prettier` job in `lint`.**
+  Markdown had been reformatted by a manual prettier pass with no config,
+  no ignore file and no CI gate — and `ROADMAP.md` didn't even match
+  prettier's own output. Anyone running prettier locally would have
+  produced a 200-line diff burying the real change. The version is pinned
+  (`3.3.3`) for the same reason clang-format is: a minor bump reflows every
+  table in the repo. Prettier is scoped to Markdown only; C++ stays with
+  clang-format, YAML with yamllint.
+- markdownlint and prettier are complementary and both green: the former
+  checks rules, the latter checks layout.
+
+### Changed — One source of truth for the agent contract
+
+- **`AGENTS.md` is now a pointer to `CLAUDE.md`, not a copy of it.** It had
+  been created as a near-duplicate (270 lines, identical but for the title
+  and a trailing stub) — two copies of the same contract that would have
+  drifted apart on the first edit to either. `CLAUDE.md` is canonical and
+  says so; `AGENTS.md` exists purely so agents looking for that filename
+  find their way there, and carries an explicit instruction not to expand
+  it back into a copy.
+
 ### Added — Repository documentation & hygiene
 
 Filling the gaps a mature repo is expected to have, before Phase 2 starts

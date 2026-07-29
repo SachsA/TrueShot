@@ -94,7 +94,7 @@ custom kernel anti-cheat in Phase 9).
   `trueshot_server` binary.
 - **Multi-OS CI/CD** — every push runs on Windows, macOS and Linux in
   Debug + Release with `-Werror`, plus clang-format, EditorConfig and
-  markdownlint gates. Builds are reproducible against a pinned
+  markdownlint and prettier gates. Builds are reproducible against a pinned
   `clang-format-18.1.8`.
 - **Modern CMake** — single `CMakeLists.txt`, presets, warnings enabled,
   optional Werror.
@@ -169,6 +169,7 @@ TrueShot/
 ├─ .gitmessage                  # commit-message template (see CONTRIBUTING)
 ├─ CHANGELOG.md
 ├─ CLAUDE.md                    # working agreement (constraints, doc contract)
+├─ AGENTS.md                    # pointer to CLAUDE.md for non-Claude agents
 ├─ CONTRIBUTING.md
 ├─ SECURITY.md                  # how to report a vulnerability
 ├─ LICENSE
