@@ -10,6 +10,26 @@ in the ADRs indexed in [docs/README.md](docs/README.md).
 
 ## [Unreleased]
 
+### Fixed — markdownlint CI failure (MD060)
+
+Dependabot bumped `markdownlint-cli2-action` to v24, which bundles
+markdownlint 0.41 and its new `MD060/table-column-style` rule. Six errors
+across two files, all on table rows containing `↔`.
+
+- **`MD060` disabled.** It's a _layout_ rule, and layout is prettier's job
+  in this repo. The two tools compute the display width of ambiguous
+  Unicode characters differently, so a table row containing `↔` cannot
+  satisfy both — it isn't a fixable formatting error, it's two formatters
+  disagreeing. One owns table layout, and that's prettier.
+- **markdownlint is now pinned and invoked directly** —
+  `npx markdownlint-cli2@0.23.1` in `lint.yml` instead of
+  `markdownlint-cli2-action@vN`. The action bundles its own markdownlint,
+  so a Dependabot major bump silently changes which rules run. Same policy
+  as `clang-format 18.1.8` and `prettier 3.3.3`: the version is ours to
+  choose.
+- `CLAUDE.md` §2 now lists all three pinned linter versions and requires
+  local verification against the exact version CI runs.
+
 ### Added — Markdown formatting is now enforced
 
 - **`.prettierrc.json` + `.prettierignore` + a `prettier` job in `lint`.**

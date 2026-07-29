@@ -113,8 +113,12 @@ could possibly be affected. Not just the obvious files — everything.
   "to write" list must not overlap.
 - **Phase / sub-phase numbers**: no duplicates (we already shipped a bug
   where two sections were both `### 8.8`).
-- **Pinned versions**: `clang-format` version, vcpkg baseline, gtest,
-  GitHub Action versions — consistent everywhere they're mentioned.
+- **Pinned versions**: `clang-format` 18.1.8, `prettier` 3.3.3,
+  `markdownlint-cli2` 0.23.1, vcpkg baseline, gtest, GitHub Action
+  versions — consistent everywhere they're mentioned, and identical
+  between `CONTRIBUTING.md` and `.github/workflows/lint.yml`. **Verify
+  locally with the exact version CI runs**, never a different one: a
+  linter minor bump can add rules (that's how MD060 broke the build).
 - **CLI flags**: documented identically in README, ROADMAP, test plans,
   and the binary's own `--help` output.
 - **Shared constants**: values duplicated across the client/server

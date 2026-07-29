@@ -287,17 +287,32 @@ Two tools, two jobs, both gates in `lint`:
 | **markdownlint** | Rules — heading levels, fence style, duplicate headings      | `.markdownlint.json`                  |
 | **prettier**     | Layout — table alignment, list markers, emphasis, whitespace | `.prettierrc.json`, `.prettierignore` |
 
-After editing any `.md`, run:
+After editing any `.md`, run both:
 
 ```bash
 npx prettier@3.3.3 --write "**/*.md"
+npx markdownlint-cli2@0.23.1 "**/*.md" "#build" "#netcode/build"
 ```
 
-The version is pinned on purpose: a prettier minor bump can reflow every
-table in the repo, and an unpinned `npx prettier` in CI would turn the
-whole thing red on someone else's schedule. Prettier is scoped to Markdown
-only — C++ belongs to clang-format, YAML to yamllint. `.prettierignore`
-enforces that boundary.
+**Both versions are pinned, and both must stay in sync with
+`.github/workflows/lint.yml`.** A minor bump of either tool can reflow
+every table in the repo or introduce a rule that fails a dozen files at
+once — neither should happen on someone else's release schedule. Same
+policy as `clang-format 18.1.8`.
+
+For the same reason the workflow calls `npx markdownlint-cli2@<version>`
+directly rather than using `markdownlint-cli2-action`: the action bundles
+its own markdownlint, so Dependabot bumping the action silently changes
+which rules run. That is exactly how `MD060` appeared and broke the build.
+
+**`MD060` (table-column-style) is disabled on purpose.** It is a _layout_
+rule, and layout belongs to prettier here. The two disagree on characters
+of ambiguous Unicode width — `↔` in particular, used in several tables —
+and a row containing one cannot satisfy both. One tool owns table layout;
+that tool is prettier.
+
+Prettier is scoped to Markdown only — C++ belongs to clang-format, YAML to
+yamllint. `.prettierignore` enforces that boundary.
 
 ### Why `*.bat` is excluded from the EditorConfig check
 

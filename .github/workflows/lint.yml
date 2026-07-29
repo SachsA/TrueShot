@@ -95,12 +95,15 @@ jobs:
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v7
-      - uses: DavidAnson/markdownlint-cli2-action@v24
-        with:
-          globs: |
-            **/*.md
-            !netcode/build/**
-            !build/**
+      # Pinned rather than using markdownlint-cli2-action: the action
+      # bundles its own markdownlint, so a Dependabot major bump silently
+      # introduces new rules and turns the repo red overnight (that is
+      # exactly how MD060 landed on us). Same policy as clang-format and
+      # prettier — the version is ours to choose, deliberately.
+      - name: Run markdownlint (pinned)
+        run: |
+          npx --yes markdownlint-cli2@0.23.1 \
+            "**/*.md" "#netcode/build" "#build" "#vcpkg" "#vcpkg_installed"
 
   # -----------------------------------------------------------------
   # Prettier — Markdown formatting only (see .prettierignore).
