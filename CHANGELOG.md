@@ -10,6 +10,49 @@ in the ADRs indexed in [docs/README.md](docs/README.md).
 
 ## [Unreleased]
 
+### Fixed — clang-tidy weekly run (45 errors)
+
+The Monday cron job went red on its own. Nothing regressed — the weekly job
+scans **all** sources, and `src/audio/audio_system.cpp` had never been part
+of a previous clean-up pass.
+
+- **31 × `std::endl` → `'\n'`** in `audio_system.cpp`
+  (`performance-avoid-endl`). This is a standing rule in `CLAUDE.md` §5 and
+  the file had simply been missed; every other translation unit was already
+  clean.
+- **7 × narrowing conversions** made explicit — `size_t` → `int` for
+  `AudioMetrics::activeSources` and the bank index, `size_t` → `float` for
+  `cpuUsage`, `memoryUsage` and `averageLatency`.
+- **`limitActiveSources()`** now `reserve()`s and uses `emplace_back`
+  instead of `push_back` in a loop.
+- **`(GLADloadproc)` C-style cast → `reinterpret_cast`** in
+  `application.cpp`. Unrelated function-pointer types by design; the cast
+  is the documented GLAD/GLFW idiom, now spelled explicitly.
+- **Redundant `m_GameTime(0.0f)`** dropped from the `PlayerController`
+  constructor — the header already default-initialises it.
+- **`performance-no-int-to-ptr` disabled** with rationale: the
+  `glVertexAttribPointer` offset argument is an intptr-encoded integer by
+  specification, so no cast-free form exists. Same category as the existing
+  OpenGL/ImGui/ENet exemptions.
+- **`Application::run()` cognitive complexity suppressed locally**, not
+  repo-wide, via a commented `NOLINTNEXTLINE`. It is a real smell (96 vs a
+  threshold of 25) and is tracked as `ROADMAP.md` §2.0 — Phase 2 rewrites
+  that loop for match flow, so it gets split there rather than churned
+  twice.
+
+### Fixed — `.clang-tidy` and the workflow contradicted each other
+
+`.clang-tidy` said `WarningsAsErrors: ""` with a comment reading _"promote
+to `*` once the codebase is clean"_, while `clang-tidy.yml` passed
+`--warnings-as-errors='*'` on the command line and overrode it. The config
+file was describing a policy the CI did not follow.
+
+- `WarningsAsErrors: "*"` is now set in `.clang-tidy`, which is the single
+  source of truth, and the workflow no longer passes the flag.
+- The broken `HeaderFilterRegex` is now documented in place as a known
+  limitation with a pointer to `ROADMAP.md` §2.0, rather than silently
+  doing nothing.
+
 ### Fixed — markdownlint CI failure (MD060)
 
 Dependabot bumped `markdownlint-cli2-action` to v24, which bundles

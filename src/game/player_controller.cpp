@@ -7,8 +7,9 @@
 #include <iostream>
 
 PlayerController::PlayerController(FPSCamera* camera)
-    : m_Camera(camera), m_GameTime(0.0f),
-      m_LastFootstepPos(glm::vec3(0.0f, Physics::PLAYER_HEIGHT, 3.0f)) {
+    // m_GameTime is left to its in-class initialiser (0.0f). Only members
+    // whose starting value differs from the declaration belong here.
+    : m_Camera(camera), m_LastFootstepPos(glm::vec3(0.0f, Physics::PLAYER_HEIGHT, 3.0f)) {
     m_State.position = glm::vec3(0.0f, Physics::PLAYER_HEIGHT, 3.0f);
     m_Camera->setPosition(m_State.position);
 }

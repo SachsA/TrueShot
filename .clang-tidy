@@ -8,8 +8,18 @@
 #     (`if (x) return;` is idiomatic here, `if (x) { return; }` is verbose).
 #   * Checks that produce false positives on OpenGL / ImGui / ENet public APIs
 #     (which require C-style void* casts and unmarked-return functions).
+#     `performance-no-int-to-ptr` is here for the same reason: the
+#     `glVertexAttribPointer` offset argument is an intptr-encoded integer
+#     by specification, so there is no cast-free way to write it. Expect
+#     more of these in Phase 4 as the renderer grows.
 #   * Modernization checks that would touch every declaration for no
 #     benefit (`use-auto`, `return-braced-init-list`).
+#
+# One-off exceptions live in the code as `NOLINTNEXTLINE(<check>)` with a
+# comment explaining why, so a single noisy site never costs us the check
+# everywhere else. Current suppressions:
+#   * src/core/application.cpp — Application::run() cognitive complexity,
+#     tracked for extraction in ROADMAP.md Phase 2.
 ---
 Checks: >
   bugprone-*,
@@ -34,6 +44,7 @@ Checks: >
   -cppcoreguidelines-pro-type-vararg,
   -cppcoreguidelines-special-member-functions,
   -modernize-avoid-c-arrays,
+  -performance-no-int-to-ptr,
   -modernize-return-braced-init-list,
   -modernize-use-auto,
   -modernize-use-nodiscard,
@@ -49,6 +60,19 @@ Checks: >
   -readability-named-parameter,
   -readability-uppercase-literal-suffix
 
-WarningsAsErrors: ""    # Promote to "*" once the codebase is clean.
+# The codebase is clean, so every enabled check is a hard failure. This is
+# the single source of truth: the workflow must NOT pass
+# --warnings-as-errors on the command line, or this line becomes a lie and
+# the two drift (they did — the config said "" while CI forced "*").
+WarningsAsErrors: "*"
+
+# KNOWN LIMITATION — do not "fix" casually.
+# This is matched against the path clang-tidy prints, which is absolute on
+# CI (/home/runner/work/TrueShot/TrueShot/src/...), so the '^' anchor means
+# it never matches there and our headers go unlinted (the last run reported
+# "suppressed 1056835 warnings in non-user code" for exactly this reason).
+# Un-anchoring it would lint every header for the first time, against
+# WarningsAsErrors "*", with an unknown number of new diagnostics. That is
+# its own task with its own review — tracked in ROADMAP.md Phase 2.
 HeaderFilterRegex: '^(include|src)/.*\.(h|hpp|cpp)$'
 FormatStyle: file

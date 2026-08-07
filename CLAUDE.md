@@ -70,7 +70,11 @@ could possibly be affected. Not just the obvious files — everything.
 **Tooling config**
 
 - `.clang-format` — include categories when new directory layouts appear
-- `.clang-tidy` — enabled/disabled checks, with a comment explaining why
+- `.clang-tidy` — enabled/disabled checks, with a comment explaining why.
+  It owns `WarningsAsErrors`; the workflow must never pass
+  `--warnings-as-errors` too, or the two silently drift. Prefer a commented
+  `NOLINTNEXTLINE(<check>)` at a single noisy site over disabling a check
+  repo-wide, and list the exception in the header of `.clang-tidy`
 - `.ecrc` — EditorConfig-checker exclusions
 - `.editorconfig` — per-extension whitespace rules
 - `.markdownlint.json` — markdown rule tweaks

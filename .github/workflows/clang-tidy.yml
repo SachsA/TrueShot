@@ -75,5 +75,8 @@ jobs:
             echo "No sources to check."
             exit 0
           fi
-          ${{ steps.ct.outputs.bin }} -p build "${FILES[@]}" \
-            --warnings-as-errors='*'
+          # No --warnings-as-errors here on purpose: `.clang-tidy` owns that
+          # setting (WarningsAsErrors: "*"). Passing it on the command line
+          # too means the config file can say one thing while CI does
+          # another, which is exactly how they drifted apart before.
+          ${{ steps.ct.outputs.bin }} -p build "${FILES[@]}"

@@ -314,6 +314,29 @@ But : deux joueurs sur le même LAN voient leurs mouvements et leurs tirs.
 
 But : 10 joueurs sur un serveur jouent un match complet avec round structure.
 
+### 2.0 — Dette technique à solder d'abord
+
+Deux points relevés par clang-tidy et volontairement reportés ici plutôt
+que corrigés à la va-vite. Ils touchent des zones que la Phase 2 réécrit de
+toute façon.
+
+- [ ] **Découper `Application::run()`.** Complexité cognitive 96 pour un
+      seuil de 25 : la fonction porte l'horloge de frame, l'accumulateur
+      réseau 128 Hz, l'échantillonnage des inputs, le drain des snapshots
+      et la séquence render/HUD. Extraire au minimum `stepNetwork()` et
+      `drainSnapshots()`. Actuellement suppressé par un
+      `NOLINTNEXTLINE(readability-function-cognitive-complexity)` commenté
+      dans `src/core/application.cpp` — retirer le NOLINT en même temps.
+      La Phase 2 réécrit cette boucle pour le match flow, donc on la
+      découpe à ce moment-là plutôt que de la churner deux fois.
+- [ ] **Réparer `HeaderFilterRegex` dans `.clang-tidy`.** Le `^` ancre le
+      motif sur un chemin relatif alors que clang-tidy compare un chemin
+      absolu en CI : nos headers ne sont donc **jamais** analysés (le
+      dernier run a signalé « suppressed 1056835 warnings in non-user
+      code »). Désancrer expose potentiellement des centaines de
+      diagnostics jamais vus, avec `WarningsAsErrors: "*"` — à faire comme
+      une tâche à part, mesurée, pas en passant.
+
 ### 2.1 — Équipes
 
 - [ ] Concept équipe (Attaquants / Défenseurs ou Red / Blue)

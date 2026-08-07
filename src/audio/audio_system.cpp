@@ -39,7 +39,7 @@ AudioSystem::~AudioSystem() {
 bool AudioSystem::initialize() {
     if (m_Initialized) return true;
 
-    std::cout << "Initializing AudioSystem..." << std::endl;
+    std::cout << "Initializing AudioSystem..." << '\n';
 
     // In a real implementation, initialize OpenAL here
     initializeOpenAL();
@@ -55,14 +55,14 @@ bool AudioSystem::initialize() {
     m_AudioThread   = std::thread(&AudioSystem::audioThreadFunc, this);
 
     m_Initialized   = true;
-    std::cout << "AudioSystem initialized successfully!" << std::endl;
+    std::cout << "AudioSystem initialized successfully!" << '\n';
     return true;
 }
 
 void AudioSystem::shutdown() {
     if (!m_Initialized) return;
 
-    std::cout << "Shutting down AudioSystem..." << std::endl;
+    std::cout << "Shutting down AudioSystem..." << '\n';
 
     // Stop audio thread
     m_ThreadRunning = false;
@@ -84,7 +84,7 @@ void AudioSystem::shutdown() {
     m_SoundBanks.clear();
 
     m_Initialized = false;
-    std::cout << "AudioSystem shut down." << std::endl;
+    std::cout << "AudioSystem shut down." << '\n';
 }
 
 void AudioSystem::update(float deltaTime) {
@@ -156,7 +156,7 @@ int AudioSystem::playSound(const std::string& soundName, const glm::vec3& positi
         }
 
         if (clipIt == m_AudioClips.end()) {
-            std::cout << "Warning: Sound not found: " << soundName << std::endl;
+            std::cout << "Warning: Sound not found: " << soundName << '\n';
             return -1;
         }
     }
@@ -196,7 +196,7 @@ int AudioSystem::playSound(const std::string& soundName, const glm::vec3& positi
     if (m_DebugVisualization) {
         std::cout << "[AUDIO] Playing: " << soundName << " | Pos: " << position.x << ","
                   << position.y << "," << position.z << " | Dist: " << distance << "m"
-                  << " | Vol: " << calculatedVolume << std::endl;
+                  << " | Vol: " << calculatedVolume << '\n';
     }
 
     m_Metrics.soundsPlayedThisFrame++;
@@ -219,7 +219,7 @@ int AudioSystem::playSound2D(const std::string& soundName, float volume, float p
     source->category  = Audio::AudioCategory::UI;
 
     if (m_DebugVisualization) {
-        std::cout << "[AUDIO] Playing 2D: " << soundName << " | Vol: " << volume << std::endl;
+        std::cout << "[AUDIO] Playing 2D: " << soundName << " | Vol: " << volume << '\n';
     }
 
     return sourceId;
@@ -228,7 +228,7 @@ int AudioSystem::playSound2D(const std::string& soundName, float volume, float p
 int AudioSystem::playSoundEvent(Audio::AudioEvent event, const glm::vec3& position, float volume) {
     auto eventIt = m_EventToSound.find(event);
     if (eventIt == m_EventToSound.end()) {
-        std::cout << "Warning: No sound mapped for event: " << (int)event << std::endl;
+        std::cout << "Warning: No sound mapped for event: " << (int)event << '\n';
         return -1;
     }
 
@@ -255,7 +255,7 @@ void AudioSystem::onWeaponFire(const std::string& weaponName, const glm::vec3& p
 
     if (m_DebugVisualization) {
         std::cout << "[WEAPON]" << weaponName << " fired at (" << position.x << ", " << position.y
-                  << ", " << position.z << ")" << std::endl;
+                  << ", " << position.z << ")" << '\n';
     }
 }
 
@@ -276,7 +276,7 @@ void AudioSystem::onWeaponDraw(const std::string& weaponName, const glm::vec3& p
 
     if (m_DebugVisualization) {
         std::cout << "[WEAPON]" << weaponName << " drew at (" << position.x << ", " << position.y
-                  << ", " << position.z << ")" << std::endl;
+                  << ", " << position.z << ")" << '\n';
     }
 }
 
@@ -295,7 +295,7 @@ void AudioSystem::onWeaponReload(const std::string& weaponName, const glm::vec3&
     }
 
     if (m_DebugVisualization) {
-        std::cout << "[RELOAD]" << weaponName << " reload (" << reloadPhase << ")" << std::endl;
+        std::cout << "[RELOAD]" << weaponName << " reload (" << reloadPhase << ")" << '\n';
     }
 }
 
@@ -370,8 +370,7 @@ void AudioSystem::onFootstep(const glm::vec3& position, Audio::SurfaceMaterial s
     }
 
     if (m_DebugVisualization && !isLocalPlayer) {
-        std::cout << "[FOOT] Footstep on " << (int)surface << " | Speed: " << movementSpeed
-                  << std::endl;
+        std::cout << "[FOOT] Footstep on " << (int)surface << " | Speed: " << movementSpeed << '\n';
     }
 }
 
@@ -415,7 +414,7 @@ void AudioSystem::stopSound(int sourceId) {
         // In real implementation: alSourceStop(it->second->alSourceId);
 
         if (m_DebugVisualization) {
-            std::cout << "[STOP] Stopped source " << sourceId << std::endl;
+            std::cout << "[STOP] Stopped source " << sourceId << '\n';
         }
     }
 }
@@ -452,11 +451,11 @@ bool AudioSystem::loadSound(const std::string& name, const std::string& filePath
     auto clip = loadAudioFile(filePath);
     if (clip && clip->isLoaded) {
         m_AudioClips[name] = clip;
-        std::cout << "Loaded audio: " << name << " (" << clip->duration << "s)" << std::endl;
+        std::cout << "Loaded audio: " << name << " (" << clip->duration << "s)" << '\n';
         return true;
     }
 
-    std::cout << "Failed to load audio: " << filePath << std::endl;
+    std::cout << "Failed to load audio: " << filePath << '\n';
     return false;
 }
 
@@ -466,7 +465,7 @@ void AudioSystem::initializeOpenAL() {
     // m_ALContext = alcCreateContext(m_ALDevice, nullptr);
     // alcMakeContextCurrent(m_ALContext);
 
-    std::cout << "OpenAL initialized (simulated)" << std::endl;
+    std::cout << "OpenAL initialized (simulated)" << '\n';
 }
 
 void AudioSystem::shutdownOpenAL() {
@@ -475,7 +474,7 @@ void AudioSystem::shutdownOpenAL() {
     // alcDestroyContext(m_ALContext);
     // alcCloseDevice(m_ALDevice);
 
-    std::cout << "OpenAL shut down (simulated)" << std::endl;
+    std::cout << "OpenAL shut down (simulated)" << '\n';
 }
 
 void AudioSystem::setupEventMappings() {
@@ -530,7 +529,7 @@ void AudioSystem::loadDefaultSounds() {
     registerDummySound("ui_select", 0.05f);
     registerDummySound("ui_hover", 0.03f);
 
-    std::cout << "Loaded " << m_AudioClips.size() << " default sounds" << std::endl;
+    std::cout << "Loaded " << m_AudioClips.size() << " default sounds" << '\n';
 }
 
 void AudioSystem::registerDummySound(const std::string& name, float duration) {
@@ -576,7 +575,7 @@ int AudioSystem::createAudioSource() {
     // In real implementation: alGenSources(1, &source->alSourceId);
 
     m_ActiveSources[sourceId] = std::move(source);
-    m_Metrics.activeSources   = m_ActiveSources.size();
+    m_Metrics.activeSources   = static_cast<int>(m_ActiveSources.size());
 
     return sourceId;
 }
@@ -637,7 +636,7 @@ void AudioSystem::releaseAudioSource(int sourceId) {
     if (it != m_ActiveSources.end()) {
         // In real implementation: alDeleteSources(1, &it->second->alSourceId);
         m_ActiveSources.erase(it);
-        m_Metrics.activeSources = m_ActiveSources.size();
+        m_Metrics.activeSources = static_cast<int>(m_ActiveSources.size());
     }
 }
 
@@ -645,8 +644,9 @@ void AudioSystem::limitActiveSources() {
     // Remove lowest priority sources if we hit the limit
     std::vector<std::pair<int, Audio::Priority>> sources;
 
+    sources.reserve(m_ActiveSources.size());
     for (auto& pair : m_ActiveSources) {
-        sources.push_back({pair.first, pair.second->priority});
+        sources.emplace_back(pair.first, pair.second->priority);
     }
 
     // Sort by priority (lowest first)
@@ -774,8 +774,7 @@ void AudioSystem::updateCurrentAudioZone() {
             m_Listener.currentSurface = m_CurrentZone->defaultSurface;
 
             if (m_DebugVisualization) {
-                std::cout << "[ZONE] Entered audio zone: " << m_CurrentZone->reverb.name
-                          << std::endl;
+                std::cout << "[ZONE] Entered audio zone: " << m_CurrentZone->reverb.name << '\n';
             }
         }
     }
@@ -787,16 +786,18 @@ void AudioSystem::updateEnvironmentalEffects() {
 }
 
 void AudioSystem::updateMetrics() {
-    m_Metrics.activeSources = m_ActiveSources.size();
+    m_Metrics.activeSources = static_cast<int>(m_ActiveSources.size());
 
     // Calculate average latency (simulated)
-    m_Metrics.averageLatency = 10.0f + (m_ActiveSources.size() * 0.5f);
+    m_Metrics.averageLatency = 10.0f + (static_cast<float>(m_ActiveSources.size()) * 0.5f);
 
     // Memory usage estimate
-    m_Metrics.memoryUsage = m_AudioClips.size() * 0.5f + m_ActiveSources.size() * 0.01f;
+    m_Metrics.memoryUsage = static_cast<float>(m_AudioClips.size()) * 0.5f +
+                            static_cast<float>(m_ActiveSources.size()) * 0.01f;
 
     // CPU usage estimate
-    m_Metrics.cpuUsage = (m_ActiveSources.size() / float(MAX_SOURCES)) * 15.0f;
+    m_Metrics.cpuUsage =
+        (static_cast<float>(m_ActiveSources.size()) / static_cast<float>(MAX_SOURCES)) * 15.0f;
 }
 
 void AudioSystem::addPitchVariation(AudioSource& source, float variation) {
@@ -816,7 +817,7 @@ std::string AudioSystem::selectSoundFromBank(const std::string& bankName) {
     if (bank.clips.empty()) return "";
 
     // Simple selection - avoid repeating last sound
-    int index            = (bank.lastPlayedIndex + 1) % bank.clips.size();
+    int index            = (bank.lastPlayedIndex + 1) % static_cast<int>(bank.clips.size());
     bank.lastPlayedIndex = index;
 
     return bank.clips[index]->filePath;
@@ -847,24 +848,24 @@ void AudioSystem::processAudioQueue() {
 }
 
 void AudioSystem::printDebugInfo() const {
-    std::cout << "\n=== AUDIO SYSTEM DEBUG ===" << std::endl;
-    std::cout << "Active Sources: " << m_Metrics.activeSources << "/" << MAX_SOURCES << std::endl;
-    std::cout << "Sounds This Frame: " << m_Metrics.soundsPlayedThisFrame << std::endl;
-    std::cout << "Dropped Sounds: " << m_Metrics.droppedSounds << std::endl;
-    std::cout << "Occluded Sounds: " << m_Metrics.occludedSounds << std::endl;
-    std::cout << "CPU Usage: " << m_Metrics.cpuUsage << "%" << std::endl;
-    std::cout << "Memory Usage: " << m_Metrics.memoryUsage << " MB" << std::endl;
-    std::cout << "Average Latency: " << m_Metrics.averageLatency << " ms" << std::endl;
+    std::cout << "\n=== AUDIO SYSTEM DEBUG ===" << '\n';
+    std::cout << "Active Sources: " << m_Metrics.activeSources << "/" << MAX_SOURCES << '\n';
+    std::cout << "Sounds This Frame: " << m_Metrics.soundsPlayedThisFrame << '\n';
+    std::cout << "Dropped Sounds: " << m_Metrics.droppedSounds << '\n';
+    std::cout << "Occluded Sounds: " << m_Metrics.occludedSounds << '\n';
+    std::cout << "CPU Usage: " << m_Metrics.cpuUsage << "%" << '\n';
+    std::cout << "Memory Usage: " << m_Metrics.memoryUsage << " MB" << '\n';
+    std::cout << "Average Latency: " << m_Metrics.averageLatency << " ms" << '\n';
 
     std::cout << "\nListener Position: (" << m_Listener.position.x << ", " << m_Listener.position.y
-              << ", " << m_Listener.position.z << ")" << std::endl;
-    std::cout << "Master Volume: " << (m_Listener.masterVolume * 100.0f) << "%" << std::endl;
+              << ", " << m_Listener.position.z << ")" << '\n';
+    std::cout << "Master Volume: " << (m_Listener.masterVolume * 100.0f) << "%" << '\n';
 
     if (m_CurrentZone) {
-        std::cout << "Current Zone: " << m_CurrentZone->reverb.name << std::endl;
+        std::cout << "Current Zone: " << m_CurrentZone->reverb.name << '\n';
     }
 
-    std::cout << "========================\n" << std::endl;
+    std::cout << "========================\n" << '\n';
 }
 
 // AudioUtils namespace implementations
